@@ -173,6 +173,22 @@ exports.listIdentifiers = function(shares) {
   return output;
 };
 
+// List Round Workers for API Endpoints
+exports.listWorkers = function(shares, address) {
+  const workers = [];
+  if (shares) {
+    Object.keys(shares).forEach((entry) => {
+      const details = JSON.parse(shares[entry]);
+      const worker = (address && address.includes('.')) ? entry : entry.split('.')[0];
+      if (!address || address === worker) {
+        if (details.worker && !(workers.includes(details.worker))) {
+          workers.push(details.worker);
+        }
+      }
+    });
+  }
+  return workers;
+};
 
 // Indicate Severity By Colors
 exports.loggerColors = function(severity, text) {
@@ -221,7 +237,6 @@ exports.processHistorical = function(history) {
 // Process Work for API Endpoints with Identifier
 exports.processIdentifiedWork = function(shares, multiplier, hashrateWindow) {
   const output = [];
-
   if (shares) {
     const identifiers = exports.listIdentifiers(shares);
     shares = shares.map((share) => JSON.parse(share));
@@ -244,6 +259,69 @@ exports.processIdentifiedWork = function(shares, multiplier, hashrateWindow) {
     });
   }
   return output;
+};
+
+// Process Luck for API Endpoints
+exports.processLuck = function(pending, confirmed) {
+  const output = {};
+  pending = pending.map((block) => JSON.parse(block));
+  confirmed = confirmed.map((block) => JSON.parse(block));
+  const sorted = pending
+    .concat(confirmed)
+    .sort((a, b) => (b.height - a.height));
+  output['luck1'] = exports.calculateAverage(sorted.slice(0, 1), 'luck');
+  output['luck10'] = exports.calculateAverage(sorted.slice(0, 10), 'luck');
+  output['luck100'] = exports.calculateAverage(sorted.slice(0, 100), 'luck');
+  return output;
+};
+
+// Process Miners for API Endpoints
+exports.processMiners = function(shares, hashrate, multiplier, hashrateWindow, active) {
+  const miners = {};
+  if (shares) {
+    Object.keys(shares).forEach((entry) => {
+      const details = JSON.parse(shares[entry]);
+
+      // Generate Miner Data
+      const address = entry.split('.')[0];
+      const hashrateValue = exports.processWork(hashrate, address, 'miner');
+      const effortValue = (/^-?\d*(\.\d+)?$/.test(details.effort) ? parseFloat(details.effort) : null);
+      const timeValue = (/^-?\d*(\.\d+)?$/.test(details.times) ? parseFloat(details.times) : null);
+      const workValue = /^-?\d*(\.\d+)?$/.test(details.work) ? parseFloat(details.work) : 0;
+
+      // Calculate Miner Information
+      if (details.worker && workValue > 0) {
+        if (!active || (active && hashrateValue > 0)) {
+          if (address in miners) {
+            if (details.solo) {
+              miners[address].effort += effortValue || 0;
+            }
+            if (timeValue >= miners[address].times) {
+              miners[address].times = timeValue;
+            }
+            miners[address].shares.valid += (details.types || {}).valid || 0;
+            miners[address].shares.invalid += (details.types || {}).invalid || 0;
+            miners[address].shares.stale += (details.types || {}).stale || 0;
+            miners[address].work += workValue;
+          } else {
+            miners[address] = {
+              miner: address,
+              effort: details.solo ? effortValue : null,
+              hashrate: (multiplier * hashrateValue) / hashrateWindow,
+              shares: {
+                valid: (details.types || {}).valid || 0,
+                invalid: (details.types || {}).invalid || 0,
+                stale: (details.types || {}).stale || 0,
+              },
+              times: !details.solo ? timeValue : null,
+              work: workValue,
+            };
+          }
+        }
+      }
+    });
+  }
+  return Object.values(miners);
 };
 
 // Process Payments for API Endpoints
