@@ -163,7 +163,7 @@ exports.listIdentifiers = function(shares) {
     shares = shares
       .map((share) => JSON.parse(share))
       .forEach((share) => {
-        if (share.identifier) {
+        if (share.identifier || share.identifier == '') {
           if (!(output.includes(share.identifier))) {
             output.push(share.identifier);
           }
