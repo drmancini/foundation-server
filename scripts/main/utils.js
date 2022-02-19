@@ -171,7 +171,7 @@ exports.listIdentifiers = function(shares) {
     });
   }
   if (output.length == 0) {
-    output = 'default';
+    output = ['default'];
   }
   return output;
 };
