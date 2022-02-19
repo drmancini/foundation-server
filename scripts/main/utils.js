@@ -207,6 +207,17 @@ exports.processBlocks = function(blocks) {
   return output;
 };
 
+// Process Historical Data for API Endpoints
+exports.processHistorical = function(history) {
+  const output = [];
+  if (history) {
+    history.forEach((entry) => {
+      output.push(JSON.parse(entry));
+    });
+  }
+  return output;
+};
+
 // Process Work for API Endpoints with Identifier
 exports.processIdentifiedWork = function(shares, multiplier, hashrateWindow) {
   const output = [];
