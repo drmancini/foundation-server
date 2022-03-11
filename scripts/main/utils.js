@@ -274,13 +274,6 @@ exports.processMinerPayments = function(payments, blockType) {
   if(payments) {
     payments = payments.filter((payment) => payment.block_type === blockType);
     payments.forEach((payment) => {delete payment.block_type
-      // const outputValue = {
-      //   miner: payment.miner,
-      //   paid: payment.paid,
-      //   transaction: payment.transaction,
-      //   time: payment.time,
-      // };
-      // output.push(outputValue);
     })
   };
 

@@ -67,40 +67,6 @@ const PoolDatabase = function(portalConfig) {
     });
   };
 
-  // Create Sequelize Connection
-  /* istanbul ignore next */
-  // this.connectSequelize = function(table) {
-
-  //   // Build Connection Options
-  //   const database = _this.portalConfig.postgresql.database;
-  //   const username = _this.portalConfig.postgresql.user;
-  //   const password = _this.portalConfig.postgresql.password;
-    
-  //   const connectionOptions = {};
-  //   connectionOptions.host = _this.portalConfig.postgresql.host;
-  //   connectionOptions.port = _this.portalConfig.postgresql.port;
-  //   connectionOptions.dialect = 'postgres';
-  //   connectionOptions.logging = false;
-
-  //   const sequelize = new Sequelize(database, username, password, connectionOptions);
-
-
-  //   const Shares = SharesModel(sequelize, Sequelize);
-  //   const Payments = PaymentsModel(sequelize, Sequelize);
-  //   const Users = UsersModel(sequelize, Sequelize);
-
-  //   sequelize.sync({ force: false })
-
-  //   switch (table) {
-  //     case 'shares_table':
-  //       return Shares;
-  //     case 'payments_table':
-  //       return Payments;
-  //     case 'users_table':
-  //       return Users;
-  //   }
-  // };
-
   this.connectSequelize = function() {
 
     // Build Connection Options
