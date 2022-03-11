@@ -19,11 +19,13 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
 
   this.pool = poolConfig.name;
   this.client = client;
-  this.sequelizeShares = SharesModel(sequelize, Sequelize);
-  sequelize.sync({ force: false })
+  this.sequelize = sequelize;
   this.poolConfig = poolConfig;
   this.portalConfig = portalConfig;
   this.forkId = process.env.forkId;
+
+  const sequelizeShares = SharesModel(sequelize, Sequelize);
+  this.sequelize.sync({ force: false })
 
   const logSystem = 'Pool';
   const logComponent = poolConfig.name;
@@ -186,7 +188,7 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
     }
 
     // Save Share Data to Historic Database
-    _this.sequelizeShares  
+    sequelizeShares  
       .create({
         pool: _this.pool,
         block_type: blockType,

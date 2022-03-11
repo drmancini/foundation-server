@@ -21,11 +21,13 @@ const PoolPayments = function (logger, client, sequelize) {
 
   this.pools = [];
   this.client = client;
-  this.sequelizePayments = PaymentsModel(sequelize, Sequelize);
-  sequelize.sync({ force: false })
+  this.sequelize = sequelize;
   this.poolConfigs = JSON.parse(process.env.poolConfigs);
   this.portalConfig = JSON.parse(process.env.portalConfig);
   this.forkId = process.env.forkId;
+
+  const sequelizePayments = PaymentsModel(sequelize, Sequelize);
+  this.sequelize.sync({ force: false })
 
   // Check for Deletable Shares
   this.checkShares = function(rounds, round) {
@@ -722,7 +724,7 @@ const PoolPayments = function (logger, client, sequelize) {
 
         // Update Sequelize with Miner Payment Records
         for (const [address, amount] of Object.entries(amounts)) {
-          _this.sequelizePayments  
+          sequelizePayments  
             .create({
               pool: pool,
               block_type: blockType,
