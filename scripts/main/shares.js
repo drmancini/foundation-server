@@ -5,23 +5,24 @@
  */
 
 const utils = require('./utils');
-const PoolDatabase = require('./database');
 const md5 = require('blueimp-md5');
+const Sequelize = require('sequelize');
+const SharesModel = require('../../models/shares.model');
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Shares Function
-const PoolShares = function (logger, client, poolConfig, portalConfig) {
+const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig) {
 
   const _this = this;
-  const database = new PoolDatabase(portalConfig);
   process.setMaxListeners(0);
 
   this.pool = poolConfig.name;
   this.client = client;
+  this.sequelizeShares = SharesModel(sequelize, Sequelize);
+  sequelize.sync({ force: false })
   this.poolConfig = poolConfig;
   this.portalConfig = portalConfig;
-  this.sequelizeShares = database.connectSequelize('shares_table');
   this.forkId = process.env.forkId;
 
   const logSystem = 'Pool';

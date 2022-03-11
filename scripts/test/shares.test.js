@@ -8,6 +8,9 @@ const MockDate = require('mockdate');
 const redis = require('redis-mock');
 jest.mock('redis', () => jest.requireActual('redis-mock'));
 
+const sequelizeMock = require('sequelize-mock');
+const sequelize = new sequelizeMock();
+
 const PoolLogger = require('../main/logger');
 const PoolShares = require('../main/shares');
 const poolConfig = require('../../configs/pools/example.js');
@@ -36,7 +39,7 @@ describe('Test shares functionality', () => {
   });
 
   test('Test initialization of shares', () => {
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     expect(typeof poolShares.poolConfig).toBe('object');
     expect(typeof poolShares.calculateBlocks).toBe('function');
     expect(typeof poolShares.buildSharesCommands).toBe('function');
@@ -44,7 +47,7 @@ describe('Test shares functionality', () => {
 
   test('Test redis client error handling', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     poolShares.client.emit('error', 'example error');
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Redis client had an error'));
     console.log.mockClear();
@@ -52,7 +55,7 @@ describe('Test shares functionality', () => {
 
   test('Test redis client ending handling', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     poolShares.client.emit('end');
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Connection to redis database has been ended'));
     console.log.mockClear();
@@ -60,94 +63,94 @@ describe('Test shares functionality', () => {
 
   test('Test times command handling [1]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const lastShare = { time: 1637877700000, times: 10000 };
     expect(poolShares.handleTimes(lastShare)).toBe(10385.886);
   });
 
   test('Test times command handling [2]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const lastShare = { time: 1637878084000, times: 10000 };
     expect(poolShares.handleTimes(lastShare)).toBe(10001.886);
   });
 
   test('Test times command handling [3]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const lastShare = { time: 1637078085886, times: 10000 };
     expect(poolShares.handleTimes(lastShare)).toBe(10000);
   });
 
   test('Test effort command handling [1]', () => {
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const shareData = { difficulty: 1 };
     const shares = { 'example': '{"time":1637348736715,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true,"round":"361aae45"}'};
     expect(poolShares.handleEffort(shares, 'test', shareData, 100, false)).toBe(1);
   });
 
   test('Test effort command handling [2]', () => {
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const shareData = { difficulty: 50 };
     const shares = { 'example': '{"time":1637348736715,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true,"round":"361aae45"}'};
     expect(poolShares.handleEffort(shares, 'test', shareData, 100, false)).toBe(50);
   });
 
   test('Test effort command handling [3]', () => {
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const shareData = { difficulty: 50 };
     const shares = { 'example': '{"time":1637348736715,"work":10,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'};
     expect(poolShares.handleEffort(shares, 'test', shareData, 100, true)).toBe(50);
   });
 
   test('Test effort command handling [4]', () => {
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const shareData = { difficulty: 50 };
     const shares = { 'example': '{"time":1637348736715,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true,"round":"361aae45"}'};
     expect(poolShares.handleEffort(shares, 'example', shareData, 100, true)).toBe(51);
   });
 
   test('Test effort command handling [5]', () => {
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const shareData = { difficulty: 50 };
     const shares = { 'example': '{"time":1637348736715,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'};
     expect(poolShares.handleEffort(shares, 'test', shareData, 100, false)).toBe(51);
   });
 
   test('Test effort command handling [5]', () => {
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const shareData = { difficulty: 50 };
     const shares = { 'example': '{"time":1637348736715,"work":"blah","effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'};
     expect(poolShares.handleEffort(shares, 'test', shareData, 100, false)).toBe(50);
   });
 
   test('Test types command handling [1]', () => {
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const lastShare = { types: { valid: 500, invalid: 2, stale: 1 }};
     expect(poolShares.handleTypes(lastShare, 'valid').valid).toBe(501);
   });
 
   test('Test types command handling [2]', () => {
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const lastShare = { types: { valid: 500, invalid: 2, stale: 1 }};
     expect(poolShares.handleTypes(lastShare, 'invalid').valid).toBe(500);
   });
 
   test('Test types command handling [3]', () => {
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const lastShare = { types: { valid: 500, invalid: 2, stale: 1 }};
     expect(poolShares.handleTypes(lastShare, 'invalid').invalid).toBe(3);
   });
 
   test('Test types command handling [4]', () => {
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const lastShare = { types: { valid: 500, invalid: 2, stale: 1 }};
     expect(poolShares.handleTypes(lastShare, 'stale').stale).toBe(2);
   });
 
   test('Test share command handling [1]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [{}, {}, {}, {}];
     const shareData = {
       'job': '4',
@@ -176,7 +179,7 @@ describe('Test shares functionality', () => {
 
   test('Test share command handling [2]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [{}, {}, {}, {}];
     const shareData = {
       'job': '4',
@@ -204,7 +207,7 @@ describe('Test shares functionality', () => {
   test('Test share command handling [3]', () => {
     MockDate.set(1637878085886);
     poolConfigCopy.auxiliary = { enabled: 'true' };
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [{}, {}, {}, {}];
     const shareData = {
       'job': '4',
@@ -237,7 +240,7 @@ describe('Test shares functionality', () => {
 
   test('Test share command handling [4]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     poolShares.roundValue = '361aae45';
     const results = [{}, {}, { 'example': '{"time":1637348736715,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true,"round":"361aae45"}'}, {}];
     const shareData = {
@@ -264,7 +267,7 @@ describe('Test shares functionality', () => {
 
   test('Test share command handling [5]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     poolShares.roundValue = '361aae45';
     const results = [{ 'example': '{"time":1637878005886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
     const shareData = {
@@ -293,7 +296,7 @@ describe('Test shares functionality', () => {
 
   test('Test share command handling [6]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     poolShares.roundValue = 'aaaaaaaa';
     poolShares.prevRoundValue = '361aae45';
     const results = [{ 'example': '{"time":1637878085886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
@@ -323,7 +326,7 @@ describe('Test shares functionality', () => {
 
   test('Test share command handling [7]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [{}, {}, {}, {}];
     const shareData = {
       'job': '4',
@@ -349,7 +352,7 @@ describe('Test shares functionality', () => {
 
   test('Test share command handling [8]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     poolShares.roundValue = 'aaaaaaaa';
     poolShares.prevRoundValue = '361aae45';
     const results = [{ 'example': '{"time":1637878005886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
@@ -381,7 +384,7 @@ describe('Test shares functionality', () => {
   test('Test share command handling [9]', () => {
     MockDate.set(1637878085886);
     poolConfigCopy.auxiliary = { enabled: 'true' };
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [{}, { 'example': '{"time":1637878005886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
     const shareData = {
       'job': '4',
@@ -415,7 +418,7 @@ describe('Test shares functionality', () => {
   test('Test share command handling [10]', () => {
     MockDate.set(1637878085886);
     poolConfigCopy.auxiliary = { enabled: 'true' };
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [];
     const shareData = {
       'job': '4',
@@ -448,7 +451,7 @@ describe('Test shares functionality', () => {
 
   test('Test share command handling [11]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [];
     const shareData = {
       'job': '4',
@@ -478,7 +481,7 @@ describe('Test shares functionality', () => {
   test('Test share command handling [12]', () => {
     MockDate.set(1637878085886);
     poolConfigCopy.auxiliary = { enabled: 'true' };
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [{}, {}, {}, { 'example': '{"time":1637878005886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true,"round":"361aae45"}'}];
     const shareData = {
       'job': '4',
@@ -508,7 +511,7 @@ describe('Test shares functionality', () => {
   test('Test share command handling [13]', () => {
     MockDate.set(1637878085886);
     poolConfigCopy.auxiliary = { enabled: 'true' };
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [];
     const shareData = {
       'job': '4',
@@ -537,7 +540,7 @@ describe('Test shares functionality', () => {
 
   test('Test share command handling [14]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     poolShares.roundValue = '361aae45';
     const results = [{ 'example': '{"time":1637878005886,"work":15,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"orphan"}'}];
     const shareData = {
@@ -566,7 +569,7 @@ describe('Test shares functionality', () => {
 
   test('Test block command handling [1]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [];
     const shareData = {
       'job': '4',
@@ -594,7 +597,7 @@ describe('Test shares functionality', () => {
 
   test('Test block command handling [2]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [];
     const shareData = {
       'job': '4',
@@ -619,7 +622,7 @@ describe('Test shares functionality', () => {
 
   test('Test block command handling [3]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [];
     const shareData = {
       'job': '4',
@@ -643,7 +646,7 @@ describe('Test shares functionality', () => {
 
   test('Test block command handling [4]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [];
     const shareData = {
       'job': '4',
@@ -667,7 +670,7 @@ describe('Test shares functionality', () => {
 
   test('Test block command handling [5]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [{ 'example1': '{"work":8}', 'example2': '{"work":8}', 'example3': '{"work":8}' }, {}, {}, {}];
     const shareData = {
       'job': '4',
@@ -695,7 +698,7 @@ describe('Test shares functionality', () => {
 
   test('Test block command handling [6]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [{}, {}, { 'example': '{"time":1637878085886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true}'}, {}];
     const shareData = {
       'job': '4',
@@ -723,7 +726,7 @@ describe('Test shares functionality', () => {
 
   test('Test block command handling [7]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [];
     const shareData = {
       'job': '4',
@@ -750,7 +753,7 @@ describe('Test shares functionality', () => {
 
   test('Test block command handling [8]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [];
     const shareData = {
       'job': '4',
@@ -779,7 +782,7 @@ describe('Test shares functionality', () => {
   test('Test block command handling [9]', () => {
     MockDate.set(1637878085886);
     poolConfigCopy.auxiliary = { enabled: 'true' };
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [];
     const shareData = {
       'job': '4',
@@ -805,7 +808,7 @@ describe('Test shares functionality', () => {
   test('Test block command handling [10]', () => {
     MockDate.set(1637878085886);
     poolConfigCopy.auxiliary = { enabled: 'true' };
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [{}, { 'example': '{"time":1637878085886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true}'}, {}, {}];
     const shareData = {
       'job': '4',
@@ -835,7 +838,7 @@ describe('Test shares functionality', () => {
   test('Test block command handling [11]', () => {
     MockDate.set(1637878085886);
     poolConfigCopy.auxiliary = { enabled: 'true' };
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [];
     const shareData = {
       'job': '4',
@@ -864,7 +867,7 @@ describe('Test shares functionality', () => {
 
   test('Test block command handling [12]', () => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [{}, {}, { 'example': '{"time":1637878085886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true}'}, {}];
     const shareData = {
       'job': '4',
@@ -891,7 +894,7 @@ describe('Test shares functionality', () => {
 
   test('Test command handling and execution', (done) => {
     MockDate.set(1637878085886);
-    const poolShares = new PoolShares(logger, client, poolConfigCopy, configCopy);
+    const poolShares = new PoolShares(logger, client, sequelize, poolConfigCopy, configCopy);
     const results = [{}, {}, {}, {}];
     const shareData = {
       'job': '4',

@@ -40,6 +40,10 @@ client.on('error', () => {
   throw new Error('Unable to establish database connection. Ensure Redis is setup properly and listening.');
 });
 
+// Build Sequelize Connection
+const sequelize = database.connectSequelize();
+
 // Start Pool Server
 database.checkRedisClient(client);
-new PoolThreads(logger, client, config).setupThreads();
+new PoolThreads(logger, client, sequelize, config).setupThreads();
+// new PoolThreads(logger, client, config).setupThreads();

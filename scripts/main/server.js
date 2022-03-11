@@ -19,12 +19,13 @@ const PoolApi = require('./api.js');
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Server Function
-const PoolServer = function (logger, client) {
+const PoolServer = function (logger, client, sequelize) {
 
   const _this = this;
   process.setMaxListeners(0);
 
   this.client = client;
+  this.sequelize = sequelize;
   this.poolConfigs = JSON.parse(process.env.poolConfigs);
   this.portalConfig = JSON.parse(process.env.portalConfig);
 
@@ -39,7 +40,7 @@ const PoolServer = function (logger, client) {
 
     // Build Main Server
     const app = express();
-    const api = new PoolApi(_this.client, _this.poolConfigs, _this.portalConfig);
+    const api = new PoolApi(_this.client, _this.sequelize, _this.poolConfigs, _this.portalConfig);
     const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
     const cache = apicache.options({}).middleware;
 

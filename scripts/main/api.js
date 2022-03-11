@@ -4,22 +4,25 @@
  *
  */
 
-const PoolDatabase = require('./database');
 const utils = require('./utils');
 const Algorithms = require('foundation-stratum').algorithms;
+const Sequelize = require('sequelize');
+const PaymentsModel = require('../../models/payments.model');
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main API Function
-const PoolApi = function (client, poolConfigs, portalConfig) {
+const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   const _this = this;
-  const database = new PoolDatabase(portalConfig);
+
+  this.sequelizePayments = PaymentsModel(sequelize, Sequelize);
+  sequelize.sync({ force: false })
 
   this.client = client;
   this.poolConfigs = poolConfigs;
   this.portalConfig = portalConfig;
-  this.sequelizePayments = database.connectSequelize('payments_table');
+  
   this.headers = {
     'Access-Control-Allow-Headers' : 'Content-Type, Access-Control-Allow-Headers, Access-Control-Allow-Origin, Access-Control-Allow-Methods',
     'Access-Control-Allow-Origin': '*',
@@ -119,7 +122,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
     }, callback);
   };
 
-  // API Endpoint for /miners/active
+  // API Endpoint for /historical
   this.handleHistorical = function(pool, callback) {
     const historicalWindow = _this.poolConfigs[pool].statistics.historicalWindow;
     const windowHistorical = (((Date.now() / 1000) - historicalWindow) | 0).toString();

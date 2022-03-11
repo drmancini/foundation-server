@@ -6,24 +6,25 @@
 
 const fs = require('fs');
 const async = require('async');
-const PoolDatabase = require('./database');
 const utils = require('./utils');
 const Stratum = require('foundation-stratum');
+const Sequelize = require('sequelize');
+const PaymentsModel = require('../../models/payments.model');
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Payments Function
-const PoolPayments = function (logger, client, portalConfig) {
+const PoolPayments = function (logger, client, sequelize) {
 
   const _this = this;
-  const database = new PoolDatabase(portalConfig);
   process.setMaxListeners(0);
 
   this.pools = [];
   this.client = client;
+  this.sequelizePayments = PaymentsModel(sequelize, Sequelize);
+  sequelize.sync({ force: false })
   this.poolConfigs = JSON.parse(process.env.poolConfigs);
   this.portalConfig = JSON.parse(process.env.portalConfig);
-  this.sequelizePayments = database.connectSequelize('payments_table');
   this.forkId = process.env.forkId;
 
   // Check for Deletable Shares

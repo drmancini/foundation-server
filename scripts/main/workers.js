@@ -11,13 +11,14 @@ const PoolStratum = require('./stratum');
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Workers Function
-const PoolWorkers = function (logger, client) {
+const PoolWorkers = function (logger, client, sequelize) {
 
   const _this = this;
   process.setMaxListeners(0);
 
   this.pools = {};
   this.client = client;
+  this.sequelize = sequelize;
   this.poolConfigs = JSON.parse(process.env.poolConfigs);
   this.portalConfig = JSON.parse(process.env.portalConfig);
   this.forkId = process.env.forkId;
@@ -27,7 +28,7 @@ const PoolWorkers = function (logger, client) {
   this.createPromises = function(configName) {
     return new Promise((resolve, reject) => {
       const poolConfig = _this.poolConfigs[configName];
-      const poolShares = new PoolShares(logger, _this.client, poolConfig, _this.portalConfig);
+      const poolShares = new PoolShares(logger, _this.client, _this.sequelize, _this.sequelize, poolConfig, _this.portalConfig);
       const poolStatistics = new PoolStatistics(logger, _this.client, poolConfig, _this.portalConfig);
       const poolStratum = new PoolStratum(logger, poolConfig, _this.portalConfig, poolShares, poolStatistics);
       poolStratum.setupStratum((response) => {
