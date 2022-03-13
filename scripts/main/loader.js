@@ -123,8 +123,8 @@ const PoolLoader = function(logger, portalConfig) {
     const historicalWindow = poolConfig.statistics.historicalWindow || 86400;
 
     // Check Historical Settings
-    if (historicalWindow / historicalInterval >= 50) {
-      logger.error('Builder', 'Setup', 'Historical retention must be limited to <= 50 records. Check your configuration files.');
+    if (historicalWindow / historicalInterval >= 150) {
+      logger.error('Builder', 'Setup', 'Historical retention must be limited to <= 150 records. Check your configuration files.');
       return false;
     }
 

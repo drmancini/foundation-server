@@ -171,7 +171,7 @@ describe('Test shares functionality', () => {
     const results = [{}, {}, {}, {}];
     const shareData = {
       'job': '4',
-      'ip': '::1.1.1.1',
+      'ip': ':::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,

@@ -114,7 +114,8 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
     const difficulty = (shareType === 'valid' ? shareData.difficulty : -shareData.difficulty);
     const minerType = isSoloMining ? 'solo' : 'shared';
     const identifier = shareData.identifier || '';
-    const ip = shareData.ip.split(':')[3];
+    const ipLength = shareData.ip.split(':').length - 1;
+    const ip = shareData.ip.split(':')[ipLength];
 
     const worker = ['share', 'primary'].includes(blockType) ? shareData.addrPrimary : shareData.addrAuxiliary;
     const blockDifficulty = ['share', 'primary'].includes(blockType) ? shareData.blockDiffPrimary : shareData.blockDiffAuxiliary;
@@ -202,7 +203,7 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
         miner_type: minerType,
         share_type: shareType,
         ip_hash: md5(ip), // will ask for user IP to confirm settings (min. payment)
-        //ip_hint: ip.split('.')[3], // will give this as hint to user
+        ip_hint: ip.split('.')[3], // will give this as hint to user
       });
     
     return commands;

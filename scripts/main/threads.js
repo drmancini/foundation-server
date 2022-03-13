@@ -18,7 +18,7 @@ const PoolThreads = function(logger, client, sequelize, portalConfig) {
 
   const _this = this;
   this.client = client;
-  // this.sequelize = sequelize;
+  this.sequelize = sequelize;
   this.portalConfig = portalConfig;
 
   // Start Pool Server
