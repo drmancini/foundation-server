@@ -270,14 +270,12 @@ exports.processLuck = function(pending, confirmed) {
 
 // Process Miner Payments for API Endpoints
 exports.processMinerPayments = function(payments, blockType) {
-  // output = [];
+  let output = {};
   if(payments) {
-    payments = payments.filter((payment) => payment.block_type === blockType);
-    payments.forEach((payment) => {delete payment.block_type
-    })
+    output = payments.filter((payment) => payment.block_type === blockType);
+    output.forEach((payment) => {delete payment.block_type});
   };
-
-  return payments;
+  return output;
 }
 
 // Process Miners for API Endpoints

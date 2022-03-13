@@ -11,6 +11,23 @@ jest.mock('redis', () => jest.requireActual('redis-mock'));
 const sequelizeMock = require('sequelize-mock');
 const sequelize = new sequelizeMock();
 
+jest.mock('../../models/shares.model.js', () => () => {  
+  const SequelizeMock = require("sequelize-mock");
+  const dbMock = new SequelizeMock();
+  return dbMock.define('shares', {
+    pool: 'asd',
+    block_type: 'primary',
+    worker: 'sad',  
+    work: 0.5,
+    share_type: 'valid',
+    miner_type: 'shared',
+    identifier: 'asd',
+    ip_hash: 'asd',
+    ip_hint: '3',
+    time: 123      
+  })
+});
+
 const PoolLogger = require('../main/logger');
 const PoolShares = require('../main/shares');
 const poolConfig = require('../../configs/pools/example.js');
@@ -154,7 +171,7 @@ describe('Test shares functionality', () => {
     const results = [{}, {}, {}, {}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -183,7 +200,7 @@ describe('Test shares functionality', () => {
     const results = [{}, {}, {}, {}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -211,7 +228,7 @@ describe('Test shares functionality', () => {
     const results = [{}, {}, {}, {}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example1',
       'addrAuxiliary': 'example2',
@@ -245,7 +262,7 @@ describe('Test shares functionality', () => {
     const results = [{}, {}, { 'example': '{"time":1637348736715,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true,"round":"361aae45"}'}, {}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3003,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -272,7 +289,7 @@ describe('Test shares functionality', () => {
     const results = [{ 'example': '{"time":1637878005886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -302,7 +319,7 @@ describe('Test shares functionality', () => {
     const results = [{ 'example': '{"time":1637878085886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -330,7 +347,7 @@ describe('Test shares functionality', () => {
     const results = [{}, {}, {}, {}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -358,7 +375,7 @@ describe('Test shares functionality', () => {
     const results = [{ 'example': '{"time":1637878005886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -388,7 +405,7 @@ describe('Test shares functionality', () => {
     const results = [{}, { 'example': '{"time":1637878005886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"361aae45"}'}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example1',
       'addrAuxiliary': 'example2',
@@ -422,7 +439,7 @@ describe('Test shares functionality', () => {
     const results = [];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example1',
       'addrAuxiliary': 'example2',
@@ -455,7 +472,7 @@ describe('Test shares functionality', () => {
     const results = [];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -485,7 +502,7 @@ describe('Test shares functionality', () => {
     const results = [{}, {}, {}, { 'example': '{"time":1637878005886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true,"round":"361aae45"}'}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example1',
       'addrAuxiliary': 'example2',
@@ -515,7 +532,7 @@ describe('Test shares functionality', () => {
     const results = [];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example1',
       'addrAuxiliary': 'example2',
@@ -545,7 +562,7 @@ describe('Test shares functionality', () => {
     const results = [{ 'example': '{"time":1637878005886,"work":15,"effort":7.277845022124848e-7,"worker":"example","solo":false,"round":"orphan"}'}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -573,7 +590,7 @@ describe('Test shares functionality', () => {
     const results = [];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -601,7 +618,7 @@ describe('Test shares functionality', () => {
     const results = [];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -626,7 +643,7 @@ describe('Test shares functionality', () => {
     const results = [];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -650,7 +667,7 @@ describe('Test shares functionality', () => {
     const results = [];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -674,7 +691,7 @@ describe('Test shares functionality', () => {
     const results = [{ 'example1': '{"work":8}', 'example2': '{"work":8}', 'example3': '{"work":8}' }, {}, {}, {}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -702,7 +719,7 @@ describe('Test shares functionality', () => {
     const results = [{}, {}, { 'example': '{"time":1637878085886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true}'}, {}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3003,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -730,7 +747,7 @@ describe('Test shares functionality', () => {
     const results = [];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3003,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -757,7 +774,7 @@ describe('Test shares functionality', () => {
     const results = [];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3003,
       'addrPrimary': 'example',
       'addrAuxiliary': null,
@@ -786,7 +803,7 @@ describe('Test shares functionality', () => {
     const results = [];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example1',
       'addrAuxiliary': 'example2',
@@ -812,7 +829,7 @@ describe('Test shares functionality', () => {
     const results = [{}, { 'example': '{"time":1637878085886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true}'}, {}, {}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example1',
       'addrAuxiliary': 'example2',
@@ -842,7 +859,7 @@ describe('Test shares functionality', () => {
     const results = [];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example1',
       'addrAuxiliary': 'example2',
@@ -871,7 +888,7 @@ describe('Test shares functionality', () => {
     const results = [{}, {}, { 'example': '{"time":1637878085886,"work":1,"effort":7.277845022124848e-7,"worker":"example","solo":true}'}, {}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3003,
       'addrPrimary': null,
       'addrAuxiliary': null,
@@ -898,7 +915,7 @@ describe('Test shares functionality', () => {
     const results = [{}, {}, {}, {}];
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3002,
       'addrPrimary': 'example',
       'addrAuxiliary': null,

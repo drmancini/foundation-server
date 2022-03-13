@@ -5,6 +5,7 @@
  * @returns {PaymentsClass} Returns the Users model
  */
 
+/* istanbul ignore next */
 module.exports = function( sequelize, DataTypes ) {
   return sequelize.define(
     'payments', {

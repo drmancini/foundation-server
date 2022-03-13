@@ -7,6 +7,9 @@
 const redis = require('redis-mock');
 jest.mock('redis', () => jest.requireActual('redis-mock'));
 
+const sequelizeMock = require('sequelize-mock');
+const sequelize = new sequelizeMock();
+
 const PoolThreads = require('../main/threads');
 const PoolLogger = require('../main/logger');
 const portalConfig = require('../../configs/main/example.js');
@@ -31,7 +34,7 @@ describe('Test threads functionality', () => {
   });
 
   test('Test initialization of threads', () => {
-    const poolThreads = new PoolThreads(logger, client, configCopy);
+    const poolThreads = new PoolThreads(logger, client, sequelize, configCopy);
     expect(typeof poolThreads.client).toBe('object');
     expect(typeof poolThreads.setupThreads).toBe('function');
   });

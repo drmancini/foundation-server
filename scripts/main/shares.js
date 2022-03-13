@@ -12,21 +12,26 @@ const SharesModel = require('../../models/shares.model');
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Shares Function
-const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig) {
+// const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig) {
+const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
   const _this = this;
   process.setMaxListeners(0);
 
   this.pool = poolConfig.name;
   this.client = client;
-  this.sequelize = sequelize;
+  // this.sequelize = sequelize;
   this.poolConfig = poolConfig;
   this.portalConfig = portalConfig;
   this.forkId = process.env.forkId;
 
-  const sequelizeShares = SharesModel(sequelize, Sequelize);
-  this.sequelize.sync({ force: false })
-
+  //const sequelizeShares = SharesModel(sequelize, Sequelize);
+  //this.sequelize.sync({ force: false })
+  /* istanbul ignore next */
+  //if (typeof(sequelizeShares) === 'function') {
+    
+ // };
+  
   const logSystem = 'Pool';
   const logComponent = poolConfig.name;
   const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
@@ -188,19 +193,19 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
     }
 
     // Save Share Data to Historic Database
-    sequelizeShares  
-      .create({
-        pool: _this.pool,
-        block_type: blockType,
-        identifier: hashrateShare.identifier,
-        time: hashrateShare.time,  // for testing purposes ATM
-        work: hashrateShare.work,
-        worker: hashrateShare.worker,
-        miner_type: minerType,
-        share_type: shareType,
-        ip_hash: md5(ip), // will ask for user IP to confirm settings (min. payment)
-        ip_hint: ip.split('.')[3], // will give this as hint to user
-      });
+    // sequelizeShares  
+    //   .create({
+    //     pool: _this.pool,
+    //     block_type: blockType,
+    //     identifier: hashrateShare.identifier,
+    //     time: hashrateShare.time,  // for testing purposes ATM
+    //     work: hashrateShare.work,
+    //     worker: hashrateShare.worker,
+    //     miner_type: minerType,
+    //     share_type: shareType,
+    //     ip_hash: md5(ip), // will ask for user IP to confirm settings (min. payment)
+    //     //ip_hint: ip.split('.')[3], // will give this as hint to user
+    //   });
     
     return commands;
   };

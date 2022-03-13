@@ -9,6 +9,9 @@ const redis = require('redis-mock');
 const events = require('events');
 jest.mock('redis', () => jest.requireActual('redis-mock'));
 
+const sequelizeMock = require('sequelize-mock');
+const sequelize = new sequelizeMock();
+
 const PoolApi = require('../main/api');
 const PoolServer = require('../main/server');
 const PoolLogger = require('../main/logger');

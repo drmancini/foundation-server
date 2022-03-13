@@ -12,6 +12,22 @@ const poolConfig = require('../../configs/pools/example.js');
 const portalConfig = require('../../configs/main/example.js');
 const PoolApi = require('../main/api');
 
+const sequelizeMock = require('sequelize-mock');
+const sequelize = new sequelizeMock();
+
+jest.mock('../../models/payments.model.js', () => () => {  
+  const SequelizeMock = require("sequelize-mock");
+  const dbMock = new SequelizeMock();
+  return dbMock.define('payments', {
+    pool: 'asd',
+    block_type: 'primary',  
+    time: 123,
+    paid: 123.4,
+    transaction: 'asd',
+    miner: 'asd'
+  })
+});
+
 const client = redis.createClient({
   'port': portalConfig.redis.port,
   'host': portalConfig.redis.host,
@@ -114,7 +130,7 @@ describe('Test API functionality', () => {
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest('Pool1', 'unknown', 'unknown');
       const poolConfigsCopy = JSON.parse(JSON.stringify(poolConfigs));
-      const poolApi = new PoolApi(client, poolConfigsCopy, portalConfig);
+      const poolApi = new PoolApi(client, sequelize, poolConfigsCopy, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });

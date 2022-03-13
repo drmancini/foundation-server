@@ -9,6 +9,9 @@ const PoolLogger = require('../main/logger');
 const portalConfig = require('../../configs/main/example.js');
 const logger = new PoolLogger(portalConfig);
 
+const sequelizeMock = require('sequelize-mock');
+const sequelize = new sequelizeMock();
+
 ////////////////////////////////////////////////////////////////////////////////
 
 describe('Test loader functionality', () => {

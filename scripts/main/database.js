@@ -67,6 +67,7 @@ const PoolDatabase = function(portalConfig) {
     });
   };
 
+  /* istanbul ignore next */
   this.connectSequelize = function() {
 
     // Build Connection Options
@@ -82,7 +83,6 @@ const PoolDatabase = function(portalConfig) {
 
     const sequelize = new Sequelize(database, username, password, connectionOptions);
     return sequelize;
-
   };
 };
 

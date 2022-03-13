@@ -7,6 +7,9 @@
 const redis = require('redis-mock');
 jest.mock('redis', () => jest.requireActual('redis-mock'));
 
+const SequelizeMock = require("sequelize-mock");
+const sequelize = new SequelizeMock();
+
 const mock = require('./daemon.mock.js');
 const nock = require('nock');
 

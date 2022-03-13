@@ -14,20 +14,25 @@ const PaymentsModel = require('../../models/payments.model');
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Payments Function
-const PoolPayments = function (logger, client, sequelize) {
+// const PoolPayments = function (logger, client, sequelize) {
+const PoolPayments = function (logger, client) {  
 
   const _this = this;
   process.setMaxListeners(0);
 
   this.pools = [];
   this.client = client;
-  this.sequelize = sequelize;
+  // this.sequelize = sequelize;
   this.poolConfigs = JSON.parse(process.env.poolConfigs);
   this.portalConfig = JSON.parse(process.env.portalConfig);
   this.forkId = process.env.forkId;
 
-  const sequelizePayments = PaymentsModel(sequelize, Sequelize);
-  this.sequelize.sync({ force: false })
+  // const sequelizePayments = PaymentsModel(sequelize, Sequelize);
+  
+  /* istanbul ignore next */
+  // if (typeof(sequelizePayments) === 'function') {
+  //   this.sequelize.sync({ force: false })
+  // };
 
   // Check for Deletable Shares
   this.checkShares = function(rounds, round) {
@@ -723,17 +728,17 @@ const PoolPayments = function (logger, client, sequelize) {
         };
 
         // Update Sequelize with Miner Payment Records
-        for (const [address, amount] of Object.entries(amounts)) {
-          sequelizePayments  
-            .create({
-              pool: pool,
-              block_type: blockType,
-              miner: address,
-              paid: amount,
-              transaction: transaction,
-              time: currentDate,
-            });
-        };
+        // for (const [address, amount] of Object.entries(amounts)) {
+        //   sequelizePayments  
+        //     .create({
+        //       pool: pool,
+        //       block_type: blockType,
+        //       miner: address,
+        //       paid: amount,
+        //       transaction: transaction,
+        //       time: currentDate,
+        //     });
+        // };
 
         // Update Redis Database with Payment Record
         logger.special('Payments', pool, `Sent ${ totalSent } ${ processingConfig.coin.symbol } to ${ Object.keys(amounts).length } workers, txid: ${ transaction }`);
