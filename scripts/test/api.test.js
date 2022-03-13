@@ -19,7 +19,7 @@ jest.mock('../../models/payments.model.js', () => () => {
   const SequelizeMock = require("sequelize-mock");
   const dbMock = new SequelizeMock();
   return dbMock.define('payments', {
-    pool: 'asd',
+    pool: 'Pool1',
     block_type: 'primary',  
     time: 123,
     paid: 123.4,
@@ -588,6 +588,26 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'immature');
+      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      poolApi.handleApiV1(request, (code, message) => {
+        poolApi.buildResponse(code, message, response);
+      });
+    });
+  });
+
+  test('Test handlePaymentsMinerRecords API endpoint', (done) => {
+    const commands = [];
+    const response = mockResponse();
+      response.on('end', (payload) => {
+        const processed = JSON.parse(payload);
+        expect(processed.statusCode).toBe(200);
+        expect(typeof processed.body).toBe('object');
+        expect(Object.keys(processed.body.primary).length).toBe(1);
+        expect(Object.keys(processed.body.auxiliary).length).toBe(0);
+        done();
+      });
+    mockSetupClient(client, commands, 'Pool1', () => {
+      const request = mockRequest('Pool1', 'payments', 'asd');
       const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);

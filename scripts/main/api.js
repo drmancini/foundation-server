@@ -16,14 +16,13 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   const _this = this;
 
-  // if (sequelize) {
-  //   const sequelizePayments = PaymentsModel(sequelize, Sequelize);
-  //   /* istanbul ignore next */
-  //   if (typeof(sequelizePayments) === 'function') {
-  //     sequelize.sync({ force: false })
-  //   };
-  // }
-
+  const sequelizePayments = PaymentsModel(sequelize, Sequelize);
+  
+  /* istanbul ignore next */
+  if (typeof(sequelizePayments) === 'function') {
+    sequelize.sync({ force: false })
+  };
+  
   this.client = client;
   this.poolConfigs = poolConfigs;
   this.portalConfig = portalConfig;
@@ -365,22 +364,21 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /payments/[miner]
   /* istanbul ignore next */
   this.handlePaymentsMinerRecords = function(pool, miner, callback) {
-    // sequelizePayments
-    //   .findAll({
-    //     raw: true,
-    //     attributes: ['block_type', 'time', 'paid', 'transaction', 'miner'],
-    //     where: {
-    //       pool: pool,
-    //       miner: miner,
-    //     }
-    //   })
-    //   .then((data) => {
-    //     callback(200, {
-    //       primary: utils.processMinerPayments(data, 'primary'),
-    //       auxiliary: utils.processMinerPayments(data, 'auxiliary'),
-    //     });
-    //   });
-    callback(200, {asd});
+    sequelizePayments
+      .findAll({
+        raw: true,
+        attributes: ['block_type', 'time', 'paid', 'transaction', 'miner'],
+        where: {
+          pool: pool,
+          miner: miner,
+        }
+      })
+      .then((data) => {
+        callback(200, {
+          primary: utils.processMinerPayments(data, 'primary'),
+          auxiliary: utils.processMinerPayments(data, 'auxiliary'),
+        });
+      });
   };
 
   // API Endpoint for /payments/paid

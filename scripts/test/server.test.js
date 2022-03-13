@@ -12,6 +12,19 @@ jest.mock('redis', () => jest.requireActual('redis-mock'));
 const sequelizeMock = require('sequelize-mock');
 const sequelize = new sequelizeMock();
 
+jest.mock('../../models/payments.model.js', () => () => {  
+  const SequelizeMock = require("sequelize-mock");
+  const dbMock = new SequelizeMock();
+  return dbMock.define('payments', {
+    pool: 'asd',
+    block_type: 'primary',  
+    time: 123,
+    paid: 123.4,
+    transaction: 'asd',
+    miner: 'asd'
+  })
+});
+
 const PoolApi = require('../main/api');
 const PoolServer = require('../main/server');
 const PoolLogger = require('../main/logger');
