@@ -60,6 +60,14 @@ const PoolServer = function (logger, client, sequelize) {
       });
     });
 
+    // Handle v2 API Requests
+    /* istanbul ignore next */
+    app.get('/api/v2/:pool/:type/:endpoint?', (req, res) => {
+      api.handleApiV2(req, (code, message) => {
+        api.buildResponse(code, message, res);
+      });
+    });
+
     // ERRORS - Handles API Errors
     /* istanbul ignore next */
     /* eslint-disable-next-line no-unused-vars */

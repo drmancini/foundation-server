@@ -6,8 +6,9 @@
 
 const utils = require('./utils');
 const Algorithms = require('foundation-stratum').algorithms;
-const Sequelize = require('sequelize');
+const { Sequelize, Op } = require('sequelize');
 const PaymentsModel = require('../../models/payments.model');
+const SharesModel = require('../../models/shares.model');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -17,9 +18,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   const _this = this;
 
   const sequelizePayments = PaymentsModel(sequelize, Sequelize);
+  const sequelizeShares = SharesModel(sequelize, Sequelize);
   
   /* istanbul ignore next */
-  if (typeof(sequelizePayments) === 'function') {
+  if ((typeof(sequelizePayments) === 'function') || (typeof(sequelizeShares) === 'function')) {
     sequelize.sync({ force: false })
   };
   
@@ -139,6 +141,29 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         auxiliary: utils.processHistorical(results[1]),
       });
     }, callback);
+  };
+
+  // API Endpoint for /historical/[miner]
+  // primary: {"time":1647200759587,"hashrate":{"shared":[{"identifier":"EU","hashrate":55.75289296213342}],"solo":[{"identifier":"","hashrate":0}]}
+  this.handleMinerHistorical = function(pool, miner, callback) {
+    sequelizeShares
+      .findAll({
+        raw:true,
+        attributes: ['worker', 'work', 'share_type', 'miner_type', 'identifier', 'time'],
+        where: {
+          pool: pool,
+          worker: {
+            [Op.like]: miner + '%',
+          },
+        }
+      })
+      .then((data) => {
+        callback(200, {
+          test: data,
+          primary: utils.processMinerHistorical(data, 'primary'),
+          auxiliary: utils.processMinerHistorical(data, 'auxiliary'),
+        });
+      });
   };
 
   // API Endpoint for /miners/active
@@ -845,9 +870,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       _this.handleBlocksSpecific(pool, method, (code, message) => callback(code, message));
       break;
 
-    // Miners Endpoints
+    // Historical Endpoints
     case (endpoint === 'historical' && method === ''):
       _this.handleHistorical(pool, (code, message) => callback(code, message));
+      break;
+    case (endpoint === 'historical' && method.length >= 1):
+      _this.handleMinerHistorical(pool, method, (code, message) => callback(code, message));
       break;
 
     // Miners Endpoints
@@ -929,6 +957,69 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       callback(405, 'The requested method is not currently supported. Verify your input and try again');
       break;
     }
+  };
+
+    // Determine API Endpoint Called
+  this.handleApiV2 = function(req, callback) {
+
+    let type, endpoint, method, address, page;
+    const miscellaneous = ['pools'];
+
+    // If Path Params Exist
+    if (req.params) {
+      pool = utils.validateInput(req.params.pool || '');
+      type = utils.validateInput(req.params.type || '');
+      endpoint = utils.validateInput(req.params.endpoint || '');
+    }
+
+    // If Query Params Exist
+    if (req.query) {
+      method = utils.validateInput(req.query.method || '');
+      address = utils.validateInput(req.query.address || '');
+      page = utils.validateInput(req.query.page || '');
+    }
+    console.log('params: ' + JSON.stringify(req.params));
+
+    // Check if Requested Pool Exists
+    if (!(pool in _this.poolConfigs) && !(miscellaneous.includes(pool))) {
+      callback(404, 'The requested pool was not found. Verify your input and try again');
+      return;
+    }
+
+    // Select Endpoint from Parameters
+    switch (type) {
+      case ('pool'):
+        switch (endpoint) {
+          case ('hashrate'):
+              _this.handleBlocksConfirmed(pool, (code, message) => callback(code, message));
+            break;
+        }
+        break;
+      case ('miner'):
+        break;
+      default:
+        callback(405, 'The requested endpoint does not exist. Verify your input and try again');
+      break;
+    }
+    
+    
+    
+
+    // case (endpoint === 'blocks' && method === 'confirmed'):
+    //   _this.handleBlocksConfirmed(pool, (code, message) => callback(code, message));
+    //   break;
+    // case (endpoint === 'blocks' && method === 'kicked'):
+    //   _this.handleBlocksKicked(pool, (code, message) => callback(code, message));
+    //   break;
+    // case (endpoint === 'blocks' && method === 'pending'):
+    //   _this.handleBlocksPending(pool, (code, message) => callback(code, message));
+    //   break;
+    // case (endpoint === 'blocks' && method === ''):
+    //   _this.handleBlocks(pool, (code, message) => callback(code, message));
+    //   break;
+    // case (endpoint === 'blocks' && method.length >= 1):
+    //   _this.handleBlocksSpecific(pool, method, (code, message) => callback(code, message));
+    //   break;
   };
 };
 
