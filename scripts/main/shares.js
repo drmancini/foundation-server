@@ -6,7 +6,7 @@
 
 const utils = require('./utils');
 const md5 = require('blueimp-md5');
-const Sequelize = require('sequelize');
+const { Sequelize, Op } = require('sequelize');
 const SharesModel = require('../../models/shares.model');
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,6 +111,7 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
     let shares;
     const commands = [];
     const dateNow = Date.now();
+    const yesterdayAndMore = dateNow - 1000 * 60 * 60 * 25;
     const difficulty = (shareType === 'valid' ? shareData.difficulty : -shareData.difficulty);
     const minerType = isSoloMining ? 'solo' : 'shared';
     const identifier = shareData.identifier || '';
@@ -196,15 +197,24 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
       .create({
         pool: _this.pool,
         block_type: blockType,
-        identifier: hashrateShare.identifier,
-        time: hashrateShare.time,  // for testing purposes ATM
-        work: hashrateShare.work,
-        worker: hashrateShare.worker,
-        miner_type: minerType,
+        share: hashrateShare,
         share_type: shareType,
+        miner_type: minerType,
         ip_hash: md5(ip), // will ask for user IP to confirm settings (min. payment)
         ip_hint: ip.split('.')[3], // will give this as hint to user
-      });
+      })
+      .then( 
+        sequelizeShares
+          .destroy({
+            where: {
+              share: {
+                time: {
+                  [Op.lte]: (dateNow - yesterdayAndMore),
+                }
+              }
+            }
+          })
+      );
     
     return commands;
   };

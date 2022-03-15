@@ -803,6 +803,122 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  // API Endpoint for /miner/stats
+  this.minerStats = function(pool, address, callback) {
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
+    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
+    const hashrate6Window = 60 * 60 * 6;
+    const hashrate6WindowTime = (((Date.now() / 1000) - hashrate6Window) | 0);
+    const hashrate24Window = 60 * 60 * 24;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    sequelizeShares
+      .findAll({
+        raw: true,
+        attributes: ['share', 'share_type'],
+        where: {
+          pool: pool,
+          share: {
+            worker: {
+              [Op.like]: address + '%',
+            },
+          }, 
+        }
+      })
+      .then((data) => {
+        let hashrateData = 0;;
+        let hashrate6Data = 0;
+        let hashrate24Data = 0;
+        let valid = 0;
+        let invalid = 0;
+        let stale = 0;
+        
+        data.forEach((share) => {
+          switch(share.share_type) {
+            case 'valid':
+              valid += 1;
+              
+              const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
+
+              if (share.share.time / 1000 > hashrateWindowTime) {
+                hashrateData += work;
+                hashrate6Data += work;
+                hashrate24Data += work;
+              } else if (share.share.time / 1000 > hashrate6WindowTime && share.share.time / 1000 <= hashrateWindowTime) {
+                hashrate6Data += work;
+                hashrate24Data += work;
+              } else if (share.share.time / 1000 <= hashrate6WindowTime) {
+                hashrate24Data += work;
+              }
+              break;
+            case 'invalid':
+              invalid += 1;
+              break;
+            case 'stale':
+              stale += 1;
+              break;
+          }
+        });
+
+        callback(200, {
+          validShares: valid,
+          invalidShares: invalid,
+          staleShares: stale,
+          hashrate: (multiplier * hashrateData) / hashrateWindow,
+          hashrate6: (multiplier * hashrate6Data) / hashrate6Window,
+          hashrate24: (multiplier * hashrate24Data) / hashrate24Window,
+        });
+      });
+
+    // callback(200, {
+    //   primary: {
+    //     shared: {
+    //       average6Hashrate: 123,
+    //       average24Hashrate: 123,
+    //       currentHashrate: 123,
+    //       invalidShares: 1,
+    //       staleShares: 1,
+    //       validShares: 1
+    //     },
+    //     solo: {
+    //     },
+    //   },
+    //   auxiliary: {
+    //     shared: {},
+    //     solo: {},
+    //   }
+    // })
+  };
+
+  // API Endpoint for /miner/workerCount
+  this.minerWorkerCount = function(pool, address, callback) {
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
+    const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
+    const commands = [
+      ['hgetall', `${ pool }:rounds:primary:current:shared:shares`],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:primary:current:solo:shares`],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:shared:shares`],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
+      ['hgetall', `${ pool }:rounds:auxiliary:current:solo:shares`],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf']];
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
+        primary: {
+          shared: utils.processMinerWorkerCount(results[0], results[1], address),
+          solo: utils.processMinerWorkerCount(results[2], results[3], address),
+        },
+        auxiliary: {
+          shared: utils.processMinerWorkerCount(results[4], results[5], address),
+          solo: utils.processMinerWorkerCount(results[6], results[7], address),
+        }
+      });
+    }, callback);
+  };
+  
+  //////////////////////////////////////////////////////////////////////////////
+
   // Execute Redis Commands
   /* istanbul ignore next */
   this.executeCommands = function(commands, callback, handler) {
@@ -987,15 +1103,29 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }
 
     // Select Endpoint from Parameters
-    switch (type) {
-      case ('pool'):
-        switch (endpoint) {
-          case ('hashrate'):
-              _this.handleBlocksConfirmed(pool, (code, message) => callback(code, message));
+    switch (true) {
+      case (type === 'pool'):
+        switch (true) {
+          case (endpoint === 'hashrate' && address.length > 0):
+              _this.handleBlocksConfirmed(pool, address, (code, message) => callback(code, message));
+            break;
+          default:
+            callback(405, 'The requested endpoint does not exist. Verify your input and try again');
             break;
         }
         break;
-      case ('miner'):
+      case (type === 'miner'):
+        switch (true) {
+          case (endpoint === 'stats' && address.length > 0):
+            _this.minerStats(pool, address, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'workerCount' && address.length > 0):
+            _this.minerWorkerCount(pool, address, (code, message) => callback(code, message));
+            break;
+          default:
+            callback(405, 'The requested endpoint does not exist. Verify your input and try again');
+            break;
+        }
         break;
       default:
         callback(405, 'The requested endpoint does not exist. Verify your input and try again');

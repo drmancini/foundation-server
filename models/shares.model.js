@@ -17,12 +17,8 @@ module.exports = function( sequelize, DataTypes ) {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      worker: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },  
-      work: {
-        type: DataTypes.FLOAT,
+      share: {
+        type: DataTypes.JSONB,
         allowNull: false,
       },
       share_type: {
@@ -30,10 +26,6 @@ module.exports = function( sequelize, DataTypes ) {
         allowNull: false,
       },
       miner_type: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      identifier: {
         type: DataTypes.STRING,
         allowNull: false,
       },
@@ -45,9 +37,5 @@ module.exports = function( sequelize, DataTypes ) {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      time: {
-        type: DataTypes.BIGINT,
-        allowNull: false,
-      }      
     });
 };

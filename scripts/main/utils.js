@@ -517,3 +517,38 @@ exports.validateInput = function(address) {
   }
   return address;
 };
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+// Process Worker Count for API Endpoint /miner/stats
+exports.processMinerStats = function(shares, hashrate, address) {}
+
+// Process Worker Count for API Endpoint /miner/workerCount
+exports.processMinerWorkerCount = function(shares, hashrate, address) {
+  let output = {};
+  let workersOnline = 0; 
+  let workersOffline = 0;
+  if (shares) {
+    Object.keys(shares).forEach((entry) => {
+      const details = JSON.parse(shares[entry]);
+
+      // Generate Worker Data
+      const hashrateValue = exports.processWork(hashrate, entry, 'worker');
+      const workValue = /^-?\d*(\.\d+)?$/.test(details.work) ? parseFloat(details.work) : 0;
+      const miner = details.worker.split('.')[0];
+
+      // Calculate Worker Information
+      if (details.worker && workValue > 0 && miner === address) {
+        workersOffline += 1;
+        if (hashrateValue > 0) {
+          workersOnline += 1;
+        }
+      }
+    });
+    output = {
+      workersOnline: workersOnline,
+      workersOffline: workersOffline - workersOnline,
+    }
+  }
+  return output;
+};
