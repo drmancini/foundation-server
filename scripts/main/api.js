@@ -808,7 +808,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
     const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
-    const hashrate6Window = 60 * 60 * 6;
+    const hashrate6Window = 60 * 60 * 12;
     const hashrate6WindowTime = (((Date.now() / 1000) - hashrate6Window) | 0);
     const hashrate24Window = 60 * 60 * 24;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
@@ -864,9 +864,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           validShares: valid,
           invalidShares: invalid,
           staleShares: stale,
-          hashrate: (multiplier * hashrateData) / hashrateWindow,
-          hashrate6: (multiplier * hashrate6Data) / hashrate6Window,
-          hashrate24: (multiplier * hashrate24Data) / hashrate24Window,
+          currentHashrate: (multiplier * hashrateData) / hashrateWindow,
+          averageHalfDayHashrate: (multiplier * hashrate6Data) / hashrate6Window,
+          averageDayHashrate: (multiplier * hashrate24Data) / hashrate24Window,
         });
       });
 
