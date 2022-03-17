@@ -1044,52 +1044,61 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
               [Op.like]: address + '%',
             },
           }, 
-        }
+        },
+        order: [
+          ['share.time', 'desc']
+        ],
       })
       .then((data) => {
         const output = [];
-
-        let hashrateData = 0;
-        let hashrate24Data = 0;
-        let valid = 0;
-        let invalid = 0;
-        let stale = 0;
-        
         data.forEach((share) => {
+          const worker = share.share.worker.split('.')[1];
+          let workerIndex = output.findIndex((obj => obj.name == worker));
+          const lastIndex = output.length - 1;
+
+          if (workerIndex == -1) {
+            const workerData = {
+              name: worker,
+              isOnline: false,
+              currentWork: 0,
+              averageWork: 0,
+              validShares: 0,
+              staleShares: 0,
+              invalidShares: 0,
+              lastSeen: 0,
+            };
+            output.push(workerData);
+            workerIndex = lastIndex + 1;
+          }
+          
           switch(share.share_type) {
             case 'valid':
-              valid += 1;
-              
               const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
-
-              if (share.share.time / 1000 > hashrateWindowTime) {
-                hashrateData += work;
-                hashrate12Data += work;
-                hashrate24Data += work;
-              } else if (share.share.time / 1000 > hashrate12WindowTime && share.share.time / 1000 <= hashrateWindowTime) {
-                hashrate12Data += work;
-                hashrate24Data += work;
-              } else if (share.share.time / 1000 <= hashrate12WindowTime) {
-                hashrate24Data += work;
+              output[workerIndex].validShares += 1;
+              output[workerIndex].averageWork += work;
+              if (share.share.time / 1000 >= hashrateWindowTime && work > 0) {
+                output[workerIndex].currentWork += work;
+                output[workerIndex].isOnline = true;
               }
               break;
             case 'invalid':
-              invalid += 1;
+              output[workerIndex].invalidShares += 1;
               break;
             case 'stale':
-              stale += 1;
+              output[workerIndex].staleShares += 1;
               break;
           }
+          
+          if (share.share.time > output[workerIndex].lastSeen) {
+            output[workerIndex].lastSeen = share.share.time;
+          }          
         });
 
-        callback(200, {
-          validShares: valid,
-          invalidShares: invalid,
-          staleShares: stale,
-          currentHashrate: (multiplier * hashrateData) / hashrateWindow,
-          averageHalfDayHashrate: (multiplier * hashrate12Data) / hashrate12Window,
-          averageDayHashrate: (multiplier * hashrate24Data) / hashrate24Window,
+        output.forEach((worker) => {
+          worker.currentWork = worker.currentWork * multiplier / hashrateWindow;
+          worker.averageWork = worker.averageWork * multiplier / hashrate24Window;
         });
+        callback(200, output );
       });
     
 
@@ -1282,6 +1291,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       break;
     case (endpoint === 'miner-workerCount' && method.length > 0):
       _this.minerWorkerCount(pool, method, (code, message) => callback(code, message));
+      break;
+    case (endpoint === 'miner-workers' && method.length > 0):
+      _this.minerWorkers(pool, method, (code, message) => callback(code, message));
       break;
     
     // Unknown Endpoints

@@ -598,7 +598,7 @@ exports.processMinerStats = function(shares, blockType, solo, address) {
 exports.processMinerWorkerCount = function(shares, hashrate, address) {
   let output = {};
   let workersOnline = 0; 
-  let workersOffline = 0;
+  let workerCount = 0;
   if (shares) {
     Object.keys(shares).forEach((entry) => {
       const details = JSON.parse(shares[entry]);
@@ -610,7 +610,7 @@ exports.processMinerWorkerCount = function(shares, hashrate, address) {
 
       // Calculate Worker Information
       if (details.worker && workValue > 0 && miner === address) {
-        workersOffline += 1;
+        workerCount += 1;
         if (hashrateValue > 0) {
           workersOnline += 1;
         }
@@ -618,7 +618,7 @@ exports.processMinerWorkerCount = function(shares, hashrate, address) {
     });
     output = {
       workersOnline: workersOnline,
-      workersOffline: workersOffline - workersOnline,
+      workersOffline: workerCount - workersOnline,
     }
   }
   return output;
