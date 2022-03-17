@@ -6,6 +6,9 @@
 
 const os = require('os');
 const crypto = require('crypto');
+const Algorithms = require('foundation-stratum').algorithms;
+const { Sequelize, Op } = require('sequelize');
+const SharesModel = require('../../models/shares.model');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -521,7 +524,75 @@ exports.validateInput = function(address) {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 // Process Worker Count for API Endpoint /miner/stats
-exports.processMinerStats = function(shares, hashrate, address) {}
+exports.processMinerStats = function(shares, blockType, solo, address) {
+  const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+  const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
+  const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
+  const hashrate6Window = 60 * 60 * 12;
+  const hashrate6WindowTime = (((Date.now() / 1000) - hashrate6Window) | 0);
+  const hashrate24Window = 60 * 60 * 24;
+  const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+
+  shares
+      .findAll({
+        raw: true,
+        attributes: ['share', 'share_type'],
+        where: {
+          pool: pool,
+          block_type: blockType,
+          share: {
+            worker: {
+              [Op.like]: address + '%',
+            },
+            solo: solo
+          }, 
+        }
+      })
+      .then((data) => {
+        let hashrateData = 0;;
+        let hashrate6Data = 0; // change to round hashrate
+        let hashrate24Data = 0;
+        let valid = 0;
+        let invalid = 0;
+        let stale = 0;
+        
+        data.forEach((share) => {
+          switch(share.share_type) {
+            case 'valid':
+              valid += 1;
+              
+              const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
+
+              if (share.share.time / 1000 > hashrateWindowTime) {
+                hashrateData += work;
+                hashrate6Data += work;
+                hashrate24Data += work;
+              } else if (share.share.time / 1000 > hashrate6WindowTime && share.share.time / 1000 <= hashrateWindowTime) {
+                hashrate6Data += work;
+                hashrate24Data += work;
+              } else if (share.share.time / 1000 <= hashrate6WindowTime) {
+                hashrate24Data += work;
+              }
+              break;
+            case 'invalid':
+              invalid += 1;
+              break;
+            case 'stale':
+              stale += 1;
+              break;
+          }
+        });
+
+        return {
+          validShares: valid,
+          invalidShares: invalid,
+          staleShares: stale,
+          currentHashrate: (multiplier * hashrateData) / hashrateWindow,
+          averageHalfDayHashrate: (multiplier * hashrate6Data) / hashrate6Window,
+          averageDayHashrate: (multiplier * hashrate24Data) / hashrate24Window,
+        };
+      });
+};
 
 // Process Worker Count for API Endpoint /miner/workerCount
 exports.processMinerWorkerCount = function(shares, hashrate, address) {

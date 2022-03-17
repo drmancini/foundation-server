@@ -802,14 +802,145 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   //////////////////////////////////////////////////////////////////////////////
+  // My New APIs
+  //////////////////////////////////////////////////////////////////////////////
 
-  // API Endpoint for /miner/stats
+  // API Endpoint for /miner/chart for miner [address]
+  this.minerChart = function(pool, address, callback) {
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    const tenMinutes = 1000 * 60 * 10;
+    const maxSteps = 24 * 6 - 1;
+    const lastTimestamp = Math.floor(Date.now() / tenMinutes) * tenMinutes;
+    
+    sequelizeShares
+      .findAll({
+        raw: true,
+        attributes: ['share', 'share_type'],
+        where: {
+          pool: pool,
+          block_type: 'primary',
+          share: {
+            worker: {
+              [Op.like]: address + '%',
+            },
+          }, 
+        },
+        order: [
+          ['share.time', 'asc']
+        ],
+      })
+      .catch((err) => {
+        callback(400, [] );
+      })
+      .then((data) => {
+        const output = [];
+        const minerHashrateArray = [];
+        const movingAverageSteps = 5;
+        let firstShare = true;
+        let validShares = 0;
+        let invalidShares = 0;
+        let staleShares = 0;
+        let minerWork = 0;
+        let timestampDataSteps;
+        let workingTimestamp;
+        let minerHashrateMA;
+        
+        data.forEach((share) => {
+          const shareTimestamp = share.share.time;
+
+          if (firstShare) {
+            if (!shareTimestamp) {
+              timestampDataSteps = 0;  
+            } else {
+              timestampDataSteps = Math.floor((lastTimestamp - shareTimestamp) / tenMinutes) * tenMinutes;
+              timestampDataSteps = (timestampDataSteps >= maxSteps) ? maxSteps : timestampDataSteps;
+            }
+            
+            workingTimestamp = lastTimestamp - (timestampDataSteps * tenMinutes);
+            
+            // fill empty steps with zero values
+            if (timestampDataSteps < maxSteps) {
+              const missingSteps = maxSteps - timestampDataSteps;
+              let tempTimestamp = workingTimestamp - ((maxSteps - timestampDataSteps) * tenMinutes);
+
+              // for (let i = 0; i < missingSteps; i++) {
+              for (let i = 0; i < 0; i++) {  
+                
+                const tempObject = {
+                  timestamp: tempTimestamp / 1000,
+                  hashrate: 0,
+                  averageHashrate: 0,
+                  validShares: 0,
+                  staleShares: 0,
+                  invalidShares: 0
+                }
+                output.push(tempObject);
+                tempTimestamp += tenMinutes;
+              }
+            }
+
+            firstShare = false;
+          }
+
+          if (shareTimestamp >= workingTimestamp && shareTimestamp < (workingTimestamp + tenMinutes)) {
+            const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
+            
+            switch (share.share_type) {
+              case 'valid':
+                minerWork += work;
+                validShares += 1;
+                break;
+              case 'invalid':
+                invalidShares += 1;
+                break;
+              case 'stale':
+                staleShares += 1;
+                break;
+              default:
+                break;
+            }
+          } else if (shareTimestamp >= (workingTimestamp + tenMinutes)) {
+            const minerHashrate = (minerWork * multiplier) / tenMinutes * 1000;
+            minerHashrateArray.push(minerHashrate);
+
+            if (minerHashrateArray.length > movingAverageSteps) {
+              minerHashrateArray.shift();
+            }
+
+            const hashrateArrayLength = minerHashrateArray.length;
+            minerHashrateMA = minerHashrateArray.reduce((a, b) => a + b) / hashrateArrayLength;
+
+            const tempObject = {
+              timestamp: workingTimestamp / 1000,
+              hashrate: minerHashrate,
+              averageHashrate: minerHashrateMA,
+              validShares: validShares,
+              staleShares: staleShares,
+              invalidShares: invalidShares
+            }
+
+            output.push(tempObject);
+
+            validShares = 0;
+            invalidShares = 0;
+            staleShares = 0;
+            minerWork = 0;
+            workingTimestamp += tenMinutes;
+
+          }
+        })
+        callback(200, output );
+      });
+  };
+
+  // API Endpoint for /miner/stats for miner [address]
   this.minerStats = function(pool, address, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
     const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
-    const hashrate6Window = 60 * 60 * 12;
-    const hashrate6WindowTime = (((Date.now() / 1000) - hashrate6Window) | 0);
+    const hashrate12Window = 60 * 60 * 12;
+    const hashrate12WindowTime = (((Date.now() / 1000) - hashrate12Window) | 0);
     const hashrate24Window = 60 * 60 * 24;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     sequelizeShares
@@ -823,11 +954,14 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
               [Op.like]: address + '%',
             },
           }, 
-        }
+        },
+        order: [
+          ['share.time', 'asc']
+        ],
       })
       .then((data) => {
-        let hashrateData = 0;;
-        let hashrate6Data = 0;
+        let hashrateData = 0;
+        let hashrate12Data = 0; // change to round hashrate
         let hashrate24Data = 0;
         let valid = 0;
         let invalid = 0;
@@ -842,12 +976,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
               if (share.share.time / 1000 > hashrateWindowTime) {
                 hashrateData += work;
-                hashrate6Data += work;
+                hashrate12Data += work;
                 hashrate24Data += work;
-              } else if (share.share.time / 1000 > hashrate6WindowTime && share.share.time / 1000 <= hashrateWindowTime) {
-                hashrate6Data += work;
+              } else if (share.share.time / 1000 > hashrate12WindowTime && share.share.time / 1000 <= hashrateWindowTime) {
+                hashrate12Data += work;
                 hashrate24Data += work;
-              } else if (share.share.time / 1000 <= hashrate6WindowTime) {
+              } else if (share.share.time / 1000 <= hashrate12WindowTime) {
                 hashrate24Data += work;
               }
               break;
@@ -865,7 +999,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           invalidShares: invalid,
           staleShares: stale,
           currentHashrate: (multiplier * hashrateData) / hashrateWindow,
-          averageHalfDayHashrate: (multiplier * hashrate6Data) / hashrate6Window,
+          averageHalfDayHashrate: (multiplier * hashrate12Data) / hashrate12Window,
           averageDayHashrate: (multiplier * hashrate24Data) / hashrate24Window,
         });
       });
@@ -890,7 +1024,78 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     // })
   };
 
-  // API Endpoint for /miner/workerCount
+  //          workers: utils.combineWorkers(results[5], results[6]),
+
+  // API Endpoint for /miner/workers for miner [address]
+  this.minerWorkers = function(pool, address, callback) {
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
+    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
+    const hashrate24Window = 60 * 60 * 24;
+    sequelizeShares
+      .findAll({
+        raw: true,
+        attributes: ['share', 'share_type'],
+        where: {
+          pool: pool,
+          share: {
+            worker: {
+              [Op.like]: address + '%',
+            },
+          }, 
+        }
+      })
+      .then((data) => {
+        const output = [];
+
+        let hashrateData = 0;
+        let hashrate24Data = 0;
+        let valid = 0;
+        let invalid = 0;
+        let stale = 0;
+        
+        data.forEach((share) => {
+          switch(share.share_type) {
+            case 'valid':
+              valid += 1;
+              
+              const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
+
+              if (share.share.time / 1000 > hashrateWindowTime) {
+                hashrateData += work;
+                hashrate12Data += work;
+                hashrate24Data += work;
+              } else if (share.share.time / 1000 > hashrate12WindowTime && share.share.time / 1000 <= hashrateWindowTime) {
+                hashrate12Data += work;
+                hashrate24Data += work;
+              } else if (share.share.time / 1000 <= hashrate12WindowTime) {
+                hashrate24Data += work;
+              }
+              break;
+            case 'invalid':
+              invalid += 1;
+              break;
+            case 'stale':
+              stale += 1;
+              break;
+          }
+        });
+
+        callback(200, {
+          validShares: valid,
+          invalidShares: invalid,
+          staleShares: stale,
+          currentHashrate: (multiplier * hashrateData) / hashrateWindow,
+          averageHalfDayHashrate: (multiplier * hashrate12Data) / hashrate12Window,
+          averageDayHashrate: (multiplier * hashrate24Data) / hashrate24Window,
+        });
+      });
+    
+
+  };
+
+  // API Endpoint for /miner/workerCount for miner [address]
   this.minerWorkerCount = function(pool, address, callback) {
     const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
     const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
@@ -946,7 +1151,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // Determine API Endpoint Called
   this.handleApiV1 = function(req, callback) {
 
-    let pool, endpoint, method;
+    let endpoint, method;
     const miscellaneous = ['pools'];
 
     // If Path Params Exist
@@ -1068,6 +1273,17 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       _this.handleStatistics(pool, (code, message) => callback(code, message));
       break;
 
+    // V2 Miner Endpoints
+    case (endpoint === 'miner-chart' && method.length > 0):
+      _this.minerChart(pool, method, (code, message) => callback(code, message));
+      break;
+    case (endpoint === 'miner-stats' && method.length > 0):
+      _this.minerStats(pool, method, (code, message) => callback(code, message));
+      break;
+    case (endpoint === 'miner-workerCount' && method.length > 0):
+      _this.minerWorkerCount(pool, method, (code, message) => callback(code, message));
+      break;
+    
     // Unknown Endpoints
     default:
       callback(405, 'The requested method is not currently supported. Verify your input and try again');
@@ -1116,6 +1332,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         break;
       case (type === 'miner'):
         switch (true) {
+          case (endpoint === 'chart' && address.length > 0):
+            _this.minerChart(pool, address, (code, message) => callback(code, message));
+            break;
           case (endpoint === 'stats' && address.length > 0):
             _this.minerStats(pool, address, (code, message) => callback(code, message));
             break;
@@ -1131,25 +1350,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         callback(405, 'The requested endpoint does not exist. Verify your input and try again');
       break;
     }
-    
-    
-    
-
-    // case (endpoint === 'blocks' && method === 'confirmed'):
-    //   _this.handleBlocksConfirmed(pool, (code, message) => callback(code, message));
-    //   break;
-    // case (endpoint === 'blocks' && method === 'kicked'):
-    //   _this.handleBlocksKicked(pool, (code, message) => callback(code, message));
-    //   break;
-    // case (endpoint === 'blocks' && method === 'pending'):
-    //   _this.handleBlocksPending(pool, (code, message) => callback(code, message));
-    //   break;
-    // case (endpoint === 'blocks' && method === ''):
-    //   _this.handleBlocks(pool, (code, message) => callback(code, message));
-    //   break;
-    // case (endpoint === 'blocks' && method.length >= 1):
-    //   _this.handleBlocksSpecific(pool, method, (code, message) => callback(code, message));
-    //   break;
   };
 };
 
