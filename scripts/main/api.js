@@ -1060,8 +1060,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             const workerData = {
               name: worker,
               isOnline: false,
-              currentWork: 0,
-              averageWork: 0,
+              currentHashrate: 0,
+              averageHashrate: 0,
               validShares: 0,
               staleShares: 0,
               invalidShares: 0,
@@ -1075,9 +1075,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             case 'valid':
               const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
               output[workerIndex].validShares += 1;
-              output[workerIndex].averageWork += work;
+              output[workerIndex].averageHashrate += work;
               if (share.share.time / 1000 >= hashrateWindowTime && work > 0) {
-                output[workerIndex].currentWork += work;
+                output[workerIndex].currentHashrate += work;
                 output[workerIndex].isOnline = true;
               }
               break;
@@ -1095,8 +1095,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         });
 
         output.forEach((worker) => {
-          worker.currentWork = worker.currentWork * multiplier / hashrateWindow;
-          worker.averageWork = worker.averageWork * multiplier / hashrate24Window;
+          worker.currentHashrate = worker.currentHashrate * multiplier / hashrateWindow;
+          worker.averageHashrate = worker.averageHashrate * multiplier / hashrate24Window;
         });
         callback(200, output );
       });
