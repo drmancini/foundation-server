@@ -15,6 +15,7 @@ const https = require('https');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
 const PoolApi = require('./api.js');
+const PoolApi2 = require('./api2.js');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -41,6 +42,7 @@ const PoolServer = function (logger, client, sequelize) {
     // Build Main Server
     const app = express();
     const api = new PoolApi(_this.client, _this.sequelize, _this.poolConfigs, _this.portalConfig);
+    const api2 = new PoolApi2(_this.client, _this.sequelize, _this.poolConfigs, _this.portalConfig);
     const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
     const cache = apicache.options({}).middleware;
 
@@ -63,8 +65,8 @@ const PoolServer = function (logger, client, sequelize) {
     // Handle v2 API Requests
     /* istanbul ignore next */
     app.get('/api/v2/:pool/:type/:endpoint?', (req, res) => {
-      api.handleApiV2(req, (code, message) => {
-        api.buildResponse(code, message, res);
+      api2.handleApiV2(req, (code, message) => {
+        api2.buildResponse(code, message, res);
       });
     });
 
@@ -73,6 +75,7 @@ const PoolServer = function (logger, client, sequelize) {
     /* eslint-disable-next-line no-unused-vars */
     app.use((err, req, res, next) => {
       _this.handleErrors(api, err, res);
+      _this.handleErrors(api2, err, res);
     });
 
     // Handle Health Check

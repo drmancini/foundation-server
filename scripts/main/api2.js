@@ -802,6 +802,453 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   //////////////////////////////////////////////////////////////////////////////
+  // My New APIs
+  //////////////////////////////////////////////////////////////////////////////
+
+  // API Endpoint for /miner/chart for miner [address]
+  this.minerChart = function(pool, address, callback) {
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    const tenMinutes = 1000 * 60 * 10;
+    const maxSteps = 24 * 6 - 1;
+    const lastTimestamp = Math.floor(Date.now() / tenMinutes) * tenMinutes;
+    
+    sequelizeShares
+      .findAll({
+        raw: true,
+        attributes: ['share', 'share_type'],
+        where: {
+          pool: pool,
+          block_type: 'primary',
+          share: {
+            worker: {
+              [Op.like]: address + '%',
+            },
+          }, 
+        },
+        order: [
+          ['share.time', 'asc']
+        ],
+      })
+      .catch((err) => {
+        callback(400, [] );
+      })
+      .then((data) => {
+        const output = [];
+        const minerHashrateArray = [];
+        const movingAverageSteps = 5;
+        let firstShare = true;
+        let validShares = 0;
+        let invalidShares = 0;
+        let staleShares = 0;
+        let minerWork = 0;
+        let timestampDataSteps;
+        let workingTimestamp;
+        let minerHashrateMA;
+        
+        data.forEach((share) => {
+          const shareTimestamp = share.share.time;
+
+          if (firstShare) {
+            if (!shareTimestamp) {
+              timestampDataSteps = 0;  
+            } else {
+              timestampDataSteps = Math.floor((lastTimestamp - shareTimestamp) / tenMinutes) * tenMinutes;
+              timestampDataSteps = (timestampDataSteps >= maxSteps) ? maxSteps : timestampDataSteps;
+            }
+            
+            workingTimestamp = lastTimestamp - (timestampDataSteps * tenMinutes);
+            
+            // fill empty steps with zero values
+            if (timestampDataSteps < maxSteps) {
+              const missingSteps = maxSteps - timestampDataSteps;
+              let tempTimestamp = workingTimestamp - ((maxSteps - timestampDataSteps) * tenMinutes);
+
+              // for (let i = 0; i < missingSteps; i++) {
+              for (let i = 0; i < 0; i++) {  
+                
+                const tempObject = {
+                  timestamp: tempTimestamp / 1000,
+                  hashrate: 0,
+                  averageHashrate: 0,
+                  validShares: 0,
+                  staleShares: 0,
+                  invalidShares: 0
+                }
+                output.push(tempObject);
+                tempTimestamp += tenMinutes;
+              }
+            }
+
+            firstShare = false;
+          }
+
+          if (shareTimestamp >= workingTimestamp && shareTimestamp < (workingTimestamp + tenMinutes)) {
+            const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
+            
+            switch (share.share_type) {
+              case 'valid':
+                minerWork += work;
+                validShares += 1;
+                break;
+              case 'invalid':
+                invalidShares += 1;
+                break;
+              case 'stale':
+                staleShares += 1;
+                break;
+              default:
+                break;
+            }
+          } else if (shareTimestamp >= (workingTimestamp + tenMinutes)) {
+            const minerHashrate = (minerWork * multiplier) / tenMinutes * 1000;
+            minerHashrateArray.push(minerHashrate);
+
+            if (minerHashrateArray.length > movingAverageSteps) {
+              minerHashrateArray.shift();
+            }
+
+            const hashrateArrayLength = minerHashrateArray.length;
+            minerHashrateMA = minerHashrateArray.reduce((a, b) => a + b) / hashrateArrayLength;
+
+            const tempObject = {
+              timestamp: workingTimestamp / 1000,
+              hashrate: minerHashrate,
+              averageHashrate: minerHashrateMA,
+              validShares: validShares,
+              staleShares: staleShares,
+              invalidShares: invalidShares
+            }
+
+            output.push(tempObject);
+
+            validShares = 0;
+            invalidShares = 0;
+            staleShares = 0;
+            minerWork = 0;
+            workingTimestamp += tenMinutes;
+
+          }
+        })
+        callback(200, output );
+      });
+  };
+
+  //  API Endpoint dor /miner/payments for miner [address]
+  this.minerPayments = function(pool, address, page, callback) {
+    let totalItems;
+    sequelizePayments
+      .count()
+      .then((itemCount) => {
+        sequelizePayments
+          .findAll({
+            raw: true,
+            attributes: ['transaction', 'paid', 'time'],
+            offset: page * 10,
+            limit: 10,
+            where: {
+              pool: pool,
+              miner: address,
+            },
+            order: [
+              ['time', 'desc']
+            ],
+          })
+          .then((data) => {
+            const output = [];
+            const totalItems = itemCount;
+            const totalPages = Math.floor(totalItems / 10) + (totalItems % 10 > 0 ? 1 : 0);
+            
+            data.forEach((payment) => {
+              const outputPayment = {};
+              outputPayment.hash = payment.transaction,
+              outputPayment.timestamp = payment.time,
+              outputPayment.value = payment.paid,
+              output.push(outputPayment);
+            });
+            callback(200, {
+              //countervalue: 'konverze do USD',
+              data: output,
+              totalItems: totalItems,
+              totalPages: totalPages,
+            });
+          });
+      });
+    
+
+    
+    
+  };
+
+  // API Endpoint for /miner/paymentStats for miner [address]
+  this.minerPaymentStats = function(pool, address, callback) {
+    sequelizePayments
+      .findAll({
+        raw: true,
+        attributes: ['transaction', 'paid', 'time'],
+        where: {
+          pool: pool,
+          miner: address,
+        },
+        order: [
+          ['time', 'desc']
+        ],
+      })
+      .then((data) => {
+        const transactionCount = data.length;
+        const lastPayment = {};
+        let totalPaid = 0; 
+        let isLastPayment = true;
+        data.forEach((payment) => {
+          if (isLastPayment) {
+              lastPayment.hash = payment.transaction,
+              lastPayment.timestamp = payment.time,
+              lastPayment.value = payment.paid,
+            isLastPayment = false;
+          }
+          totalPaid += payment.paid
+        });
+        callback(200, {
+          //countervalue: 'honverze do USD',
+          lastPayment: lastPayment,
+          stats: {
+            averageValue: totalPaid / transactionCount,
+            totalPaid: totalPaid,
+            transactionCount: transactionCount,
+          }
+        });
+      });
+  };
+
+  // API Endpoint for /miner/stats for miner [address]
+  this.minerStats = function(pool, address, callback) {
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
+    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
+    const hashrate12Window = 60 * 60 * 12;
+    const hashrate12WindowTime = (((Date.now() / 1000) - hashrate12Window) | 0);
+    const hashrate24Window = 60 * 60 * 24;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    sequelizeShares
+      .findAll({
+        raw: true,
+        attributes: ['share', 'share_type'],
+        where: {
+          pool: pool,
+          share: {
+            worker: {
+              [Op.like]: address + '%',
+            },
+          }, 
+        },
+        order: [
+          ['share.time', 'asc']
+        ],
+      })
+      .then((data) => {
+        let hashrateData = 0;
+        let hashrate12Data = 0; // change to round hashrate
+        let hashrate24Data = 0;
+        let valid = 0;
+        let invalid = 0;
+        let stale = 0;
+        
+        data.forEach((share) => {
+          switch(share.share_type) {
+            case 'valid':
+              valid += 1;
+              
+              const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
+
+              if (share.share.time / 1000 > hashrateWindowTime) {
+                hashrateData += work;
+                hashrate12Data += work;
+                hashrate24Data += work;
+              } else if (share.share.time / 1000 > hashrate12WindowTime && share.share.time / 1000 <= hashrateWindowTime) {
+                hashrate12Data += work;
+                hashrate24Data += work;
+              } else if (share.share.time / 1000 <= hashrate12WindowTime) {
+                hashrate24Data += work;
+              }
+              break;
+            case 'invalid':
+              invalid += 1;
+              break;
+            case 'stale':
+              stale += 1;
+              break;
+          }
+        });
+
+        callback(200, {
+          validShares: valid,
+          invalidShares: invalid,
+          staleShares: stale,
+          currentHashrate: (multiplier * hashrateData) / hashrateWindow,
+          averageHalfDayHashrate: (multiplier * hashrate12Data) / hashrate12Window,
+          averageDayHashrate: (multiplier * hashrate24Data) / hashrate24Window,
+        });
+      });
+
+    // callback(200, {
+    //   primary: {
+    //     shared: {
+    //       average6Hashrate: 123,
+    //       average24Hashrate: 123,
+    //       currentHashrate: 123,
+    //       invalidShares: 1,
+    //       staleShares: 1,
+    //       validShares: 1
+    //     },
+    //     solo: {
+    //     },
+    //   },
+    //   auxiliary: {
+    //     shared: {},
+    //     solo: {},
+    //   }
+    // })
+  };
+
+  //          workers: utils.combineWorkers(results[5], results[6]),
+
+  // API Endpoint for /miner/workers for miner [address]
+  this.minerWorkers = function(pool, address, callback) {
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
+    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
+    const hashrate24Window = 60 * 60 * 24;
+    sequelizeShares
+      .findAll({
+        raw: true,
+        attributes: ['share', 'share_type'],
+        where: {
+          pool: pool,
+          share: {
+            worker: {
+              [Op.like]: address + '%',
+            },
+          }, 
+        },
+        order: [
+          ['share.time', 'desc']
+        ],
+      })
+      .then((data) => {
+        const output = [];
+        data.forEach((share) => {
+          const worker = share.share.worker.split('.')[1];
+          let workerIndex = output.findIndex((obj => obj.name == worker));
+          const lastIndex = output.length - 1;
+
+          if (workerIndex == -1) {
+            const workerData = {
+              name: worker,
+              isOnline: false,
+              currentHashrate: 0,
+              averageHashrate: 0,
+              validShares: 0,
+              staleShares: 0,
+              invalidShares: 0,
+              lastSeen: 0,
+            };
+            output.push(workerData);
+            workerIndex = lastIndex + 1;
+          }
+          
+          switch(share.share_type) {
+            case 'valid':
+              const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
+              output[workerIndex].validShares += 1;
+              output[workerIndex].averageHashrate += work;
+              if (share.share.time / 1000 >= hashrateWindowTime && work > 0) {
+                output[workerIndex].currentHashrate += work;
+                output[workerIndex].isOnline = true;
+              }
+              break;
+            case 'invalid':
+              output[workerIndex].invalidShares += 1;
+              break;
+            case 'stale':
+              output[workerIndex].staleShares += 1;
+              break;
+          }
+          
+          if (share.share.time > output[workerIndex].lastSeen) {
+            output[workerIndex].lastSeen = share.share.time;
+          }          
+        });
+
+        output.forEach((worker) => {
+          worker.currentHashrate = worker.currentHashrate * multiplier / hashrateWindow;
+          worker.averageHashrate = worker.averageHashrate * multiplier / hashrate24Window;
+        });
+        callback(200, output );
+      });
+  };
+
+  // API Endpoint for /miner/workerCount for miner [address]
+  this.minerWorkerCount = function(pool, address, callback) {
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
+    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
+    console.log('aaa: ' + address);
+    sequelizeShares
+      .findAll({
+        raw: true,
+        attributes: ['share', 'share_type'],
+        where: {
+          pool: pool,
+          share: {
+            worker: {
+              [Op.like]: address + '%',
+            },
+          }, 
+        },
+        order: [
+          ['share.time', 'desc']
+        ],
+      })
+      .then((data) => {
+        const workers = [];
+        let workersOnline = 0;
+
+        console.log('here');
+
+        data.forEach((share) => {
+          const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
+          const worker = share.share.worker.split('.')[1];
+          let workerIndex = workers.findIndex((obj => obj.name == worker));
+          const lastIndex = workers.length - 1;
+          if (workerIndex == -1) {
+            const workerData = {
+              name: worker,
+              isOnline: false,
+            };
+            workers.push(workerData);
+            workerIndex = lastIndex + 1;
+          }  
+          if (share.share_type === 'valid' && (share.share.time / 1000) >= hashrateWindowTime && work > 0) {
+            workers[workerIndex].isOnline = true;
+          }
+        });
+
+        const totalWorkers = workers.length;
+        workers.forEach((worker) => {
+          if (worker.isOnline == true) {
+            workersOnline += 1;
+          }
+        });
+
+        const output = {
+          workersOnline: workersOnline,
+          workersOffline: totalWorkers - workersOnline,
+        };
+
+        callback(200, output );
+      });
+  };
+  //////////////////////////////////////////////////////////////////////////////
 
   // Execute Redis Commands
   /* istanbul ignore next */
@@ -818,7 +1265,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // Build API Payload for each Endpoint
   this.buildResponse = function(code, message, response) {
     const payload = {
-      version: '0.0.3',
+      version: '0.0.1',
       statusCode: code,
       headers: _this.headers,
       body: message,
@@ -827,22 +1274,26 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     response.end(JSON.stringify(payload));
   };
 
-  // Determine API Endpoint Called
-  this.handleApiV1 = function(req, callback) {
+    // Determine API Endpoint Called
+  this.handleApiV2 = function(req, callback) {
 
-    let endpoint, method;
+    let type, endpoint, method, address, page;
     const miscellaneous = ['pools'];
 
     // If Path Params Exist
     if (req.params) {
       pool = utils.validateInput(req.params.pool || '');
+      type = utils.validateInput(req.params.type || '');
       endpoint = utils.validateInput(req.params.endpoint || '');
     }
 
     // If Query Params Exist
     if (req.query) {
       method = utils.validateInput(req.query.method || '');
+      address = utils.validateInput(req.query.address || '');
+      page = utils.validateInput(req.query.page || '');
     }
+    console.log('params: ' + JSON.stringify(req.params));
 
     // Check if Requested Pool Exists
     if (!(pool in _this.poolConfigs) && !(miscellaneous.includes(pool))) {
@@ -852,109 +1303,43 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     // Select Endpoint from Parameters
     switch (true) {
-
-    // Blocks Endpoints
-    case (endpoint === 'blocks' && method === 'confirmed'):
-      _this.handleBlocksConfirmed(pool, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'blocks' && method === 'kicked'):
-      _this.handleBlocksKicked(pool, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'blocks' && method === 'pending'):
-      _this.handleBlocksPending(pool, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'blocks' && method === ''):
-      _this.handleBlocks(pool, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'blocks' && method.length >= 1):
-      _this.handleBlocksSpecific(pool, method, (code, message) => callback(code, message));
-      break;
-
-    // Historical Endpoints
-    case (endpoint === 'historical' && method === ''):
-      _this.handleHistorical(pool, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'historical' && method.length >= 1):
-      _this.handleMinerHistorical(pool, method, (code, message) => callback(code, message));
-      break;
-
-    // Miners Endpoints
-    case (endpoint === 'miners' && method === 'active'):
-      _this.handleMinersActive(pool, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'miners' && method.length >= 1):
-      _this.handleMinersSpecific(pool, method, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'miners' && method === ''):
-      _this.handleMiners(pool, (code, message) => callback(code, message));
-      break;
-
-    // Payments Endpoints
-    case (endpoint === 'payments' && method === 'balances'):
-      _this.handlePaymentsBalances(pool, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'payments' && method === 'generate'):
-      _this.handlePaymentsGenerate(pool, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'payments' && method === 'immature'):
-      _this.handlePaymentsImmature(pool, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'payments' && method === 'paid'):
-      _this.handlePaymentsPaid(pool, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'payments' && method === 'records'):
-      _this.handlePaymentsRecords(pool, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'payments' && method.length >= 1):
-      _this.handlePaymentsMinerRecords(pool, method, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'payments' && method === ''):
-      _this.handlePayments(pool, (code, message) => callback(code, message));
-      break;
-
-    // Ports Endpoints
-    case (endpoint === 'ports' && method === ''):
-      callback(200, { ports: _this.poolConfigs[pool].ports });
-      break;
-
-    // Rounds Endpoints
-    case (endpoint === 'rounds' && method === 'current'):
-      _this.handleRoundsCurrent(pool, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'rounds' && utils.checkNumber(method)):
-      _this.handleRoundsHeight(pool, method, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'rounds' && method === ''):
-      _this.handleRounds(pool, (code, message) => callback(code, message));
-      break;
-
-    // Statistics Endpoints
-    case (endpoint === 'statistics' && method === ''):
-      _this.handleStatistics(pool, (code, message) => callback(code, message));
-      break;
-
-    // Workers Endpoints
-    case (endpoint === 'workers' && method === 'active'):
-      _this.handleWorkersActive(pool, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'workers' && method.length >= 1):
-      _this.handleWorkersSpecific(pool, method, (code, message) => callback(code, message));
-      break;
-    case (endpoint === 'workers' && method === ''):
-      _this.handleWorkers(pool, (code, message) => callback(code, message));
-      break;
-
-    // Miscellaneous Endpoints
-    case (endpoint === '' && method === '' && pool === 'pools'):
-      callback(200, Object.keys(_this.poolConfigs));
-      break;
-    case (endpoint === '' && method === '' && !(miscellaneous.includes(pool))):
-      _this.handleStatistics(pool, (code, message) => callback(code, message));
-      break;
-    
-    // Unknown Endpoints
-    default:
-      callback(405, 'The requested method is not currently supported. Verify your input and try again');
+      case (type === 'pool'):
+        switch (true) {
+          case (endpoint === 'hashrate' && address.length > 0):
+              _this.handleBlocksConfirmed(pool, address, (code, message) => callback(code, message));
+            break;
+          default:
+            callback(405, 'The requested endpoint does not exist. Verify your input and try again');
+            break;
+        }
+        break;
+      case (type === 'miner'):
+        switch (true) {
+          case (endpoint === 'chart' && address.length > 0):
+            _this.minerChart(pool, address, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'payments' && address.length > 0):
+            _this.minerPayments(pool, address, page, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'paymentStats' && address.length > 0):
+            _this.minerPaymentStats(pool, address, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'stats' && address.length > 0):
+            _this.minerStats(pool, address, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'workerCount' && address.length > 0):
+            _this.minerWorkerCount(pool, address, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'workers' && address.length > 0):
+            _this.minerWorkers(pool, address, (code, message) => callback(code, message));
+            break;
+          default:
+            callback(405, 'The requested endpoint does not exist. Verify your input and try again');
+            break;
+        }
+        break;
+      default:
+        callback(405, 'The requested endpoint does not exist. Verify your input and try again');
       break;
     }
   };
