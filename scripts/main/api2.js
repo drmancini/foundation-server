@@ -944,8 +944,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           .findAll({
             raw: true,
             attributes: ['transaction', 'paid', 'time'],
-            offset: page * 10,
-            limit: 10,
+            //offset: page * 10,
+            //limit: 10,
             where: {
               pool: pool,
               miner: address,
@@ -974,10 +974,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             });
           });
       });
-    
-
-    
-    
   };
 
   // API Endpoint for /miner/paymentStats for miner [address]

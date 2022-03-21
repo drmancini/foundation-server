@@ -8,6 +8,7 @@ const utils = require('./utils');
 const md5 = require('blueimp-md5');
 const { Sequelize, Op } = require('sequelize');
 const SharesModel = require('../../models/shares.model');
+// const BlocksModel = require('../../models/blocks.model');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -25,7 +26,9 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
   this.forkId = process.env.forkId;
 
   const sequelizeShares = SharesModel(sequelize, Sequelize);
+  // const sequelizeBlocks = BlocksModel(sequelize, Sequelize);
   /* istanbul ignore next */
+  // if (typeof(sequelizeShares) === 'function' && typeof(sequelizeBlocks) === 'function') {
   if (typeof(sequelizeShares) === 'function') {
     this.sequelize.sync({ force: false })
   };
@@ -199,9 +202,9 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
         block_type: blockType,
         share: hashrateShare,
         share_type: shareType,
-        miner_type: minerType,
+        //miner_type: minerType,
         ip_hash: md5(ip), // will ask for user IP to confirm settings (min. payment)
-        ip_hint: ip.split('.')[3], // will give this as hint to user
+        ip_hint: '*.*.*.' + ip.split('.')[3], // will give this as hint to user
       })
       .then( 
         sequelizeShares
@@ -307,6 +310,17 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
     } else if (shareData.transaction) {
       commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'invalid', 1]);
     }
+
+    // Write New Pending Block to Sequelize
+    // if (blockValid) {
+    //   sequelizeBlocks
+    //   .create({
+    //     pool: _this.pool,
+    //     block_type: blockType,
+    //     block: outputBlock,
+    //     block_category: 'pending',
+    //   })
+    // }
 
     return commands;
   };

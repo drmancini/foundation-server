@@ -8,9 +8,6 @@ const fs = require('fs');
 const path = require('path');
 const redis = require('redis');
 const Sequelize = require('sequelize');
-const SharesModel = require('../../models/shares.model');
-const PaymentsModel = require('../../models/payments.model');
-const UsersModel = require('../../models/users.model');
 
 ////////////////////////////////////////////////////////////////////////////////
 
