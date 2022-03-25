@@ -836,7 +836,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       .then((data) => {
         const output = [];
         const minerHashrateArray = [];
-        const movingAverageSteps = 5;
+        const movingAverageSteps = 10;
         let firstShare = true;
         let validShares = 0;
         let invalidShares = 0;
@@ -1242,16 +1242,45 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
   };
 
+  // API Endpoint for /pool/hashrate
+  this.poolHashrate = function(pool, callback) {
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
+    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
+    sequelizeShares
+      .findAll({
+        raw: true,
+        attributes: ['share'],
+        where: {
+          pool: pool,
+          block_type: 'primary',
+          share_type: 'valid',
+        }
+      })
+      .catch((err) => {
+        callback(400, [] );
+      })
+      .then((data) => {
+        let poolWork = 0;
+        const apiData = data.filter((share) => share.share.time >= (hashrateWindowTime * 1000));
+        apiData.forEach((share) => {
+          const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
+          poolWork += work;
+        });
+        const output = {
+          total: poolWork * multiplier / hashrateWindow,
+        };
+        callback(200, output );
+      });
+  };
+
   // API Endpoint for /pool/hashrateChart
   this.poolHashrateChart = function(pool, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const tenMinutes = 1000 * 60 * 10;
     const maxSteps = 24 * 6;
-    const lastTimestamp = Math.floor(Date.now() / tenMinutes) * tenMinutes;
-    console.log('now: ' + Date.now());
-    console.log('last: ' + lastTimestamp);
-    
     const output = [];
     
     sequelizeShares
@@ -1276,105 +1305,37 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           const outputShare = JSON.stringify(share.share);
           shares.push(outputShare);
         })
-        const test = utils.listIdentifiers(shares);
-
-        const firstShare = JSON.parse(shares[0]);
+        const identifiers = utils.listIdentifiers(shares);
         const lastShare = JSON.parse(shares[shares.length - 1]);
         const lastTimestamp = Math.floor(lastShare.time / tenMinutes) * tenMinutes;
-        const firstTimestamp = lastTimestamp - tenMinutes * maxSteps
+        let workTimestamp = lastTimestamp - tenMinutes * maxSteps
 
         for (let i = 0; i < maxSteps; i++) {
-          
+          const shareData = data.filter((share) => share.share.time >= workTimestamp && share.share.time < workTimestamp + tenMinutes);
+          const outputObject = {
+            timestamp: 0,
+            region: {},
+            total: 0
+          }
+
+          let totalWork = 0;
+
+          identifiers.forEach((identifier) => {
+            const processShares = shareData.filter((share) => share.share.identifier === identifier);
+            let work = 0;
+            processShares.forEach((share) => {
+              work += share.share.work;
+              totalWork += share.share.work;
+            })
+            outputObject.region[identifier] = work * multiplier / tenMinutes * 1000;
+          })
+
+          outputObject.timestamp = workTimestamp;
+          outputObject.total = totalWork * multiplier / tenMinutes * 1000;
+
+          output[i] = outputObject;
+          workTimestamp += tenMinutes;
         }
-        
-
-        console.log(test);
-        //console.log(shares);
-        //let firstShare = true;
-        let workingStep = 0;
-        let timestampDataSteps;
-        let workingTimestamp;
-        
-        const regionTemplate = {};
-        data.forEach((share) => {
-          const identifier = share.share.identifier;
-          if (!regionTemplate[identifier]) {
-            regionTemplate[identifier] = 0;
-          }
-        })
-
-        const outputTemplate = {
-          timestamp: 0,
-          region: regionTemplate,
-          total: 0,
-          shares: 0,
-        };
-
-        let testCounter = 0;
-
-        data.forEach((share) => {
-          const identifier = share.share.identifier;
-          const shareTimestamp = share.share.time;
-
-          if (outputObject.total)
-
-          if (true) {
-            if (!shareTimestamp) {
-              timestampDataSteps = 0;  
-            } else {
-              timestampDataSteps = Math.floor((lastTimestamp - shareTimestamp) / tenMinutes) * tenMinutes;
-              timestampDataSteps = (timestampDataSteps >= maxSteps) ? maxSteps : timestampDataSteps;
-            }
-            console.log('steps: ' + timestampDataSteps);
-            workingTimestamp = lastTimestamp - (timestampDataSteps * tenMinutes);
-            
-            // fill empty steps with zero values
-            if (timestampDataSteps < maxSteps) {
-              const missingSteps = maxSteps - timestampDataSteps;
-              let tempTimestamp = workingTimestamp - ((maxSteps - timestampDataSteps) * tenMinutes);
-
-              // for (let i = 0; i < missingSteps; i++) {
-              for (let i = 0; i < 0; i++) {  
-                const outputObject = outputTemplate;
-                outputObject.timestamp = tempTimestamp / 1000,
-                output.push(outputObject);
-                tempTimestamp += tenMinutes;
-              }
-            }
-            //firstShare = false;
-          }
-
-          //console.log('working: ' + workingTimestamp);
-          
-          if (shareTimestamp >= workingTimestamp && shareTimestamp < (workingTimestamp + tenMinutes)) {
-            const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
-            // outputTemplate.region[identifier] += work;
-            // outputTemplate.total += work;
-            // outputTemplate.shares += 1;
-          } else if (shareTimestamp >= (workingTimestamp + tenMinutes)) {
-            const outputObject = outputTemplate;
-            outputObject.timestamp = workingTimestamp;
-            output.push(outputObject);
-            
-            
-            // outputTemplate.timestamp = workingTimestamp / 1000;
-            // Object.keys(outputTemplate.region).forEach((region) => {
-            //   region = (region * multiplier) / tenMinutes * 1000;
-            // })
-            // outputTemplate.total = (outputTemplate.total * multiplier) / tenMinutes * 1000;
-            
-            // output.push(outputTemplate);
-            testCounter += 1;
-            console.log(testCounter);
-
-            //outputTemplate.timestamp = 0;
-            // outputTemplate.region = regionTemplate;
-            
-            
-            workingTimestamp += tenMinutes;
-            console.log(workingTimestamp);
-          }
-        })
 
         callback(200, output );
       });
@@ -1511,10 +1472,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           case (endpoint === 'hashrate' && address.length > 0):
             _this.handleBlocksConfirmed(pool, address, (code, message) => callback(code, message));
             break;
+          case (endpoint === 'hashrate'):
+            _this.poolHashrate(pool, (code, message) => callback(code, message));
+            break;
           case (endpoint === 'hashrateChart'):
             _this.poolHashrateChart(pool, (code, message) => callback(code, message));
             break;
-            
           case (endpoint === 'minerCount'):
             _this.poolMinerCount(pool, (code, message) => callback(code, message));
             break;  
