@@ -1457,7 +1457,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       address = utils.validateInput(req.query.address || '');
       page = utils.validateInput(req.query.page || '');
     }
-    console.log('params: ' + JSON.stringify(req.params));
 
     // Check if Requested Pool Exists
     if (!(pool in _this.poolConfigs) && !(miscellaneous.includes(pool))) {
