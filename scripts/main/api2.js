@@ -1399,6 +1399,69 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
   };
 
+  // API Endpoint for /pool/topMiners
+  this.poolTopMiners = function(pool, callback) {
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
+    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    sequelizeShares
+      .findAll({
+        raw: true,
+        attributes: ['share', 'share_type'],
+        where: {
+          pool: pool,
+          share_type: 'valid', 
+          share: {
+            time: {
+              [Op.gte]: hashrateWindowTime,
+            },
+          }, 
+        },
+      })
+      .then((data) => {
+        const miners = {};
+        const tempArray = [];
+
+        data.forEach((share) => {
+          if (share.share.worker) {
+            const miner = share.share.worker.split('.')[0];
+            const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
+            if (miner in miners) {
+              miners[miner] += work;
+            } else {
+              miners[miner] = 0;
+            }
+          }  
+        });
+        
+        for (let entry in miners) {
+          const minerHashrate = miners[entry] * multiplier / hashrateWindowTime * 1000;
+          tempArray.push({miner: entry, hashrate: minerHashrate });
+        }
+
+        tempArray.sort((a,b) => {b.hashrate - a.hashrate});
+        const output = tempArray.slice(0, 10);
+
+        output.forEach((miner) => {
+          const workers = [];
+          const shares = data.filter((share) => share.share.worker.split('.')[0] == miner.miner && share.share.work > 0);
+          shares.forEach((share) => {
+            const worker = share.share.worker.split('.')[1];
+            if (!workers.includes(worker)) {
+              workers.push(worker);
+            }
+          });
+          let minerIndex = output.findIndex((obj => obj.miner == miner.miner));
+          output[minerIndex].workerCount = workers.length;  
+        });
+        
+        callback(200, {
+          output,
+        });
+      });
+  };
+
   // API Endpoint for /pool/workerCount
   this.poolWorkerCount = function(pool, callback) {
     const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
@@ -1493,9 +1556,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           case (endpoint === 'averageLuck'):
             _this.poolAverageLuck(pool, (code, message) => callback(code, message));
             break;
-          case (endpoint === 'hashrate' && address.length > 0):
-            _this.handleBlocksConfirmed(pool, address, (code, message) => callback(code, message));
-            break;
           case (endpoint === 'hashrate'):
             _this.poolHashrate(pool, (code, message) => callback(code, message));
             break;
@@ -1504,7 +1564,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'minerCount'):
             _this.poolMinerCount(pool, (code, message) => callback(code, message));
-            break;  
+            break;
+          case (endpoint === 'topMiners'):
+            _this.poolTopMiners(pool, (code, message) => callback(code, message));
+            break;
           case (endpoint === 'workerCount'):
             _this.poolWorkerCount(pool, (code, message) => callback(code, message));
             break;
