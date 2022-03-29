@@ -1414,7 +1414,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           share_type: 'valid', 
           share: {
             time: {
-              [Op.gte]: hashrateWindowTime,
+              [Op.gte]: hashrateWindowTime / 1000,
             },
           }, 
         },
