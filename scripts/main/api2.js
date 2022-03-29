@@ -1436,7 +1436,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         });
         
         for (let entry in miners) {
-          const minerHashrate = miners[entry] * multiplier / hashrateWindow * 1000;
+          const minerHashrate = miners[entry] * multiplier / hashrateWindow;
           tempArray.push({miner: entry, hashrate: minerHashrate });
         }
 
