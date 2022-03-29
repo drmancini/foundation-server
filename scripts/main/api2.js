@@ -1441,7 +1441,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           tempArray.push({miner: entry, hashrate: minerHashrate });
         }
 
-        console.log(miners);
+        console.log(tempArray);
 
         tempArray.sort((a,b) => {b.hashrate - a.hashrate});
         const output = tempArray.slice(0, 10);
