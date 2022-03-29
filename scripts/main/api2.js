@@ -1401,10 +1401,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /pool/topMiners
   this.poolTopMiners = function(pool, callback) {
-    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
-    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
+    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
     sequelizeShares
       .findAll({
         raw: true,
@@ -1427,13 +1427,14 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           if (share.share.worker) {
             const miner = share.share.worker.split('.')[0];
             const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
-            if (miner in miners) {
-              miners[miner] += work;
-            } else {
+            if (!(miner in miners)) {
               miners[miner] = 0;
             }
+            miners[miner] += work;
           }  
         });
+        
+        console.log(miners);
         
         for (let entry in miners) {
           const minerHashrate = miners[entry] * multiplier / hashrateWindow;
