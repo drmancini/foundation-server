@@ -824,6 +824,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             worker: {
               [Op.like]: address + '%',
             },
+            time: {
+              [Op.gte]: 25 * 60 * 60 * 1000,
+            },
           }, 
         },
         order: [
@@ -1035,6 +1038,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             worker: {
               [Op.like]: address + '%',
             },
+            time: {
+              [Op.gte]: 25 * 60 * 60 * 1000,
+            },
           }, 
         },
         order: [
@@ -1125,6 +1131,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             worker: {
               [Op.like]: address + '%',
             },
+            time: {
+              [Op.gte]: 25 * 60 * 60 * 1000,
+            },
           }, 
         },
         order: [
@@ -1184,26 +1193,62 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
   };
 
+  // API Endpoint for /miner/workerCount for miner [address]
   this.minerWorkerCount = function(pool, address, callback) {
-    const config = _this.poolConfigs[pool] || {};
-    const hashrateWindow = config.statistics.hashrateWindow;
-    const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
-    const commands = [
-      ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
-      ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
-      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
-      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf'],
-    ];
-    _this.executeCommands(commands, (results) => {
-      callback(200, {
-        primary: {
-          workers: utils.combineWorkers(results[0], results[1], address),
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
+    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
+    sequelizeShares
+      .findAll({
+        raw: true,
+        attributes: ['share', 'share_type'],
+        where: {
+          pool: pool,
+          share: {
+            worker: {
+              [Op.like]: address + '%',
+            },
+          }, 
         },
-        auxiliary: {
-          workers: utils.combineWorkers(results[2], results[3], address),
-        }
+        order: [
+          ['share.time', 'desc']
+        ],
+      })
+      .then((data) => {
+        const workers = [];
+        let workersOnline = 0;
+
+        data.forEach((share) => {
+          const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
+          const worker = share.share.worker.split('.')[1];
+          let workerIndex = workers.findIndex((obj => obj.name == worker));
+          const lastIndex = workers.length - 1;
+          if (workerIndex == -1) {
+            const workerData = {
+              name: worker,
+              isOnline: false,
+            };
+            workers.push(workerData);
+            workerIndex = lastIndex + 1;
+          }  
+          if (share.share_type === 'valid' && (share.share.time / 1000) >= hashrateWindowTime && work > 0) {
+            workers[workerIndex].isOnline = true;
+          }
+        });
+
+        const totalWorkers = workers.length;
+        workers.forEach((worker) => {
+          if (worker.isOnline == true) {
+            workersOnline += 1;
+          }
+        });
+
+        const output = {
+          workersOnline: workersOnline,
+          workersOffline: totalWorkers - workersOnline,
+        };
+
+        callback(200, output );
       });
-    }, callback);
   };
 
   // API Endpoint for /pool/averageLuck
@@ -1242,6 +1287,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           pool: pool,
           block_type: 'primary',
           share_type: 'valid',
+          share: {
+            time: {
+              [Op.gte]: 25 * 60 * 60 * 1000,
+            },
+          }, 
         }
       })
       .catch((err) => {
@@ -1277,6 +1327,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           pool: pool,
           block_type: 'primary',
           share_type: 'valid',
+          share: {
+            time: {
+              [Op.gte]: 25 * 60 * 60 * 1000,
+            },
+          }, 
         },
         order: [
           ['share.time', 'asc']

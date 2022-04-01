@@ -92,13 +92,11 @@ exports.countOccurences = function(array, value) {
 };
 
 // Combine Solo/Shared Workers Count
-exports.combineWorkers = function(shared, solo, address) {
+exports.combineWorkers = function(shared, solo) {
   let output = 0;
   if (shared || solo) {
     shared = shared ? shared.map((share) => JSON.parse(share)) : [];
-    shared = address ? shared.filter((share) => share.worker.split('.')[0] == address) : shared;
     solo = solo ? solo.map((share) => JSON.parse(share)) : [];
-    solo = address ? solo.filter((share) => share.worker.split('.')[0] == address) : solo;
     output += exports.countWorkers(shared);
     output += exports.countWorkers(solo);
   }
