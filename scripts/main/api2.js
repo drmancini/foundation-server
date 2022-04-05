@@ -1273,6 +1273,38 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
+  // API Endpoint for /pool/hashrate2
+  /* istanbul ignore next */
+  this.poolHashrate2 = function(pool, callback) {
+    const config = _this.poolConfigs[pool] || {};
+    const algorithm = config.primary.coin.algorithms.mining;
+    const hashrateWindow = config.statistics.hashrateWindow;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
+    const commands = [
+      ['zrangebyscore', `${ pool }:rounds:primary:current:shared:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:primary:current:solo:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:shared:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:auxiliary:current:solo:hashrate`, windowTime, '+inf'],
+    ];
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
+        primary: {
+          hashrate: {
+            shared: (multiplier * utils.processWork(results[0])) / hashrateWindow,
+            solo: (multiplier * utils.processWork(results[1])) / hashrateWindow,
+          },
+        },
+        auxiliary: {
+          hashrate: {
+            shared: (multiplier * utils.processWork(results[2])) / hashrateWindow,
+            solo: (multiplier * utils.processWork(results[3])) / hashrateWindow,
+          },
+        }
+      });
+    }, callback);
+  };
+
   // API Endpoint for /pool/hashrate
   this.poolHashrate = function(pool, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
@@ -1555,6 +1587,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'hashrate'):
             _this.poolHashrate(pool, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'hashrate2'):
+            _this.poolHashrate2(pool, (code, message) => callback(code, message));
             break;
           case (endpoint === 'hashrateChart'):
             _this.poolHashrateChart(pool, (code, message) => callback(code, message));
