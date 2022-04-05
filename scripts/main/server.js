@@ -89,8 +89,8 @@ const PoolServer = function (logger, client, sequelize) {
     /* istanbul ignore next */
     if (_this.portalConfig.server.tls) {
       const options = {
-        key: fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.key)),
-        cert: fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.cert)),
+        key: fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.apikey)),
+        cert: fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.apicert)),
       };
       logger.debug('Server', 'Website', 'Enabling TLS/SSL encryption on API endpoints');
       this.server = https.createServer(options, app);
