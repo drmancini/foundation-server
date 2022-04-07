@@ -115,7 +115,7 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
     let shares;
     const commands = [];
     const dateNow = Date.now();
-    const yesterdayAndMore = dateNow - 1000 * 60 * 60 * 24;
+    const yesterdayAndMore = 1000 * 60 * 60 * 25;
     const difficulty = (shareType === 'valid' ? shareData.difficulty : -shareData.difficulty);
     const minerType = isSoloMining ? 'solo' : 'shared';
     const identifier = shareData.identifier || '';
