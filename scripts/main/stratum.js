@@ -132,7 +132,7 @@ const PoolStratum = function (logger, poolConfig, portalConfig, poolShares, pool
     poolStratum.on('share', (shareData, shareType, blockValid, callback) => {
 
       // Save Share Data Check to Historic Database
-      if (shareType == 'stale' || shareType == 'invalid') {
+      
         sequelizeSharesCheck
           .create({
             pool: _this.pool,
@@ -143,7 +143,7 @@ const PoolStratum = function (logger, poolConfig, portalConfig, poolShares, pool
             //ip_hash: md5(ip), // will ask for user IP to confirm settings (min. payment)
             //ip_hint: '*.*.*.' + ip.split('.')[3], // will give this as hint to user
           });
-      }
+      
 
       _this.handleShares(shareData, shareType, blockValid, callback);
     });
