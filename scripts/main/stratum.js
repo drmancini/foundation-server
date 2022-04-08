@@ -6,7 +6,7 @@
 
 const Stratum = require('foundation-stratum');
 const { Sequelize, Op } = require('sequelize');
-const SharesCheckModel = require('../../models/sharescheck.model');
+const SharesCheckModel = require('../../models/shares_check.model');
 
 ////////////////////////////////////////////////////////////////////////////////
 
