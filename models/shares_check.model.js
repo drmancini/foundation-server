@@ -15,7 +15,7 @@ module.exports = function( sequelize, DataTypes ) {
       },
       block_valid: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       share: {
         type: DataTypes.JSONB,
