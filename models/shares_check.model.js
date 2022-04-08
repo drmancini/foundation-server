@@ -8,22 +8,22 @@
 /* istanbul ignore next */
 module.exports = function( sequelize, DataTypes ) {
   return sequelize.define(
-    'shares-check', {
+    'sharescheck', {
       pool: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
-      block_valid: {
+      block_type: {
         type: DataTypes.STRING,
         allowNull: true,
       },
       share: {
         type: DataTypes.JSONB,
-        allowNull: false,
+        allowNull: true,
       },
       share_type: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
     });
 };

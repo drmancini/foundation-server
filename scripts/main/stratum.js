@@ -6,7 +6,7 @@
 
 const Stratum = require('foundation-stratum');
 const { Sequelize, Op } = require('sequelize');
-const SharesCheckModel = require('../../models/shares_check.model');
+const SharesCheckModel = require('../../models/sharescheck.model');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -134,15 +134,15 @@ const PoolStratum = function (logger, poolConfig, portalConfig, poolShares, pool
       // Save Share Data Check to Historic Database
       if (shareType == 'stale' || shareType == 'invalid') {
         sequelizeSharesCheck
-        .create({
-          pool: _this.pool,
-          blockValid: blockValid,
-          share: shareData,
-          share_type: shareType,
-          //miner_type: minerType,
-          //ip_hash: md5(ip), // will ask for user IP to confirm settings (min. payment)
-          //ip_hint: '*.*.*.' + ip.split('.')[3], // will give this as hint to user
-        });
+          .create({
+            pool: _this.pool,
+            blockValid: blockValid,
+            share: shareData,
+            share_type: shareType,
+            //miner_type: minerType,
+            //ip_hash: md5(ip), // will ask for user IP to confirm settings (min. payment)
+            //ip_hint: '*.*.*.' + ip.split('.')[3], // will give this as hint to user
+          });
       }
 
       _this.handleShares(shareData, shareType, blockValid, callback);
