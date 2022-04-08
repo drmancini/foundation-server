@@ -136,7 +136,7 @@ const PoolStratum = function (logger, poolConfig, portalConfig, poolShares, pool
         sequelizeSharesCheck
           .create({
             pool: _this.pool,
-            blockValid: blockValid,
+            block_type: blockValid,
             share: shareData,
             share_type: shareType,
             //miner_type: minerType,
