@@ -5,8 +5,8 @@
  */
 
 const Stratum = require('foundation-stratum');
-const { Sequelize, Op } = require('sequelize');
-const SharesCheckModel = require('../../models/shares_check.model');
+// const { Sequelize, Op } = require('sequelize');
+// const SharesCheckModel = require('../../models/shares_check.model');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -14,14 +14,14 @@ const SharesCheckModel = require('../../models/shares_check.model');
 const PoolStratum = function (logger, poolConfig, portalConfig, poolShares, poolStatistics, sequelize) {
 
   // test
-  this.sequelize = sequelize;
-  const sequelizeSharesCheck = SharesCheckModel(sequelize, Sequelize);
+  // this.sequelize = sequelize;
+  // const sequelizeSharesCheck = SharesCheckModel(sequelize, Sequelize);
   // const sequelizeBlocks = BlocksModel(sequelize, Sequelize);
   /* istanbul ignore next */
   // if (typeof(sequelizeShares) === 'function' && typeof(sequelizeBlocks) === 'function') {
-  if (typeof(sequelizeSharesCheck) === 'function') {
-    this.sequelize.sync({ force: false })
-  };
+  // if (typeof(sequelizeSharesCheck) === 'function') {
+    // this.sequelize.sync({ force: false })
+  // };
 
   const _this = this;
   process.setMaxListeners(0);
@@ -133,16 +133,13 @@ const PoolStratum = function (logger, poolConfig, portalConfig, poolShares, pool
 
       // Save Share Data Check to Historic Database
       
-        sequelizeSharesCheck
-          .create({
-            pool: _this.pool,
-            block_type: blockValid,
-            share: shareData,
-            share_type: shareType,
-            //miner_type: minerType,
-            //ip_hash: md5(ip), // will ask for user IP to confirm settings (min. payment)
-            //ip_hint: '*.*.*.' + ip.split('.')[3], // will give this as hint to user
-          });
+      // sequelizeSharesCheck
+      //   .create({
+      //     pool: _this.pool,
+      //     block_type: blockValid,
+      //     share: shareData,
+      //     share_type: shareType,
+      //   });
       
 
       _this.handleShares(shareData, shareType, blockValid, callback);
