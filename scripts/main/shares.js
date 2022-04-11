@@ -210,17 +210,17 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
         ip_hash: md5(ip), // will ask for user IP to confirm settings (min. payment)
         ip_hint: '*.*.*.' + ip.split('.')[3], // will give this as hint to user
       })
-      .then( 
-        sequelizeShares
-          .destroy({
-            where: {
-              share: {
-                time: {
-                  [Op.lte]: (dateNow - yesterdayAndMore),
-                }
-              }
-            }
-          })
+      // .then( 
+      //   sequelizeShares
+      //     .destroy({
+      //       where: {
+      //         share: {
+      //           time: {
+      //             [Op.lte]: (dateNow - yesterdayAndMore),
+      //           }
+      //         }
+      //       }
+      //     })
       );
     
     return commands;
