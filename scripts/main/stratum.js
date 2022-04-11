@@ -5,23 +5,11 @@
  */
 
 const Stratum = require('foundation-stratum');
-// const { Sequelize, Op } = require('sequelize');
-// const SharesCheckModel = require('../../models/shares_check.model');
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Stratum Function
-const PoolStratum = function (logger, poolConfig, portalConfig, poolShares, poolStatistics, sequelize) {
-
-  // test
-  // this.sequelize = sequelize;
-  // const sequelizeSharesCheck = SharesCheckModel(sequelize, Sequelize);
-  // const sequelizeBlocks = BlocksModel(sequelize, Sequelize);
-  /* istanbul ignore next */
-  // if (typeof(sequelizeShares) === 'function' && typeof(sequelizeBlocks) === 'function') {
-  // if (typeof(sequelizeSharesCheck) === 'function') {
-    // this.sequelize.sync({ force: false })
-  // };
+const PoolStratum = function (logger, poolConfig, portalConfig, poolShares, poolStatistics) {
 
   const _this = this;
   process.setMaxListeners(0);
@@ -130,18 +118,6 @@ const PoolStratum = function (logger, poolConfig, portalConfig, poolShares, pool
       logger.debug(logSystem, logComponent, logSubCat, `Difficulty update to ${ diff } for worker: ${ JSON.stringify(workerName) }`);
     });
     poolStratum.on('share', (shareData, shareType, blockValid, callback) => {
-
-      // Save Share Data Check to Historic Database
-      
-      // sequelizeSharesCheck
-      //   .create({
-      //     pool: _this.pool,
-      //     block_type: blockValid,
-      //     share: shareData,
-      //     share_type: shareType,
-      //   });
-      
-
       _this.handleShares(shareData, shareType, blockValid, callback);
     });
     return poolStratum;
