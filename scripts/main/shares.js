@@ -209,7 +209,7 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
         //miner_type: minerType,
         ip_hash: md5(ip), // will ask for user IP to confirm settings (min. payment)
         ip_hint: '*.*.*.' + ip.split('.')[3], // will give this as hint to user
-      })
+      });
       // .then( 
       //   sequelizeShares
       //     .destroy({
@@ -221,113 +221,11 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
       //         }
       //       }
       //     })
-      );
+      // );
     
     return commands;
   };
 
-  // Manage Blocks Calculations
-  this.calculateBlocks = function(results, shareData, shareType, blockValid, isSoloMining) {
-
-    let shares;
-    const commands = [];
-    const dateNow = Date.now();
-    const blockType = shareData.blockType;
-    const difficulty = (shareType === 'valid' ? shareData.difficulty : -shareData.difficulty);
-    const minerType = isSoloMining ? 'solo' : 'shared';
-    const identifier = shareData.identifier || '';
-
-    const worker = ['share', 'primary'].includes(blockType) ? shareData.addrPrimary : shareData.addrAuxiliary;
-    const blockDifficulty = ['share', 'primary'].includes(blockType) ? shareData.blockDiffPrimary : shareData.blockDiffAuxiliary;
-
-    // Establish Previous Share Data
-    if (isSoloMining) {
-      shares = (['share', 'primary'].includes(blockType)) ? (results[2] || {}) : (results[3] || {});
-    } else {
-      shares = (['share', 'primary'].includes(blockType)) ? (results[0] || {}) : (results[1] || {});
-    }
-
-    // Establish Last Share Data for Miner
-    const lastShare = JSON.parse(shares[worker] || '{}');
-    const luck = _this.handleEffort(shares, worker, shareData, shareType, blockDifficulty, isSoloMining);
-
-    // Build Output Block
-    const outputBlock = {
-      time: dateNow,
-      height: shareData.height,
-      hash: shareData.hash,
-      reward: shareData.reward,
-      identifier: identifier,
-      transaction: shareData.transaction,
-      difficulty: blockDifficulty,
-      luck: luck,
-      worker: worker,
-      solo: isSoloMining,
-      round: _this.roundValue,
-    };
-
-    // Build Primary Output (Solo)
-    const outputShare = {
-      time: dateNow,
-      effort: 0,
-      identifier: identifier,
-      round: _this.roundValue,
-      solo: isSoloMining,
-      times: 0,
-      types: { valid: 0, invalid: 0, stale: 0 },
-      work: difficulty,
-      worker: worker,
-    };
-
-    // Build Secondary Output (Solo)
-    const roundShare = JSON.parse(JSON.stringify(outputShare));
-    roundShare.effort = luck;
-    roundShare.times = lastShare.times;
-    roundShare.types = lastShare.types;
-    roundShare.work = difficulty + (lastShare.work || 0);
-
-    // Check for Multiple Workers (Solo);
-    const workers = Object.keys(results[2] || {}).filter((result) => {
-      const address = worker ? worker.split('.')[0] : '';
-      return result.split('.')[0] === address;
-    });
-
-    // Don't Restart Round if Solo Block, Just Reset Workers
-    if (blockValid && isSoloMining) {
-      commands.push(['sadd', `${ _this.pool }:blocks:${ blockType }:pending`, JSON.stringify(outputBlock)]);
-      commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'valid', 1]);
-      commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:shares`, worker, JSON.stringify(roundShare)]);
-      workers.forEach((result) => {
-        outputShare.worker = result;
-        commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, result, JSON.stringify(outputShare)]);
-      });
-
-    // Handle Round Updates if Shared Block
-    } else if (blockValid) {
-      commands.push(['sadd', `${ _this.pool }:blocks:${ blockType }:pending`, JSON.stringify(outputBlock)]);
-      commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'valid', 1]);
-      commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:counts`]);
-      commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:shares`]);
-      process.send({ pool: _this.pool, type: 'roundUpdate' });
-
-    // Handle Invalid Block Submitted
-    } else if (shareData.transaction) {
-      commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'invalid', 1]);
-    }
-
-    // Write New Pending Block to Sequelize
-    // if (blockValid) {
-    //   sequelizeBlocks
-    //   .create({
-    //     pool: _this.pool,
-    //     block_type: blockType,
-    //     block: outputBlock,
-    //     block_category: 'pending',
-    //   })
-    // }
-
-    return commands;
-  };
 
   // Manage Worker Times
   this.buildSharesCommands = function(results, shareData, shareType, blockValid, isSoloMining) {
