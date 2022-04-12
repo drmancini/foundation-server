@@ -941,7 +941,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   this.minerPayments = function(pool, address, page, callback) {
     let totalItems;
     sequelizePayments
-      .count()
+      .count({
+        where: {
+          pool: pool,
+        }
+      })
       .then((itemCount) => {
         sequelizePayments
           .findAll({
