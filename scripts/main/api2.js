@@ -1031,6 +1031,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const hashrate12Window = 60 * 60 * 12;
     const hashrate12WindowTime = (((Date.now() / 1000) - hashrate12Window) | 0);
     const hashrate24Window = 60 * 60 * 24;
+    const hashrate24WindowTime = (((Date.now() / 1000) - hashrate24Window) | 0);
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     sequelizeShares
       .findAll({
