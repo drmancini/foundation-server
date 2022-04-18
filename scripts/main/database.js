@@ -79,7 +79,6 @@ const PoolDatabase = function(portalConfig) {
     connectionOptions.logging = false;
     connectionOptions.pool.idle = 200000;
     connectionOptions.pool.acquire = 1000000;
-    };
 
     const sequelize = new Sequelize(database, username, password, connectionOptions);
     return sequelize;
