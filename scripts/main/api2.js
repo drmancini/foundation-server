@@ -1043,7 +1043,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
               [Op.like]: address + '%',
             },
             time: {
-              [Op.gte]: 25 * 60 * 60 * 1000,
+              [Op.gte]: 24 * 60 * 60 * 1000,
             },
           }, 
         },
@@ -1073,7 +1073,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
               } else if (share.share.time / 1000 > hashrate12WindowTime && share.share.time / 1000 <= hashrateWindowTime) {
                 hashrate12Data += work;
                 hashrate24Data += work;
-              } else if (share.share.time / 1000 <= hashrate12WindowTime) {
+              } else if (share.share.time / 1000 > hashrate24WindowTime && share.share.time / 1000 <= hashrate12WindowTime) {
                 hashrate24Data += work;
               }
               break;
