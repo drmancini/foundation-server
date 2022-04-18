@@ -77,8 +77,10 @@ const PoolDatabase = function(portalConfig) {
     connectionOptions.port = _this.portalConfig.postgresql.port;
     connectionOptions.dialect = 'postgres';
     connectionOptions.logging = false;
-    connectionOptions.pool.idle = 200000;
-    connectionOptions.pool.acquire = 1000000;
+    connectionOptions.pool = {
+      idle: 200000,
+      acquire: 1000000
+    };
 
     const sequelize = new Sequelize(database, username, password, connectionOptions);
     return sequelize;
