@@ -1455,9 +1455,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         outputObject.total = total;
         output.push(outputObject);
       });
-      callback(200, {
-        output
-      });
+      callback(200, output);
     }, callback);   
   };
 
