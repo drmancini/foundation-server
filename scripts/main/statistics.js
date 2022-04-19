@@ -36,33 +36,39 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   _this.hashrateWindow = _this.poolConfig.statistics.hashrateWindow || 300;
   _this.historicalWindow = _this.poolConfig.statistics.historicalWindow || 86400;
 
-  // Calculate Historical Information
+  // Calculate Historical Information TEST
   this.calculateHistoricalInfo = function(results, blockType) {
-
     const commands = [];
     const dateNow = Date.now();
     const algorithm = _this.poolConfig.primary.coin.algorithms.mining;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    
+    const tenMinutes = 10 * 60 * 1000;
+    const potentialTimestamp = Math.floor(dateNow / tenMinutes) * tenMinutes;
+    const lastTimestamp = results[4][1] * 1000;
 
-    // Build Historical Output
-    const output = {
-      time: dateNow,
-      hashrate: {
-        shared: utils.processIdentifiers(results[1], multiplier, _this.hashrateWindow),
-        solo: utils.processIdentifiers(results[2], multiplier, _this.hashrateWindow),
-      },
-      network: {
-        difficulty: parseFloat((results[0] || {}).difficulty || 0),
-        hashrate: parseFloat((results[0] || {}).hashrate || 0),
-      },
-      status: {
-        miners: utils.combineMiners(results[1], results[2]),
-        workers: utils.combineWorkers(results[1], results[2]),
-      },
-    };
+    if (lastTimestamp < potentialTimestamp || isNaN(lastTimestamp)) {
+      // Build Historical Output
+      const output = {
+        time: potentialTimestamp,
+        hashrate: {
+          shared: utils.processIdentifiers(results[1], multiplier, _this.hashrateWindow),
+          solo: utils.processIdentifiers(results[2], multiplier, _this.hashrateWindow),
+        },
+        network: {
+          difficulty: parseFloat((results[0] || {}).difficulty || 0),
+          hashrate: parseFloat((results[0] || {}).hashrate || 0),
+        },
+        status: {
+          miners: utils.combineMiners(results[1], results[2]),
+          workers: utils.combineWorkers(results[1], results[2]),
+        },
+      };
 
-    // Handle Historical Updates
-    commands.push(['zadd', `${ _this.pool }:statistics:${ blockType }:historical`, dateNow / 1000 | 0, JSON.stringify(output)]);
+      // Handle Historical Updates
+      commands.push(['zadd', `${ _this.pool }:statistics:${ blockType }:historical`, potentialTimestamp / 1000 | 0, JSON.stringify(output)]);
+    } 
+
     return commands;
   };
 
@@ -99,7 +105,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       ['hgetall', `${ _this.pool }:statistics:${ blockType }:network`],
       ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, windowTime, '+inf'],
       ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:solo:hashrate`, windowTime, '+inf'],
-      ['zremrangebyscore', `${ _this.pool }:statistics:${ blockType }:historical`, 0, `(${ windowHistorical }`]];
+      ['zremrangebyscore', `${ _this.pool }:statistics:${ blockType }:historical`, 0, `(${ windowHistorical }`],
+      ['zrevrangebyscore', `${ _this.pool }:statistics:${ blockType }:historical`, '+inf', '-inf', 'WITHSCORES', 'LIMIT', 0, 1]]; 
     _this.executeCommands(historicalLookups, (results) => {
       const commands = _this.calculateHistoricalInfo(results, blockType);
       callback(commands);

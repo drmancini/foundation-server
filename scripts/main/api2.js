@@ -1419,6 +1419,48 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
   };
 
+  // this.handleHistorical = function(pool, callback) {
+  //   const historicalWindow = _this.poolConfigs[pool].statistics.historicalWindow;
+  //   const windowHistorical = (((Date.now() / 1000) - historicalWindow) | 0).toString();
+  //   const commands = [
+  //     ['zrangebyscore', `${ pool }:statistics:primary:historical`, windowHistorical, '+inf'],
+  //     ['zrangebyscore', `${ pool }:statistics:auxiliary:historical`, windowHistorical, '+inf']];
+  //   _this.executeCommands(commands, (results) => {
+  //     callback(200, {
+  //       primary: utils.processHistorical(results[0]),
+  //       auxiliary: utils.processHistorical(results[1]),
+  //     });
+  //   }, callback);
+  // };
+
+  // API Endpoint for /pool/hashrateChart2
+  this.poolHashrateChart2 = function(pool, callback) {
+    const historicalWindow = _this.poolConfigs[pool].statistics.historicalWindow;
+    const windowHistorical = (((Date.now() / 1000) - historicalWindow) | 0).toString();
+    const commands = [
+      ['zrangebyscore', `${ pool }:statistics:primary:historical`, windowHistorical, '+inf'],
+      ['zrangebyscore', `${ pool }:statistics:auxiliary:historical`, windowHistorical, '+inf']];
+    _this.executeCommands(commands, (results) => { 
+      const output = [];
+      results[0].forEach((entry) => {
+        const data = JSON.parse(entry);
+        const outputObject = {};
+        outputObject.timestamp = data.time;
+        outputObject.region = {};
+        let total = 0;
+        data.hashrate.shared.forEach((identifier) => {
+          outputObject.region[identifier.identifier] = identifier.hashrate; 
+          total += identifier.hashrate;
+        });
+        outputObject.total = total;
+        output.push(outputObject);
+      });
+      callback(200, {
+        output
+      });
+    }, callback);   
+  };
+
   // API Endpoint for /pool/minerCount
   this.poolMinerCount = function(pool, callback) {
     const config = _this.poolConfigs[pool] || {};
@@ -1594,6 +1636,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'hashrateChart'):
             _this.poolHashrateChart(pool, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'hashrateChart2'):
+            _this.poolHashrateChart2(pool, (code, message) => callback(code, message));
             break;
           case (endpoint === 'minerCount'):
             _this.poolMinerCount(pool, (code, message) => callback(code, message));
