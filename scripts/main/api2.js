@@ -1350,91 +1350,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /pool/hashrateChart
   this.poolHashrateChart = function(pool, callback) {
-    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
-    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
-    const tenMinutes = 1000 * 60 * 10;
-    const maxSteps = 24 * 6;
-    const output = [];
-    
-    sequelizeShares
-      .findAll({
-        raw: true,
-        attributes: ['share'],
-        where: {
-          pool: pool,
-          block_type: 'primary',
-          share_type: 'valid',
-          share: {
-            time: {
-              [Op.gte]: 25 * 60 * 60 * 1000,
-            },
-          }, 
-        },
-        order: [
-          ['share.time', 'asc']
-        ],
-      })
-      .catch((err) => {
-        callback(400, [] );
-      })
-      .then((data) => {
-        const shares = [];
-        data.forEach((share) => {
-          const outputShare = JSON.stringify(share.share);
-          shares.push(outputShare);
-        })
-        const identifiers = utils.listIdentifiers(shares);
-        const lastShare = JSON.parse(shares[shares.length - 1]);
-        const lastTimestamp = Math.floor(lastShare.time / tenMinutes) * tenMinutes;
-        let workTimestamp = lastTimestamp - tenMinutes * maxSteps
-
-        for (let i = 0; i < maxSteps; i++) {
-          const shareData = data.filter((share) => share.share.time >= workTimestamp && share.share.time < workTimestamp + tenMinutes);
-          const outputObject = {
-            timestamp: 0,
-            region: {},
-            total: 0
-          }
-
-          let totalWork = 0;
-
-          identifiers.forEach((identifier) => {
-            const processShares = shareData.filter((share) => share.share.identifier === identifier);
-            let work = 0;
-            processShares.forEach((share) => {
-              work += share.share.work;
-              totalWork += share.share.work;
-            })
-            outputObject.region[identifier] = work * multiplier / tenMinutes * 1000;
-          })
-
-          outputObject.timestamp = workTimestamp;
-          outputObject.total = totalWork * multiplier / tenMinutes * 1000;
-
-          output[i] = outputObject;
-          workTimestamp += tenMinutes;
-        }
-
-        callback(200, output );
-      });
-  };
-
-  // this.handleHistorical = function(pool, callback) {
-  //   const historicalWindow = _this.poolConfigs[pool].statistics.historicalWindow;
-  //   const windowHistorical = (((Date.now() / 1000) - historicalWindow) | 0).toString();
-  //   const commands = [
-  //     ['zrangebyscore', `${ pool }:statistics:primary:historical`, windowHistorical, '+inf'],
-  //     ['zrangebyscore', `${ pool }:statistics:auxiliary:historical`, windowHistorical, '+inf']];
-  //   _this.executeCommands(commands, (results) => {
-  //     callback(200, {
-  //       primary: utils.processHistorical(results[0]),
-  //       auxiliary: utils.processHistorical(results[1]),
-  //     });
-  //   }, callback);
-  // };
-
-  // API Endpoint for /pool/hashrateChart2
-  this.poolHashrateChart2 = function(pool, callback) {
     const historicalWindow = _this.poolConfigs[pool].statistics.historicalWindow;
     const windowHistorical = (((Date.now() / 1000) - historicalWindow) | 0).toString();
     const commands = [
@@ -1636,7 +1551,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.poolHashrateChart(pool, (code, message) => callback(code, message));
             break;
           case (endpoint === 'hashrateChart2'):
-            _this.poolHashrateChart2(pool, (code, message) => callback(code, message));
+            _this.poolHashrateChart(pool, (code, message) => callback(code, message));
             break;
           case (endpoint === 'minerCount'):
             _this.poolMinerCount(pool, (code, message) => callback(code, message));
