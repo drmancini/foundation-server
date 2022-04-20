@@ -1330,10 +1330,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const commands = [
       ['smembers', `${ pool }:blocks:${ blockType }:confirmed`],
       ['smembers', `${ pool }:blocks:${ blockType }:kicked`],
-      ['smembers', `${ pool }:blocks:${ blockType }:pending`]];
+      ['smembers', `${ pool }:blocks:${ blockType }:pending`],
+      ['hgetall', `${ pool }:statistics:${ blockType }:network`]];
 
     _this.executeCommands(commands, (results) => {
       result = {};
+      const currentBlock = results[3].height;
       
       const confirmed = results[0]
         .map((block) => JSON.parse(block));
@@ -1356,7 +1358,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const pending = results[2]
         .map((block) => JSON.parse(block));
       pending.forEach((block) => {
-        block.pending = true;
+        block.pending = currentBlock - block.height < 101 ? true : false;
         block.miner = block.worker.split('.')[0];
         delete block['worker'];
         block.type = 'block';
