@@ -210,7 +210,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
             logger.debug('Statistics', _this.pool, `Finished deleting share cache for ${ blockType } configuration.`);
           }
         })
-    }, 3 * 60 * 1000);
+    }, _this.historicalInterval * 1000);
 
     // Handle Historical Data Interval
     setInterval(() => {

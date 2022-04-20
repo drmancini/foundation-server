@@ -1256,6 +1256,58 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
   };
 
+  // API Endpoint for /pool/blocks
+  this.poolBlocks = function(pool, callback, blockType = 'primary') {
+    const commands = [
+      ['smembers', `${ pool }:blocks:${ blockType }:confirmed`],
+      ['smembers', `${ pool }:blocks:${ blockType }:kicked`],
+      ['smembers', `${ pool }:blocks:${ blockType }:pending`]];
+    _this.executeCommands(commands, (results) => {
+      result = {};
+      
+      const confirmed = results[0]
+        .map((block) => JSON.parse(block));
+      confirmed.forEach((block) => {
+        block.worker = block.worker.split('.')[0];
+        block.type = 'block';
+      });
+
+      const kicked = results[1]
+        .map((block) => JSON.parse(block));
+      kicked.forEach((block) => {
+        block.worker = block.worker.split('.')[0];
+        block.type = 'orphan';
+      });
+
+      const pending = results[2]
+        .map((block) => JSON.parse(block));
+      pending.forEach((block) => {
+        block.worker = block.worker.split('.')[0];
+        block.type = 'block';
+      });
+      
+      const data = confirmed
+        .concat(kicked, pending)
+        .sort((a, b) => (b.height - a.height)); 
+
+      const blockCount = data.lengts;
+      const pageEntries = 10;
+      const pageCount = Math.floor(blockCount / pageEntries);
+      
+      if (blockCount % pageEntries > 0) {
+        pageCount += 1;
+      }
+
+      result.data = data;
+      result.totalPages = pageCount;
+      result.totalItems = blockCount;
+      
+      callback(200, {
+        result: result,
+      });
+    }, callback);
+  };
+
   // API Endpoint for /pool/averageLuck
   this.poolAverageLuck = function(pool, callback) {
     const commands = [
@@ -1540,6 +1592,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         switch (true) {
           case (endpoint === 'averageLuck'):
             _this.poolAverageLuck(pool, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'blocks'):
+            _this.poolBlocks(pool, (code, message) => callback(code, message));
             break;
           case (endpoint === 'hashrate'):
             _this.poolHashrate(pool, (code, message) => callback(code, message));
