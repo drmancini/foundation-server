@@ -822,6 +822,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         .map((block) => JSON.parse(block))
         .filter((block) => block.worker.split('.')[0] === address);
       confirmed.forEach((block) => {
+        bock.pending = false;
         block.miner = block.worker.split('.')[0];
         delete block['worker'];
         block.type = 'block';
@@ -831,6 +832,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         .map((block) => JSON.parse(block))
         .filter((block) => block.worker.split('.')[0] === address);
       kicked.forEach((block) => {
+        bock.pending = false;
         block.miner = block.worker.split('.')[0];
         delete block['worker'];
         block.type = 'orphan';
@@ -840,6 +842,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         .map((block) => JSON.parse(block))
         .filter((block) => block.worker.split('.')[0] === address);
       pending.forEach((block) => {
+        bock.pending = true;
         block.miner = block.worker.split('.')[0];
         delete block['worker'];
         block.type = 'block';
@@ -1335,6 +1338,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const confirmed = results[0]
         .map((block) => JSON.parse(block));
       confirmed.forEach((block) => {
+        bock.pending = false;
         block.miner = block.worker.split('.')[0];
         delete block['worker'];
         block.type = 'block';
@@ -1343,6 +1347,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const kicked = results[1]
         .map((block) => JSON.parse(block));
       kicked.forEach((block) => {
+        bock.pending = false;
         block.miner = block.worker.split('.')[0];
         delete block['worker'];
         block.type = 'orphan';
@@ -1351,6 +1356,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const pending = results[2]
         .map((block) => JSON.parse(block));
       pending.forEach((block) => {
+        bock.pending = true;
         block.miner = block.worker.split('.')[0];
         delete block['worker'];
         block.type = 'block';
