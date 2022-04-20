@@ -851,7 +851,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
       const blockCount = data.length;
       const pageEntries = 10;
-      const pageCount = Math.floor(blockCount / pageEntries);
+      let pageCount = Math.floor(blockCount / pageEntries);
       
       if (blockCount % pageEntries > 0) {
         pageCount += 1;
@@ -1362,7 +1362,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
       const blockCount = data.length;
       const pageEntries = 10;
-      const pageCount = Math.floor(blockCount / pageEntries);
+      let pageCount = Math.floor(blockCount / pageEntries);
       
       if (blockCount % pageEntries > 0) {
         pageCount += 1;
