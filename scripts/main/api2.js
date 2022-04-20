@@ -805,6 +805,68 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // My New APIs
   //////////////////////////////////////////////////////////////////////////////
 
+  // API Endpoint for /miner/blocks for miner [address]
+  this.minerBlocks = function(pool, address, blockType, callback, ) {
+    if (blockType == '') {
+      blockType = 'primary';
+
+    }
+    const commands = [
+      ['smembers', `${ pool }:blocks:${ blockType }:confirmed`],
+      ['smembers', `${ pool }:blocks:${ blockType }:kicked`],
+      ['smembers', `${ pool }:blocks:${ blockType }:pending`]];
+    _this.executeCommands(commands, (results) => {
+      result = {};
+      
+      const confirmed = results[0]
+        .map((block) => JSON.parse(block))
+        .filter((block) => block.worker.split('.')[0] === address);
+      confirmed.forEach((block) => {
+        block.miner = block.worker.split('.')[0];
+        delete block['worker'];
+        block.type = 'block';
+      });
+
+      const kicked = results[1]
+        .map((block) => JSON.parse(block))
+        .filter((block) => block.worker.split('.')[0] === address);
+      kicked.forEach((block) => {
+        block.miner = block.worker.split('.')[0];
+        delete block['worker'];
+        block.type = 'orphan';
+      });
+
+      const pending = results[2]
+        .map((block) => JSON.parse(block))
+        .filter((block) => block.worker.split('.')[0] === address);
+      pending.forEach((block) => {
+        block.miner = block.worker.split('.')[0];
+        delete block['worker'];
+        block.type = 'block';
+      });
+      
+      const data = confirmed
+        .concat(kicked, pending)
+        .sort((a, b) => (b.height - a.height)); 
+
+      const blockCount = data.length;
+      const pageEntries = 10;
+      const pageCount = Math.floor(blockCount / pageEntries);
+      
+      if (blockCount % pageEntries > 0) {
+        pageCount += 1;
+      }
+
+      result.data = data;
+      result.totalPages = pageCount;
+      result.totalItems = blockCount;
+      
+      callback(200, {
+        result: result,
+      });
+    }, callback);
+  };
+
   // API Endpoint for /miner/chart for miner [address]
   this.minerChart = function(pool, address, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
@@ -1257,32 +1319,40 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /pool/blocks
-  this.poolBlocks = function(pool, callback, blockType = 'primary') {
+  this.poolBlocks = function(pool, blockType, callback) {
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+
     const commands = [
       ['smembers', `${ pool }:blocks:${ blockType }:confirmed`],
       ['smembers', `${ pool }:blocks:${ blockType }:kicked`],
       ['smembers', `${ pool }:blocks:${ blockType }:pending`]];
+
     _this.executeCommands(commands, (results) => {
       result = {};
       
       const confirmed = results[0]
         .map((block) => JSON.parse(block));
       confirmed.forEach((block) => {
-        block.worker = block.worker.split('.')[0];
+        block.miner = block.worker.split('.')[0];
+        delete block['worker'];
         block.type = 'block';
       });
 
       const kicked = results[1]
         .map((block) => JSON.parse(block));
       kicked.forEach((block) => {
-        block.worker = block.worker.split('.')[0];
+        block.miner = block.worker.split('.')[0];
+        delete block['worker'];
         block.type = 'orphan';
       });
 
       const pending = results[2]
         .map((block) => JSON.parse(block));
       pending.forEach((block) => {
-        block.worker = block.worker.split('.')[0];
+        block.miner = block.worker.split('.')[0];
+        delete block['worker'];
         block.type = 'block';
       });
       
@@ -1290,7 +1360,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         .concat(kicked, pending)
         .sort((a, b) => (b.height - a.height)); 
 
-      const blockCount = data.lengts;
+      const blockCount = data.length;
       const pageEntries = 10;
       const pageCount = Math.floor(blockCount / pageEntries);
       
@@ -1563,7 +1633,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     // Determine API Endpoint Called
   this.handleApiV2 = function(req, callback) {
 
-    let type, endpoint, method, address, page;
+    let type, endpoint, method, blockType, address, page;
     const miscellaneous = ['pools'];
 
     // If Path Params Exist
@@ -1576,6 +1646,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     // If Query Params Exist
     if (req.query) {
       method = utils.validateInput(req.query.method || '');
+      blockType = utils.validateInput(req.query.blockType || '');
       address = utils.validateInput(req.query.address || '');
       page = utils.validateInput(req.query.page || '');
     }
@@ -1588,13 +1659,41 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     // Select Endpoint from Parameters
     switch (true) {
+      case (type === 'miner'):
+        switch (true) {
+          case (endpoint === 'blocks' && address.length > 0):
+            _this.minerBlocks(pool, address, blockType, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'chart' && address.length > 0):
+            _this.minerChart(pool, address, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'payments' && address.length > 0):
+            _this.minerPayments(pool, address, page, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'paymentStats' && address.length > 0):
+            _this.minerPaymentStats(pool, address, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'stats' && address.length > 0):
+            _this.minerStats(pool, address, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'workerCount' && address.length > 0):
+            _this.minerWorkerCount(pool, address, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'workers' && address.length > 0):
+            _this.minerWorkers(pool, address, (code, message) => callback(code, message));
+            break;
+          default:
+            callback(405, 'The requested endpoint does not exist. Verify your input and try again');
+            break;
+        }
+        break;
       case (type === 'pool'):
         switch (true) {
           case (endpoint === 'averageLuck'):
             _this.poolAverageLuck(pool, (code, message) => callback(code, message));
             break;
           case (endpoint === 'blocks'):
-            _this.poolBlocks(pool, (code, message) => callback(code, message));
+            _this.poolBlocks(pool, blockType, (code, message) => callback(code, message));
             break;
           case (endpoint === 'hashrate'):
             _this.poolHashrate(pool, (code, message) => callback(code, message));
@@ -1616,31 +1715,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'workerCount'):
             _this.poolWorkerCount(pool, (code, message) => callback(code, message));
-            break;
-          default:
-            callback(405, 'The requested endpoint does not exist. Verify your input and try again');
-            break;
-        }
-        break;
-      case (type === 'miner'):
-        switch (true) {
-          case (endpoint === 'chart' && address.length > 0):
-            _this.minerChart(pool, address, (code, message) => callback(code, message));
-            break;
-          case (endpoint === 'payments' && address.length > 0):
-            _this.minerPayments(pool, address, page, (code, message) => callback(code, message));
-            break;
-          case (endpoint === 'paymentStats' && address.length > 0):
-            _this.minerPaymentStats(pool, address, (code, message) => callback(code, message));
-            break;
-          case (endpoint === 'stats' && address.length > 0):
-            _this.minerStats(pool, address, (code, message) => callback(code, message));
-            break;
-          case (endpoint === 'workerCount' && address.length > 0):
-            _this.minerWorkerCount(pool, address, (code, message) => callback(code, message));
-            break;
-          case (endpoint === 'workers' && address.length > 0):
-            _this.minerWorkers(pool, address, (code, message) => callback(code, message));
             break;
           default:
             callback(405, 'The requested endpoint does not exist. Verify your input and try again');
