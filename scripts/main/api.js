@@ -15,7 +15,7 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
   const _this = this;
   this.client = client;
   this.poolConfigs = poolConfigs;
-  this.portalConfig = portalConfig;  
+  this.portalConfig = portalConfig;
   this.headers = {
     'Access-Control-Allow-Headers' : 'Content-Type, Access-Control-Allow-Headers, Access-Control-Allow-Origin, Access-Control-Allow-Methods',
     'Access-Control-Allow-Origin': '*',
