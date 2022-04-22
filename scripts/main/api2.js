@@ -1570,6 +1570,37 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
+  // API Endpoint for /pool/minerCount2
+  this.poolMinerCount2 = function(pool, blockType, isSolo, callback) {
+    const config = _this.poolConfigs[pool] || {};
+    const solo = isSolo ? 'solo' : 'shared';
+    const onlineWindow = config.statistics.onlineWindow * 1000;
+    const onlineWindowTime = ((Date.now() - onlineWindow) || 0);
+
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+
+    const commands = [
+      ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`]
+    ];
+    _this.executeCommands(commands, (results) => {
+      const miners = [];
+      for (const [key, value] of Object.entries(results[0])) {
+        const minerData = JSON.parse(value);
+        const miner = minerData.worker.split('.')[0];
+        const lastShareTime = minerData.time;
+        if (!miners.includes(miner) && lastShareTime >= onlineWindowTime ) {
+          miners.push(miner);
+        }
+      }
+      
+      callback(200, {
+        result: miners.length
+      });
+    }, callback);
+  };
+
   // API Endpoint for /pool/topMiners
   this.poolTopMiners = function(pool, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
@@ -1793,6 +1824,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'minerCount'):
             _this.poolMinerCount(pool, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'minerCount2'):
+            _this.poolMinerCount2(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'topMiners'):
             _this.poolTopMiners(pool, (code, message) => callback(code, message));
