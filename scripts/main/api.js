@@ -128,7 +128,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
-  // API Endpoint for /historical
+  // API Endpoint for /miners/active
   this.handleHistorical = function(pool, callback) {
     const historicalWindow = _this.poolConfigs[pool].statistics.historicalWindow;
     const windowHistorical = (((Date.now() / 1000) - historicalWindow) | 0).toString();
@@ -827,7 +827,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       _this.handleBlocksSpecific(pool, method, (code, message) => callback(code, message));
       break;
 
-    // Historical Endpoints
+    // Miners Endpoints
     case (endpoint === 'historical' && method === ''):
       _this.handleHistorical(pool, (code, message) => callback(code, message));
       break;
@@ -902,7 +902,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     case (endpoint === '' && method === '' && !(miscellaneous.includes(pool))):
       _this.handleStatistics(pool, (code, message) => callback(code, message));
       break;
-    
+
     // Unknown Endpoints
     default:
       callback(405, 'The requested method is not currently supported. Verify your input and try again');
