@@ -1312,7 +1312,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     if (blockType == '') {
       blockType = 'primary';
     }
-    
+
     const commands = [
       ['smembers', `${ pool }:blocks:${blockType}:confirmed`]];
     _this.executeCommands(commands, (results) => {
@@ -1710,7 +1710,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       case (type === 'pool'):
         switch (true) {
           case (endpoint === 'averageLuck'):
-            _this.poolAverageLuck(pool, (code, message) => callback(code, message));
+            _this.poolAverageLuck(pool, blockType, (code, message) => callback(code, message));
             break;
           case (endpoint === 'blocks'):
             _this.poolBlocks(pool, blockType, (code, message) => callback(code, message));
