@@ -1306,6 +1306,33 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
   };
   
+  // ultimately change to last 30 days or something
+  // API Endpoint for /pool/averageLuck
+  this.poolAverageLuck = function(pool, blockType, callback) {
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+    
+    const commands = [
+      ['smembers', `${ pool }:blocks:${blockType}:confirmed`]];
+    _this.executeCommands(commands, (results) => {
+      let output;
+      let luckSum = 0;
+      const blocks = results[0].map(block => JSON.parse(block)) || [];
+      blocks.forEach((block) => luckSum += block.luck);
+      const blockCount = blocks.length;
+      if (blockCount == 0) {
+        output = null;
+      } else if (blockCount > 0) {
+        output = luckSum / blockCount;
+      }
+      
+      callback(200, {
+        result: output,
+      });
+    }, callback);
+  };
+
   // API Endpoint for /pool/blocks
   this.poolBlocks = function(pool, blockType, callback) {
     if (blockType == '') {
@@ -1367,28 +1394,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       
       callback(200, {
         result: result,
-      });
-    }, callback);
-  };
-
-  // API Endpoint for /pool/averageLuck
-  this.poolAverageLuck = function(pool, callback) {
-    const commands = [
-      ['smembers', `${ pool }:blocks:primary:confirmed`]];
-    _this.executeCommands(commands, (results) => {
-      let output;
-      let luckSum = 0;
-      const blocks = results[0].map(block => JSON.parse(block)) || [];
-      blocks.forEach((block) => luckSum += block.luck);
-      const blockCount = blocks.length;
-      if (blockCount == 0) {
-        output = null;
-      } else if (blockCount > 0) {
-        output = luckSum / blockCount;
-      }
-      
-      callback(200, {
-        averageLuck: output,
       });
     }, callback);
   };
