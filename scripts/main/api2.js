@@ -1234,13 +1234,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       blockType = 'primary';
     }
 
-    console.log(solo);
     const commands = [
       ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`],
       ['hgetall', `dev:workers:primary:shared`]
     ];
     _this.executeCommands(commands, (results) => {
-      console.log(results[1]);
       let workerOnlineCount = 0;
       let workerOfflineCount = 0;
       for (const [key, value] of Object.entries(results[0])) {
