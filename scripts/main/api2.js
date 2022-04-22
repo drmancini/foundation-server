@@ -1464,12 +1464,16 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /pool/hashrateChart
-  this.poolHashrateChart = function(pool, callback) {
+  this.poolHashrateChart = function(pool, blockType, callback) {
     const historicalWindow = _this.poolConfigs[pool].statistics.historicalWindow;
     const windowHistorical = (((Date.now() / 1000) - historicalWindow) | 0).toString();
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+
     const commands = [
-      ['zrangebyscore', `${ pool }:statistics:primary:historical`, windowHistorical, '+inf'],
-      ['zrangebyscore', `${ pool }:statistics:auxiliary:historical`, windowHistorical, '+inf']];
+      ['zrangebyscore', `${ pool }:statistics:${ pool }:historical`, windowHistorical, '+inf'],  
+    ];
     _this.executeCommands(commands, (results) => { 
       const output = [];
       results[0].forEach((entry) => {
@@ -1713,7 +1717,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.poolHashrate2(pool, (code, message) => callback(code, message));
             break;
           case (endpoint === 'hashrateChart'):
-            _this.poolHashrateChart(pool, (code, message) => callback(code, message));
+            _this.poolHashrateChart(pool, blockType, (code, message) => callback(code, message));
             break;
           case (endpoint === 'minerCount'):
             _this.poolMinerCount(pool, blockType, isSolo, (code, message) => callback(code, message));
