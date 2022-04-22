@@ -170,6 +170,12 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
       outputShare.work = difficulty;
     }
 
+    // Build Worker Activity Data
+    const workerShare = {
+      time: dateNow,
+      worker: worker,
+    };
+
     // Build Secondary Output (Solo)
     const hashrateShare = JSON.parse(JSON.stringify(outputShare));
     hashrateShare.work = difficulty;
@@ -178,12 +184,14 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
     if (shareType === 'valid' && isSoloMining) {
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateShare)]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
+      commands.push(['hset', `${ _this.pool }:workers:${ blockType }:${ minerType }`, worker, JSON.stringify(workerShare)]);
 
     // Handle Shared Effort, Share Updates
     } else if (shareType === 'valid') {
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateShare)]);
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'valid', 1]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
+      commands.push(['hset', `${ _this.pool }:workers:${ blockType }:${ minerType }`, worker, JSON.stringify(workerShare)]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'effort', effort]);
 
     // Handle Stale Shares Submitted
@@ -191,12 +199,14 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateShare)]);
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'stale', 1]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
+      commands.push(['hset', `${ _this.pool }:workers:${ blockType }:${ minerType }`, worker, JSON.stringify(workerShare)]);
 
     // Handle Invalid Shares Submitted
     } else {
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateShare)]);
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'invalid', 1]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
+      commands.push(['hset', `${ _this.pool }:workers:${ blockType }:${ minerType }`, worker, JSON.stringify(workerShare)]);
     }
 
     // Save Share Data to Historic Database
@@ -279,6 +289,12 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
       worker: worker,
     };
 
+    // Build Worker Activity Data
+    const workerShare = {
+      time: dateNow,
+      worker: worker,
+    };
+    
     // Build Secondary Output (Solo)
     const roundShare = JSON.parse(JSON.stringify(outputShare));
     roundShare.effort = luck;
@@ -300,6 +316,7 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
       workers.forEach((result) => {
         outputShare.worker = result;
         commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, result, JSON.stringify(outputShare)]);
+        commands.push(['hset', `${ _this.pool }:workers:${ blockType }:${ minerType }`, worker, JSON.stringify(workerShare)]);
       });
 
     // Handle Round Updates if Shared Block

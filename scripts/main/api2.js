@@ -1220,6 +1220,51 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
   };
 
+  // API Endpoint for /miner/workerCount2
+  this.minerWorkerCount2 = function(pool, address, blockType, isSolo, callback) {
+    const config = _this.poolConfigs[pool] || {};
+    const solo = isSolo ? 'solo' : 'shared';
+    const dateNow = Date.now();
+    const onlineWindow = config.statistics.onlineWindow * 1000;
+    const onlineWindowTime = ((dateNow - onlineWindow) || 0);
+    const offlineWindow = config.statistics.offlineWindow * 1000;
+    const offlineWindowTime = ((dateNow - offlineWindow) || 0);
+
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+
+    console.log(solo);
+    const commands = [
+      ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`],
+      ['hgetall', `dev:workers:primary:shared`]
+    ];
+    _this.executeCommands(commands, (results) => {
+      console.log(results[1]);
+      let workerOnlineCount = 0;
+      let workerOfflineCount = 0;
+      for (const [key, value] of Object.entries(results[0])) {
+        const worker = JSON.parse(value);
+        const miner = worker.worker.split('.')[0] || '';
+        if (miner === address) {
+          if (worker.time >= offlineWindowTime && worker.time < onlineWindowTime) {
+            workerOfflineCount ++;
+          }
+          else if (worker.time > onlineWindowTime) {
+            workerOnlineCount ++;
+          }
+        }
+      }
+      
+      callback(200, {
+        result: {
+          workersOnline: workerOnlineCount,
+          workersOffline: workerOfflineCount
+        }
+      });
+    }, callback);
+  };
+
   // API Endpoint for /miner/workerCount for miner [address]
   this.minerWorkerCount = function(pool, address, callback) {
     const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
@@ -1612,6 +1657,35 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
+  // API Endpoint for /pool/workerCount2
+  this.poolWorkerCount2 = function(pool, blockType, isSolo, callback) {
+    const config = _this.poolConfigs[pool] || {};
+    const solo = isSolo ? 'solo' : 'shared';
+    const onlineWindow = config.statistics.onlineWindow * 1000;
+    const onlineWindowTime = ((Date.now() - onlineWindow) || 0);
+
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+
+    const commands = [
+      ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`]
+    ];
+    _this.executeCommands(commands, (results) => {
+      let workerCount = 0;
+      for (const [key, value] of Object.entries(results[0])) {
+        const worker = JSON.parse(value);
+        if (worker.time > onlineWindowTime) {
+          workerCount ++;
+        };
+      }
+      
+      callback(200, {
+        result: workerCount
+      });
+    }, callback);
+  };
+
   //////////////////////////////////////////////////////////////////////////////
 
   // Execute Redis Commands
@@ -1641,7 +1715,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     // Determine API Endpoint Called
   this.handleApiV2 = function(req, callback) {
 
-    let type, endpoint, method, blockType, address, page;
+    let type, endpoint, method, blockType, isSolo, address, page;
     const miscellaneous = ['pools'];
 
     // If Path Params Exist
@@ -1655,6 +1729,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     if (req.query) {
       method = utils.validateInput(req.query.method || '');
       blockType = utils.validateInput(req.query.blockType || '');
+      isSolo = utils.validateInput(req.query.isSolo || '');
       address = utils.validateInput(req.query.address || '');
       page = utils.validateInput(req.query.page || '');
     }
@@ -1686,6 +1761,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'workerCount' && address.length > 0):
             _this.minerWorkerCount(pool, address, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'workerCount2' && address.length > 0):
+            _this.minerWorkerCount2(pool, address, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'workers' && address.length > 0):
             _this.minerWorkers(pool, address, (code, message) => callback(code, message));
@@ -1723,6 +1801,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'workerCount'):
             _this.poolWorkerCount(pool, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'workerCount2'):
+            _this.poolWorkerCount2(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
           default:
             callback(405, 'The requested endpoint does not exist. Verify your input and try again');
