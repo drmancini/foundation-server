@@ -6,29 +6,16 @@
 
 const utils = require('./utils');
 const Algorithms = require('foundation-stratum').algorithms;
-const { Sequelize, Op } = require('sequelize');
-const PaymentsModel = require('../../models/payments.model');
-const SharesModel = require('../../models/shares.model');
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main API Function
-const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
+const PoolApi = function (client, poolConfigs, portalConfig) {
 
   const _this = this;
-
-  const sequelizePayments = PaymentsModel(sequelize, Sequelize);
-  const sequelizeShares = SharesModel(sequelize, Sequelize);
-  
-  /* istanbul ignore next */
-  if ((typeof(sequelizePayments) === 'function') || (typeof(sequelizeShares) === 'function')) {
-    sequelize.sync({ force: false })
-  };
-  
   this.client = client;
   this.poolConfigs = poolConfigs;
-  this.portalConfig = portalConfig;
-  
+  this.portalConfig = portalConfig;  
   this.headers = {
     'Access-Control-Allow-Headers' : 'Content-Type, Access-Control-Allow-Headers, Access-Control-Allow-Origin, Access-Control-Allow-Methods',
     'Access-Control-Allow-Origin': '*',
@@ -787,7 +774,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // Determine API Endpoint Called
   this.handleApiV1 = function(req, callback) {
 
-    let endpoint, method;
+    let pool, endpoint, method;
     const miscellaneous = ['pools'];
 
     // If Path Params Exist
