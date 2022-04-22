@@ -1472,7 +1472,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }
 
     const commands = [
-      ['zrangebyscore', `${ pool }:statistics:${ pool }:historical`, windowHistorical, '+inf'],  
+      ['zrangebyscore', `${ pool }:statistics:${ blockType }:historical`, windowHistorical, '+inf'],  
     ];
     _this.executeCommands(commands, (results) => { 
       const output = [];
