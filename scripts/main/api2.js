@@ -1551,27 +1551,24 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const workers = [];
       for (const [key, value] of Object.entries(results[0])) {
         const worker = JSON.parse(value);
-        console.log('worker: ' + worker.time);
-        console.log('window: ' + onlineWindowTime);
         if (worker.time > onlineWindowTime) {
           workers.push(worker.worker);
         }
       };
-      console.log(workers);
 
       const miners = [];
       results[1].forEach((entry) => {
         const share = JSON.parse(entry);
         const work = /^-?\d*(\.\d+)?$/.test(share.work) ? parseFloat(share.work) : 0;
         const miner = share.worker.split('.')[0];
-        if (!(miner in miners)) {
-          const minerObject = {
+        minerIndex = miners.findIndex((obj => obj.miner == miner));
+        if (minerIndex == -1) {
+          minerObject = {
             miner: miner,
             work: work
-          }
+          };
           miners.push(minerObject);
         } else {
-          minerIndex = miners.findIndex((obj => obj.miner == miner));
           miners[minerIndex].work += work;
         }
       });
