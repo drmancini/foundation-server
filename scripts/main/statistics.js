@@ -215,8 +215,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
           }
         }, () => {});
       }, () => {});
-    // }, _this.usersInterval * 1000);
-    }, 10 * 1000);
+    }, _this.usersInterval * 1000);
 
     // Handle Blocks Info Interval
     // This merely deletes blocks if there's more than 100 confirmed ... no need for this until I reach 10% share
