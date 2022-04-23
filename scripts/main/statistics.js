@@ -39,6 +39,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
   _this.historicalInterval = _this.poolConfig.statistics.historicalInterval || 1800;
   _this.refreshInterval = _this.poolConfig.statistics.refreshInterval || 20;
   _this.paymentsInterval = _this.poolConfig.statistics.paymentsInterval || 20;
+  _this.usersInterval = _this.poolConfig.statistics.usersInterval || 600;
 
   // Current Statistics Windows
   _this.hashrateWindow = _this.poolConfig.statistics.hashrateWindow || 300;
@@ -78,6 +79,40 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
     } 
 
     return commands;
+  };
+
+  // Handle Users Information in Redis
+  this.handleUsersInfo = function(blockType, callback, handler) {
+    const commands = [];
+    const usersLookups = [
+      ['hgetall', `${ _this.pool }:workers:${ blockType }:shared`],
+      ['hgetall', `${ _this.pool }:workers:${ blockType }:solo`]
+    ];
+    _this.executeCommands(usersLookups, (results) => {
+      if (results[0]) {
+        for (const [key, value] of Object.entries(results[0])) {
+          const user = JSON.parse(value);
+          const worker = key;
+          if (!('firstJoined' in user)) {
+            user.firstJoined = Math.floor(user.time / 1000);
+          }
+          const output = JSON.stringify(user);
+          commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker, output]);
+        };
+      }
+      if (results[1]) {
+        for (const [key, value] of Object.entries(results[1])) {
+          const user = JSON.parse(value);
+          const worker = key;
+          if (!('firstJoined' in user)) {
+            user.firstJoined = Math.floor(user.time / 1000);
+          }
+          const output = JSON.stringify(user);
+          commands.push(['hset', `${ _this.pool }:workers:${ blockType }:solo`, worker, output]);
+        };
+      }
+      callback(commands);
+    }, handler);
   };
 
   // Handle Blocks Information in Redis
@@ -170,6 +205,18 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
   // Start Interval Initialization
   /* istanbul ignore next */
   this.handleIntervals = function(daemon, blockType) {
+
+    // Handle User Info Interval
+    setInterval(() => {
+      _this.handleUsersInfo(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating user statistics for ${ blockType } configuration.`);
+          }
+        }, () => {});
+      }, () => {});
+    // }, _this.usersInterval * 1000);
+    }, 10 * 1000);
 
     // Handle Blocks Info Interval
     // This merely deletes blocks if there's more than 100 confirmed ... no need for this until I reach 10% share

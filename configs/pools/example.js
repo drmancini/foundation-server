@@ -68,6 +68,7 @@ config.statistics.hashrateWindow = 300; // s;
 config.statistics.historicalWindow = 86400; // s;
 config.statistics.onlineWindow = 600; // s;
 config.statistics.offlineWindow = 3600; // s;
+config.statistics.usersInterval = 600; // s;
 
 // Settings Configuration
 config.settings = {};

@@ -1236,7 +1236,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     const commands = [
       ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`],
-      ['hgetall', `dev:workers:primary:shared`]
     ];
     _this.executeCommands(commands, (results) => {
       let workerOnlineCount = 0;
@@ -1529,6 +1528,72 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
+  // API Endpoint for /pool/topMiners2
+  this.poolTopMiners2 = function(pool, blockType, isSolo, callback) {
+    const config = _this.poolConfigs[pool] || {};
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    const dateNow = Date.now();
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
+    const hashrateWindowTime = (dateNow / 1000) - hashrateWindow;
+    const onlineWindow = config.statistics.onlineWindow * 1000;
+    const onlineWindowTime = dateNow - onlineWindow;
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+    const solo = isSolo ? 'solo' : 'shared';
+
+    const commands = [
+      ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`],
+      ['zrangebyscore', `${ pool }:rounds:${ blockType}:current:${ solo }:hashrate`, hashrateWindowTime, '+inf'],
+    ];
+    _this.executeCommands(commands, (results) => {
+      const workers = [];
+      for (const [key, value] of Object.entries(results[0])) {
+        const worker = JSON.parse(value);
+        console.log('worker: ' + worker.time);
+        console.log('window: ' + onlineWindowTime);
+        if (worker.time > onlineWindowTime) {
+          workers.push(worker.worker);
+        }
+      };
+      console.log(workers);
+
+      const miners = [];
+      results[1].forEach((entry) => {
+        const share = JSON.parse(entry);
+        const work = /^-?\d*(\.\d+)?$/.test(share.work) ? parseFloat(share.work) : 0;
+        const miner = share.worker.split('.')[0];
+        if (!(miner in miners)) {
+          const minerObject = {
+            miner: miner,
+            work: work
+          }
+          miners.push(minerObject);
+        } else {
+          minerIndex = miners.findIndex((obj => obj.miner == miner));
+          miners[minerIndex].work += work;
+        }
+      });
+      miners.sort((a,b) => {b.work - a.work}).slice(0, 10);
+      miners.forEach((miner) => {
+        let workerCount = 0;
+        workers.forEach((worker) => {
+          if (miner.miner == worker.split('.')[0]) {
+            workerCount ++;
+          }
+        })
+        miner.workerCount = workerCount;
+        miner.hashrate = miner.work * multiplier / hashrateWindow;
+        miner.firstJoined = 123;
+        delete miner.work;
+      });
+      callback(200, {
+        result: miners 
+      });
+    }, callback);
+  };
+
   // API Endpoint for /pool/topMiners
   this.poolTopMiners = function(pool, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
@@ -1732,6 +1797,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'topMiners'):
             _this.poolTopMiners(pool, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'topMiners2'):
+            _this.poolTopMiners2(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'workerCount'):
             _this.poolWorkerCount(pool, blockType, isSolo, (code, message) => callback(code, message));
