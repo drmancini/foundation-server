@@ -1675,7 +1675,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       let workerCount = 0;
       for (const [key, value] of Object.entries(results[0])) {
         const worker = JSON.parse(value);
-        if (worker.time > onlineWindowTime) {
+        if (worker.time > onlineWindowTime * 1000) {
           workerCount ++;
         };
       }
