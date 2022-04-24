@@ -1311,14 +1311,16 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     if (blockType == '') {
       blockType = 'primary';
     }
-
+    const dateNow = Date.now();
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
     const commands = [
       ['smembers', `${ pool }:blocks:${blockType}:confirmed`]];
     _this.executeCommands(commands, (results) => {
       let output;
       let luckSum = 0;
+      
       const blocks = results[0].map(block => JSON.parse(block)) || [];
-      blocks.forEach((block) => luckSum += block.luck);
+      blocks.filter((block) => block.time > dateNow - thirtyDays).forEach((block) => luckSum += block.luck);
       const blockCount = blocks.length;
       if (blockCount == 0) {
         output = null;
@@ -1501,8 +1503,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   this.poolMinerCount = function(pool, blockType, isSolo, callback) {
     const config = _this.poolConfigs[pool] || {};
     const solo = isSolo ? 'solo' : 'shared';
-    const onlineWindow = config.statistics.onlineWindow * 1000;
-    const onlineWindowTime = ((Date.now() - onlineWindow) || 0);
+    const onlineWindow = config.statistics.onlineWindow;
+    const onlineWindowTime = (((Date.now() / 1000) - onlineWindow) | 0);
 
     if (blockType == '') {
       blockType = 'primary';
@@ -1535,9 +1537,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const dateNow = Date.now();
     const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
-    const hashrateWindowTime = (dateNow / 1000) - hashrateWindow;
-    const onlineWindow = config.statistics.onlineWindow * 1000;
-    const onlineWindowTime = dateNow - onlineWindow;
+    const hashrateWindowTime = ((dateNow / 1000) - hashrateWindow | 0);
+    const onlineWindow = config.statistics.onlineWindow;
+    const onlineWindowTime = ((dateNow / 1000) - onlineWindow | 0);
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -1659,8 +1661,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   this.poolWorkerCount = function(pool, blockType, isSolo, callback) {
     const config = _this.poolConfigs[pool] || {};
     const solo = isSolo ? 'solo' : 'shared';
-    const onlineWindow = config.statistics.onlineWindow * 1000;
-    const onlineWindowTime = ((Date.now() - onlineWindow) || 0);
+    const onlineWindow = config.statistics.onlineWindow;
+    const onlineWindowTime = (((Date.now() / 1000) - onlineWindow) | 0);
 
     if (blockType == '') {
       blockType = 'primary';
