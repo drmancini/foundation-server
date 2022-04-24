@@ -1401,7 +1401,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /pool/hashrate2
   /* istanbul ignore next */
-  this.poolHashrate2 = function(pool, blockType, isSolo, callback) {
+  this.poolHashrate = function(pool, blockType, isSolo, callback) {
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -1421,44 +1421,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         },
       });
     }, callback);
-  };
-
-  // API Endpoint for /pool/hashrate
-  this.poolHashrate = function(pool, callback) {
-    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
-    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
-    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
-    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
-    sequelizeShares
-      .findAll({
-        raw: true,
-        attributes: ['share'],
-        where: {
-          pool: pool,
-          block_type: 'primary',
-          share_type: 'valid',
-          share: {
-            time: {
-              [Op.gte]: 25 * 60 * 60 * 1000,
-            },
-          }, 
-        }
-      })
-      .catch((err) => {
-        callback(400, [] );
-      })
-      .then((data) => {
-        let poolWork = 0;
-        const apiData = data.filter((share) => share.share.time >= (hashrateWindowTime * 1000));
-        apiData.forEach((share) => {
-          const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
-          poolWork += work;
-        });
-        const output = {
-          total: poolWork * multiplier / hashrateWindow,
-        };
-        callback(200, output );
-      });
   };
 
   // API Endpoint for /pool/hashrateChart
@@ -1774,10 +1736,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.poolBlocks(pool, blockType, (code, message) => callback(code, message));
             break;
           case (endpoint === 'hashrate'):
-            _this.poolHashrate(pool, (code, message) => callback(code, message));
+            _this.poolHashrate(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'hashrate2'):
-            _this.poolHashrate2(pool, blockType, isSolo, (code, message) => callback(code, message));
+            _this.poolHashrate(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'hashrateChart'):
             _this.poolHashrateChart(pool, blockType, (code, message) => callback(code, message));
