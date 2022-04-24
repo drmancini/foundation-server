@@ -1398,6 +1398,22 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
+  // API Endpoint for /pool/currentLuck
+  this.poolCurrentLuck = function(pool, blockType, isSolo, callback) {
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+    const solo = isSolo ? 'solo' : 'shared';
+    const commands = [
+      ['hgetall', `${ pool }:rounds:${ blockType }:current:${ solo }:counts`]
+    ];
+    _this.executeCommands(commands, (results) => {
+      callback(200, {
+        result: parseFloat(results[0] ? results[0].effort || 0 : 0),
+      });
+    }, callback);
+  };
+
   // API Endpoint for /pool/hashrate
   this.poolHashrate = function(pool, blockType, isSolo, callback) {
     if (blockType == '') {
@@ -1483,7 +1499,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /pool/topMiners2
-  this.poolTopMiners2 = function(pool, blockType, isSolo, callback) {
+  this.poolTopMiners = function(pool, blockType, isSolo, callback) {
     const config = _this.poolConfigs[pool] || {};
     const algorithm = config.primary.coin.algorithms.mining;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
@@ -1668,6 +1684,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           case (endpoint === 'blocks'):
             _this.poolBlocks(pool, blockType, (code, message) => callback(code, message));
             break;
+          case (endpoint === 'currentLuck'):
+            _this.poolCurrentLuck(pool, blockType, (code, message) => callback(code, message));
+            break;
           case (endpoint === 'hashrate'):
             _this.poolHashrate(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
@@ -1678,10 +1697,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.poolMinerCount(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'topMiners'):
-            _this.poolTopMiners2(pool, blockType, isSolo, (code, message) => callback(code, message));
-            break;
-          case (endpoint === 'topMiners2'):
-            _this.poolTopMiners2(pool, blockType, isSolo, (code, message) => callback(code, message));
+            _this.poolTopMiners(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'workerCount'):
             _this.poolWorkerCount(pool, blockType, isSolo, (code, message) => callback(code, message));
