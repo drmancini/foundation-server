@@ -1547,68 +1547,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
-  // API Endpoint for /pool/topMiners
-  this.poolTopMiners = function(pool, callback) {
-    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
-    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
-    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
-    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
-    sequelizeShares
-      .findAll({
-        raw: true,
-        attributes: ['share', 'share_type'],
-        where: {
-          pool: pool,
-          share_type: 'valid', 
-          share: {
-            time: {
-              [Op.gte]: hashrateWindowTime * 1000,
-            },
-          }, 
-        },
-      })
-      .then((data) => {
-        const miners = {};
-        const tempArray = [];
-
-        data.forEach((share) => {
-          if (share.share.worker) {
-            const miner = share.share.worker.split('.')[0];
-            const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
-            if (!(miner in miners)) {
-              miners[miner] = 0;
-            }
-            miners[miner] += work;
-          }  
-        });
-        
-        for (let entry in miners) {
-          const minerHashrate = miners[entry] * multiplier / hashrateWindow;
-          tempArray.push({miner: entry, hashrate: minerHashrate });
-        }
-
-        tempArray.sort((a,b) => b.hashrate - a.hashrate);
-        const output = tempArray.slice(0, 10);
-
-        output.forEach((miner) => {
-          const workers = [];
-          const shares = data.filter((share) => share.share.worker.split('.')[0] == miner.miner && share.share.work > 0);
-          shares.forEach((share) => {
-            const worker = share.share.worker.split('.')[1];
-            if (!workers.includes(worker)) {
-              workers.push(worker);
-            }
-          });
-          let minerIndex = output.findIndex((obj => obj.miner == miner.miner));
-          output[minerIndex].workerCount = workers.length;  
-        });
-        
-        callback(200, {
-          output,
-        });
-      });
-  };
-
   // API Endpoint for /pool/workerCount
   this.poolWorkerCount = function(pool, blockType, isSolo, callback) {
     const config = _this.poolConfigs[pool] || {};
@@ -1740,7 +1678,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.poolMinerCount(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'topMiners'):
-            _this.poolTopMiners(pool, (code, message) => callback(code, message));
+            _this.poolTopMiners2(pool, (code, message) => callback(code, message));
             break;
           case (endpoint === 'topMiners2'):
             _this.poolTopMiners2(pool, blockType, isSolo, (code, message) => callback(code, message));
