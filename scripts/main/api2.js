@@ -1305,7 +1305,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
   };
   
-  // ultimately change to last 30 days or something
   // API Endpoint for /pool/averageLuck
   this.poolAverageLuck = function(pool, blockType, callback) {
     if (blockType == '') {
@@ -1399,8 +1398,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
-  // API Endpoint for /pool/hashrate2
-  /* istanbul ignore next */
+  // API Endpoint for /pool/hashrate
   this.poolHashrate = function(pool, blockType, isSolo, callback) {
     if (blockType == '') {
       blockType = 'primary';
@@ -1487,10 +1485,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /pool/topMiners2
   this.poolTopMiners2 = function(pool, blockType, isSolo, callback) {
     const config = _this.poolConfigs[pool] || {};
-    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const algorithm = config.primary.coin.algorithms.mining;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const dateNow = Date.now();
-    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
+    const hashrateWindow = config.statistics.hashrateWindow;
     const hashrateWindowTime = ((dateNow / 1000) - hashrateWindow | 0);
     const onlineWindow = config.statistics.onlineWindow;
     const onlineWindowTime = ((dateNow / 1000) - onlineWindow | 0);
@@ -1716,9 +1714,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           case (endpoint === 'workerCount' && address.length > 0):
             _this.minerWorkerCount(pool, address, blockType, isSolo, (code, message) => callback(code, message));
             break;
-          case (endpoint === 'workerCount2' && address.length > 0):
-            _this.minerWorkerCount(pool, address, blockType, isSolo, (code, message) => callback(code, message));
-            break;
           case (endpoint === 'workers' && address.length > 0):
             _this.minerWorkers(pool, address, (code, message) => callback(code, message));
             break;
@@ -1738,16 +1733,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           case (endpoint === 'hashrate'):
             _this.poolHashrate(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
-          case (endpoint === 'hashrate2'):
-            _this.poolHashrate(pool, blockType, isSolo, (code, message) => callback(code, message));
-            break;
           case (endpoint === 'hashrateChart'):
             _this.poolHashrateChart(pool, blockType, (code, message) => callback(code, message));
             break;
           case (endpoint === 'minerCount'):
-            _this.poolMinerCount(pool, blockType, isSolo, (code, message) => callback(code, message));
-            break;
-          case (endpoint === 'minerCount2'):
             _this.poolMinerCount(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'topMiners'):
@@ -1757,9 +1746,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.poolTopMiners2(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'workerCount'):
-            _this.poolWorkerCount(pool, blockType, isSolo, (code, message) => callback(code, message));
-            break;
-          case (endpoint === 'workerCount2'):
             _this.poolWorkerCount(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
           default:
