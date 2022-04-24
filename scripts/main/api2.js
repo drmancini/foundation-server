@@ -1519,7 +1519,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         const minerData = JSON.parse(value);
         const miner = minerData.worker.split('.')[0];
         const lastShareTime = minerData.time;
-        if (!miners.includes(miner) && lastShareTime >= onlineWindowTime ) {
+        if (!miners.includes(miner) && lastShareTime >= onlineWindowTime * 1000) {
           miners.push(miner);
         }
       }
