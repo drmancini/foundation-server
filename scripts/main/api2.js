@@ -1572,7 +1572,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           miners[minerIndex].work += work;
         }
       });
-      const topMiners = miners.sort((a,b) => {b.work - a.work}).slice(0, 10);
+      let topMiners = miners.sort((a,b) => {b.work - a.work}).slice(0, 10);
       topMiners.forEach((miner) => {
         let workerCount = 0;
         workers.forEach((worker) => {
@@ -1585,7 +1585,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         miner.firstJoined = 123;
         delete miner.work;
       });
-      
+
       topMiners = topMiners.sort((a,b) => {b.hashrate - a.hashrate});
 
       callback(200, {
