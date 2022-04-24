@@ -1678,7 +1678,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.poolMinerCount(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'topMiners'):
-            _this.poolTopMiners2(pool, (code, message) => callback(code, message));
+            _this.poolTopMiners2(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'topMiners2'):
             _this.poolTopMiners2(pool, blockType, isSolo, (code, message) => callback(code, message));
