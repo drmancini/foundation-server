@@ -1685,7 +1685,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.poolBlocks(pool, blockType, (code, message) => callback(code, message));
             break;
           case (endpoint === 'currentLuck'):
-            _this.poolCurrentLuck(pool, blockType, (code, message) => callback(code, message));
+            _this.poolCurrentLuck(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'hashrate'):
             _this.poolHashrate(pool, blockType, isSolo, (code, message) => callback(code, message));
