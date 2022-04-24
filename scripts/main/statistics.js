@@ -86,13 +86,13 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
     const commands = [];
     const usersLookups = [
       ['hgetall', `${ _this.pool }:workers:${ blockType }:shared`],
-      ['hgetall', `${ _this.pool }:workers:${ blockType }:solo`]
+      // ['hgetall', `${ _this.pool }:workers:${ blockType }:solo`]
     ];
     _this.executeCommands(usersLookups, (results) => {
       if (results[0]) {
         for (const [key, value] of Object.entries(results[0])) {
           const user = JSON.parse(value);
-          const worker = key;
+          const worker = user.worker;
           if (!('firstJoined' in user)) {
             user.firstJoined = Math.floor(user.time / 1000);
           }
@@ -100,17 +100,17 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
           commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker, output]);
         };
       }
-      if (results[1]) {
-        for (const [key, value] of Object.entries(results[1])) {
-          const user = JSON.parse(value);
-          const worker = key;
-          if (!('firstJoined' in user)) {
-            user.firstJoined = Math.floor(user.time / 1000);
-          }
-          const output = JSON.stringify(user);
-          commands.push(['hset', `${ _this.pool }:workers:${ blockType }:solo`, worker, output]);
-        };
-      }
+      // if (results[1]) {
+      //   for (const [key, value] of Object.entries(results[1])) {
+      //     const user = JSON.parse(value);
+      //     const worker = key;
+      //     if (!('firstJoined' in user)) {
+      //       user.firstJoined = Math.floor(user.time / 1000);
+      //     }
+      //     const output = JSON.stringify(user);
+      //     commands.push(['hset', `${ _this.pool }:workers:${ blockType }:solo`, worker, output]);
+      //   };
+      // }
       callback(commands);
     }, handler);
   };

@@ -1585,6 +1585,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         miner.firstJoined = 123;
         delete miner.work;
       });
+      
+      topMiners = topMiners.sort((a,b) => {b.hashrate - a.hashrate});
+
       callback(200, {
         result: topMiners 
       });

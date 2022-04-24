@@ -64,11 +64,13 @@ config.statistics.hashrateInterval = 20; // s;
 config.statistics.historicalInterval = 1800; // s;
 config.statistics.refreshInterval = 20; // s;
 config.statistics.paymentsInterval = 20; // s;
+config.statistics.usersInterval = 600; // s;
+
 config.statistics.hashrateWindow = 300; // s;
 config.statistics.historicalWindow = 86400; // s;
 config.statistics.onlineWindow = 600; // s;
 config.statistics.offlineWindow = 3600; // s;
-config.statistics.usersInterval = 600; // s;
+
 
 // Settings Configuration
 config.settings = {};
