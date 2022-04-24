@@ -86,7 +86,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
     const commands = [];
     const usersLookups = [
       ['hgetall', `${ _this.pool }:workers:${ blockType }:shared`],
-      // ['hgetall', `${ _this.pool }:workers:${ blockType }:solo`]
+      ['hgetall', `${ _this.pool }:miners:${ blockType }`]
     ];
     _this.executeCommands(usersLookups, (results) => {
       if (results[0]) {
@@ -241,23 +241,23 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
     }, _this.hashrateInterval * 1000);
 
     // Delete old shares cache
-    // setInterval(() => {
-    //   sequelizeShares
-    //     .destroy({
-    //       where: {
-    //         share: {
-    //           time: {
-    //             [Op.lte]: (Date.now() - (_this.historicalWindow * 1000)),
-    //           }
-    //         }
-    //       }
-    //     })
-    //     .then(() => {
-    //       if (_this.poolConfig.debug) {
-    //         logger.debug('Statistics', _this.pool, `Finished deleting share cache for ${ blockType } configuration.`);
-    //       }
-    //     })
-    // }, _this.historicalInterval * 1000);
+    setInterval(() => {
+      sequelizeShares
+        .destroy({
+          where: {
+            share: {
+              time: {
+                [Op.lte]: (Date.now() - (_this.historicalWindow * 1000)),
+              }
+            }
+          }
+        })
+        .then(() => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished deleting share cache for ${ blockType } configuration.`);
+          }
+        })
+    }, _this.historicalInterval * 1000);
 
     // Handle Historical Data Interval
     setInterval(() => {
