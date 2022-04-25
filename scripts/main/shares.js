@@ -177,6 +177,8 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
       ip_hint: '*.*.*.' + ip.split('.')[3]
     };
 
+    console.log(workerShare);
+    
     // Build Secondary Output (Solo)
     const hashrateShare = JSON.parse(JSON.stringify(outputShare));
     hashrateShare.work = difficulty;
