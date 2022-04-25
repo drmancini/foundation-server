@@ -670,6 +670,20 @@ const PoolPayments = function (logger, client, sequelize) {
       const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
 
       // Test
+      const miner = worker.split('.')[0];
+      let minerLimit;
+      const commands = [['hget', `${ pool }:miners:${ blockType }`, miner]];
+      _this.client.multi(commands).exec((error, results) => {
+        if (error) {
+          logger.error('Payments', pool, `Could not get miner data from database: ${ JSON.stringify(error) }`);
+        } else {
+          console.log('test: ' + results[0]);
+          const minerObject = JSON.parse(results[0]);
+          console.log('test: ' + minerObject);
+          //minerLimit = results[0]
+        }
+      });
+      
       const myLimit = utils.coinsToSatoshis(10000000, processingConfig.payments.magnitude);
       const workerLimit = myLimit > processingConfig.payments.minPaymentSatoshis ? myLimit : processingConfig.payments.minPaymentSatoshis;
 

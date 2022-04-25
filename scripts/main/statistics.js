@@ -89,7 +89,8 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
       ['hgetall', `${ _this.pool }:miners:${ blockType }`]
     ];
     _this.executeCommands(usersLookups, (results) => {
-      const workers = results[0] || {};
+      console.log(results[0]);
+      //const workers = results[0] || {};
       for (const [key, value] of Object.entries(workers)) {
         const workerObject = JSON.parse(value);
         const worker = workerObject.worker;
