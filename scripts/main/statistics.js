@@ -95,15 +95,12 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
         const workerObject = JSON.parse(value);
         const worker = workerObject.worker;
         const miner = worker.split('.')[0];
-        if (miner in miners) {
-          console.log('yep: ' + miner);
-        } else {
-          console.log('nope: ' + miner);
-          const testObject = {
-            firstJoined: 123,
+        if (!(miner in miners)) {
+          const minerObject = {
+            firstJoined: worker.time / 1000 | 0,
             payoutLimit: 0
           }
-          const output = JSON.stringify(testObject);
+          const output = JSON.stringify(minerObject);
           commands.push(['hset', `${ _this.pool }:miners:${ blockType }`, miner, output]);  
         }
 
