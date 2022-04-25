@@ -1487,7 +1487,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         const minerData = JSON.parse(value);
         const miner = minerData.worker.split('.')[0];
         const lastShareTime = minerData.time;
-        if (!miners.includes(miner) && lastShareTime >= onlineWindowTime * 1000) {
+        if (!miners.includes(miner) && lastShareTime >= onlineWindowTime) {
           miners.push(miner);
         }
       }
@@ -1581,7 +1581,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       let workerCount = 0;
       for (const [key, value] of Object.entries(results[0])) {
         const worker = JSON.parse(value);
-        if (worker.time > onlineWindowTime * 1000) {
+        if (worker.time > onlineWindowTime) {
           workerCount ++;
         };
       }
