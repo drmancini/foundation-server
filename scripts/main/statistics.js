@@ -97,7 +97,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
         const miner = worker.split('.')[0];
         if (!(miner in miners)) {
           const minerObject = {
-            firstJoined: worker.time / 1000 | 0,
+            firstJoined: workerObject.time / 1000 | 0,
             payoutLimit: 0
           }
           const output = JSON.stringify(minerObject);
