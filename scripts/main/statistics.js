@@ -89,17 +89,29 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
       ['hgetall', `${ _this.pool }:miners:${ blockType }`]
     ];
     _this.executeCommands(usersLookups, (results) => {
-      console.log(results[0]);
-      //const workers = results[0] || {};
+      const workers = results[0] || {};
+      const miners = results[1] || {};
       for (const [key, value] of Object.entries(workers)) {
         const workerObject = JSON.parse(value);
         const worker = workerObject.worker;
         const miner = worker.split('.')[0];
-        if (!('firstJoined' in workerObject)) {
-          workerObject.firstJoined = Math.floor(workerObject.time / 1000);
+        if (miner in miners) {
+          console.log('yep: ' + miner);
+        } else {
+          console.log('nope: ' + miner);
+          const testObject = {
+            firstJoined: 123,
+            payoutLimit: 0
+          }
+          const output = JSON.stringify(testObject);
+          commands.push(['hset', `${ _this.pool }:miners:${ blockType }`, miner, output]);  
         }
-        const output = JSON.stringify(workerObject);
-        commands.push(['hset', `${ _this.pool }:miners:${ blockType }`, miner, output]);
+
+        // if (!('firstJoined' in workerObject)) {
+        //   workerObject.firstJoined = Math.floor(workerObject.time / 1000);
+        // }
+        // const output = JSON.stringify(workerObject);
+        // commands.push(['hset', `${ _this.pool }:miners:${ blockType }`, miner, output]);
       };
       
       // if (results[1]) {
