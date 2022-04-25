@@ -231,6 +231,7 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
     const difficulty = (shareType === 'valid' ? shareData.difficulty : -shareData.difficulty);
     const minerType = isSoloMining ? 'solo' : 'shared';
     const identifier = shareData.identifier || '';
+    const ipLength = shareData.ip.split(':').length - 1;
     const ip = shareData.ip.split(':')[ipLength];
 
     const worker = ['share', 'primary'].includes(blockType) ? shareData.addrPrimary : shareData.addrAuxiliary;
