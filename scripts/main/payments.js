@@ -670,7 +670,7 @@ const PoolPayments = function (logger, client, sequelize) {
       const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
 
       // Test
-      const myLimit = utils.coinsToSatoshis(100000, processingConfig.payments.magnitude);
+      const myLimit = utils.coinsToSatoshis(10000000, processingConfig.payments.magnitude);
       const workerLimit = myLimit > processingConfig.payments.minPaymentSatoshis ? myLimit : processingConfig.payments.minPaymentSatoshis;
 
 
