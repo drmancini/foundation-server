@@ -174,6 +174,8 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
     const workerShare = {
       time: dateNow,
       worker: worker,
+      ip_hash: md5(ip),
+      ip_hint: '*.*.*.' + ip.split('.')[3]
     };
 
     // Build Secondary Output (Solo)
@@ -215,24 +217,8 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
         pool: _this.pool,
         block_type: blockType,
         share: hashrateShare,
-        share_type: shareType,
-        //miner_type: minerType,
-        ip_hash: md5(ip), // will ask for user IP to confirm settings (min. payment)
-        ip_hint: '*.*.*.' + ip.split('.')[3], // will give this as hint to user
-      })
-      .then( 
-        // sequelizeShares
-          // .destroy({
-          //   where: {
-          //     share: {
-          //       time: {
-          //         [Op.lte]: (dateNow - yesterdayAndMore),
-          //       }
-          //     }
-          //   }
-          // })
-      );
-    
+        share_type: shareType
+      });  
     return commands;
   };
 
