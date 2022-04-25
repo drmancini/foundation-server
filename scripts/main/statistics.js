@@ -209,15 +209,16 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
   this.handleIntervals = function(daemon, blockType) {
 
     // Handle User Info Interval
-    // setInterval(() => {
-    //   _this.handleUsersInfo(blockType, (results) => {
-    //     _this.executeCommands(results, () => {
-    //       if (_this.poolConfig.debug) {
-    //         logger.debug('Statistics', _this.pool, `Finished updating user statistics for ${ blockType } configuration.`);
-    //       }
-    //     }, () => {});
-    //   }, () => {});
+    setInterval(() => {
+      _this.handleUsersInfo(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating user statistics for ${ blockType } configuration.`);
+          }
+        }, () => {});
+      }, () => {});
     // }, _this.usersInterval * 1000);
+    }, 5 * 1000);
 
     // Handle Blocks Info Interval
     // This merely deletes blocks if there's more than 100 confirmed ... no need for this until I reach 10% share
