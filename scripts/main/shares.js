@@ -171,14 +171,12 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
 
     // Build Worker Activity Data
     const workerShare = {
-      time: dateNow,
+      time: dateNow / 1000 | 0,
       worker: worker,
       ip_hash: md5(ip),
       ip_hint: '*.*.*.' + ip.split('.')[3]
     };
 
-    console.log(workerShare);
-    
     // Build Secondary Output (Solo)
     const hashrateShare = JSON.parse(JSON.stringify(outputShare));
     hashrateShare.work = difficulty;
@@ -280,7 +278,7 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
 
     // Build Worker Activity Data
     const workerShare = {
-      time: dateNow,
+      time: dateNow / 1000 | 0,
       worker: worker,
       ip_hash: md5(ip),
       ip_hint: '*.*.*.' + ip.split('.')[3]
