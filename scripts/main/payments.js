@@ -669,8 +669,13 @@ const PoolPayments = function (logger, client, sequelize) {
       const worker = workers[address];
       const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
 
+      // Test
+      const myLimit = utils.coinsToSatoshis(1000000, processingConfig.payments.magnitude);
+      const workerLimit = myLimit > processingConfig.payments.minPaymentSatoshis ? myLimit : processingConfig.payments.minPaymentSatoshis;
+
+
       // Determine Amounts Given Mininum Payment
-      if (amount >= processingConfig.payments.minPaymentSatoshis) {
+      if (amount >= workerLimit) {
         worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
         amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
         totalSent += worker.sent;
@@ -678,6 +683,18 @@ const PoolPayments = function (logger, client, sequelize) {
         worker.sent = 0;
         worker.change = amount;
       }
+
+      // End of Test
+
+      // Determine Amounts Given Mininum Payment
+      // if (amount >= processingConfig.payments.minPaymentSatoshis) {
+      //   worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
+      //   amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
+      //   totalSent += worker.sent;
+      // } else {
+      //   worker.sent = 0;
+      //   worker.change = amount;
+      // }
 
       workers[address] = worker;
     });
