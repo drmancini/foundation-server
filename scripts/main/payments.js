@@ -670,6 +670,7 @@ const PoolPayments = function (logger, client, sequelize) {
       const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
 
       // Test
+      console.log(worker);
       const miner = worker.split('.')[0];
       let minerLimit;
       const commands = [['hget', `${ pool }:miners:${ blockType }`, miner]];
