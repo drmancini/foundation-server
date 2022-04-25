@@ -679,7 +679,7 @@ const PoolPayments = function (logger, client, sequelize) {
         } else {
           console.log('test: ' + results[0]);
           const minerObject = JSON.parse(results[0]);
-          console.log('test: ' + minerObject);
+          console.log('test2: ' + minerObject);
           //minerLimit = results[0]
         }
       });
