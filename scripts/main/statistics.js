@@ -103,25 +103,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
           const output = JSON.stringify(minerObject);
           commands.push(['hset', `${ _this.pool }:miners:${ blockType }`, miner, output]);  
         }
-
-        // if (!('firstJoined' in workerObject)) {
-        //   workerObject.firstJoined = Math.floor(workerObject.time / 1000);
-        // }
-        // const output = JSON.stringify(workerObject);
-        // commands.push(['hset', `${ _this.pool }:miners:${ blockType }`, miner, output]);
       };
-      
-      // if (results[1]) {
-      //   for (const [key, value] of Object.entries(results[1])) {
-      //     const user = JSON.parse(value);
-      //     const worker = key;
-      //     if (!('firstJoined' in user)) {
-      //       user.firstJoined = Math.floor(user.time / 1000);
-      //     }
-      //     const output = JSON.stringify(user);
-      //     commands.push(['hset', `${ _this.pool }:workers:${ blockType }:solo`, worker, output]);
-      //   };
-      // }
       callback(commands);
     }, handler);
   };
@@ -226,8 +208,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
           }
         }, () => {});
       }, () => {});
-    // }, _this.usersInterval * 1000);
-    }, 5 * 1000);
+    }, _this.usersInterval * 1000);
 
     // Handle Blocks Info Interval
     // This merely deletes blocks if there's more than 100 confirmed ... no need for this until I reach 10% share
