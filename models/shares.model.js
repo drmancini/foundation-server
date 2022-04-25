@@ -24,6 +24,14 @@ module.exports = function( sequelize, DataTypes ) {
       share_type: {
         type: DataTypes.STRING,
         allowNull: false,
-      }
+      },
+      ip_hash: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      ip_hint: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     });
 };
