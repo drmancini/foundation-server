@@ -685,7 +685,7 @@ const PoolPayments = function (logger, client, sequelize) {
       });
       
       minerLimit = utils.coinsToSatoshis(minerLimit, processingConfig.payments.magnitude);
-      const workerLimit = myLimit > processingConfig.payments.minPaymentSatoshis ? minerLimit : processingConfig.payments.minPaymentSatoshis;
+      const workerLimit = minerLimit > processingConfig.payments.minPaymentSatoshis ? minerLimit : processingConfig.payments.minPaymentSatoshis;
 
 
       // Determine Amounts Given Mininum Payment
