@@ -670,10 +670,9 @@ const PoolPayments = function (logger, client, sequelize) {
       const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
 
       // Test
-      console.log(worker);
-      const miner = worker.split('.')[0];
+
       let minerLimit;
-      const commands = [['hget', `${ pool }:miners:${ blockType }`, miner]];
+      const commands = [['hget', `${ pool }:miners:${ blockType }`, address]];
       _this.client.multi(commands).exec((error, results) => {
         if (error) {
           logger.error('Payments', pool, `Could not get miner data from database: ${ JSON.stringify(error) }`);
