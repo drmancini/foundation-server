@@ -115,7 +115,6 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
     let shares;
     const commands = [];
     const dateNow = Date.now();
-    const yesterdayAndMore = 1000 * 60 * 60 * 25;
     const difficulty = (shareType === 'valid' ? shareData.difficulty : -shareData.difficulty);
     const minerType = isSoloMining ? 'solo' : 'shared';
     const identifier = shareData.identifier || '';
@@ -232,6 +231,7 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
     const difficulty = (shareType === 'valid' ? shareData.difficulty : -shareData.difficulty);
     const minerType = isSoloMining ? 'solo' : 'shared';
     const identifier = shareData.identifier || '';
+    const ip = shareData.ip.split(':')[ipLength];
 
     const worker = ['share', 'primary'].includes(blockType) ? shareData.addrPrimary : shareData.addrAuxiliary;
     const blockDifficulty = ['share', 'primary'].includes(blockType) ? shareData.blockDiffPrimary : shareData.blockDiffAuxiliary;
@@ -279,6 +279,8 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
     const workerShare = {
       time: dateNow,
       worker: worker,
+      ip_hash: md5(ip),
+      ip_hint: '*.*.*.' + ip.split('.')[3]
     };
     
     // Build Secondary Output (Solo)
