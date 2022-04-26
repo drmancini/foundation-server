@@ -1224,10 +1224,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   this.minerWorkerCount = function(pool, address, blockType, isSolo, callback) {
     const config = _this.poolConfigs[pool] || {};
     const solo = isSolo ? 'solo' : 'shared';
-    const dateNow = Date.now();
-    const onlineWindow = config.statistics.onlineWindow * 1000;
+    const dateNow = Date.now() / 1000 | 0;
+    const onlineWindow = config.statistics.onlineWindow;
     const onlineWindowTime = ((dateNow - onlineWindow) || 0);
-    const offlineWindow = config.statistics.offlineWindow * 1000;
+    const offlineWindow = config.statistics.offlineWindow;
     const offlineWindowTime = ((dateNow - offlineWindow) || 0);
 
     if (blockType == '') {
