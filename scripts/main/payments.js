@@ -684,12 +684,15 @@ const PoolPayments = function (logger, client, sequelize) {
         }
       });
       
+      console.log('miner: ' + minerLimit);
+      console.log('server: ' + processingConfig.payments.minPaymentSatoshis);
       minerLimit = utils.coinsToSatoshis(minerLimit, processingConfig.payments.magnitude);
-      const workerLimit = minerLimit > processingConfig.payments.minPaymentSatoshis ? minerLimit : processingConfig.payments.minPaymentSatoshis;
-
+      const payoutLimit = minerLimit > processingConfig.payments.minPaymentSatoshis ? minerLimit : processingConfig.payments.minPaymentSatoshis;
+      console.log('payout: ' + payoutLimit);
+      console.log('amount: ' + amount);
 
       // Determine Amounts Given Mininum Payment
-      if (amount >= workerLimit) {
+      if (amount >= payoutLimit) {
         worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
         amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
         totalSent += worker.sent;
