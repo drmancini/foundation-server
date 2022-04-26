@@ -700,7 +700,7 @@ const PoolPayments = function (logger, client, sequelize) {
       //   }
 
       //   workers[address] = worker;
-      });
+      // });
       
 
       // End of Test
