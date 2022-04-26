@@ -671,34 +671,34 @@ const PoolPayments = function (logger, client, sequelize) {
 
       // Test
 
-      let minerLimit;
-      const commands = [['hget', `${ pool }:miners:${ blockType }`, address]];
-      _this.client.multi(commands).exec((error, results) => {
-        if (error) {
-          logger.error('Payments', pool, `Could not get miner data from database: ${ JSON.stringify(error) }`);
-        } else {
-          const minerObject = JSON.parse(results[0]);
-          if (minerObject != null) {
-            minerLimit = minerObject.payoutLimit;
-            minerLimit = utils.coinsToSatoshis(minerLimit, processingConfig.payments.magnitude);
-          } else {
-            minerLimit = 0;
-          }
-          const payoutLimit = minerLimit > processingConfig.payments.minPaymentSatoshis ? minerLimit : processingConfig.payments.minPaymentSatoshis;
+      // let minerLimit;
+      // const commands = [['hget', `${ pool }:miners:${ blockType }`, address]];
+      // _this.client.multi(commands).exec((error, results) => {
+      //   if (error) {
+      //     logger.error('Payments', pool, `Could not get miner data from database: ${ JSON.stringify(error) }`);
+      //   } else {
+      //     const minerObject = JSON.parse(results[0]);
+      //     if (minerObject != null) {
+      //       minerLimit = minerObject.payoutLimit;
+      //       minerLimit = utils.coinsToSatoshis(minerLimit, processingConfig.payments.magnitude);
+      //     } else {
+      //       minerLimit = 0;
+      //     }
+      //     const payoutLimit = minerLimit > processingConfig.payments.minPaymentSatoshis ? minerLimit : processingConfig.payments.minPaymentSatoshis;
 
-          // Determine Amounts Given Mininum Payment
-          if (amount >= payoutLimit) {
-            worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
-            amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
-            totalSent += worker.sent;
-          } else {
-            worker.sent = 0;
-            worker.change = amount;
-          }
-        }
-        
-        workers[address] = worker;
-      });
+      //     // Determine Amounts Given Mininum Payment
+      //     if (amount >= payoutLimit) {
+      //       worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
+      //       amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
+      //       totalSent += worker.sent;
+      //     } else {
+      //       worker.sent = 0;
+      //       worker.change = amount;
+      //     }
+      //   }
+
+      //   workers[address] = worker;
+      // });
       
       
 
@@ -708,16 +708,16 @@ const PoolPayments = function (logger, client, sequelize) {
       // End of Test
 
       // Determine Amounts Given Mininum Payment
-      // if (amount >= processingConfig.payments.minPaymentSatoshis) {
-      //   worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
-      //   amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
-      //   totalSent += worker.sent;
-      // } else {
-      //   worker.sent = 0;
-      //   worker.change = amount;
-      // }
+      if (amount >= processingConfig.payments.minPaymentSatoshis) {
+        worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
+        amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
+        totalSent += worker.sent;
+      } else {
+        worker.sent = 0;
+        worker.change = amount;
+      }
 
-      // workers[address] = worker;
+      workers[address] = worker;
     });
 
     // Check if No Workers/Rounds
