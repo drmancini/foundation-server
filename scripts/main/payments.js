@@ -672,7 +672,7 @@ const PoolPayments = function (logger, client, sequelize) {
       // Test
 
       let minerLimit;
-      console.log('addres: ' + addres);
+      console.log('address: ' + address);
       const commands = [['hget', `${ pool }:miners:${ blockType }`, address]];
       _this.client.multi(commands).exec((error, results) => {
         if (error) {
