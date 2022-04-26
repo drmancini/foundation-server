@@ -678,31 +678,34 @@ const PoolPayments = function (logger, client, sequelize) {
         if (error) {
           logger.error('Payments', pool, `Could not get miner data from database: ${ JSON.stringify(error) }`);
         } else {
-          console.log('result: ' + results[0]);
           const minerObject = JSON.parse(results[0]);
           if (minerObject != null) {
-            console.log('object: ' + minerObject);
-            minerLimit = minerObject.payoutLimit
+            console.log('result: ' + results[0]);
+            minerLimit = minerObject.payoutLimit;
+            minerLimit = utils.coinsToSatoshis(minerLimit, processingConfig.payments.magnitude);
+          } else {
+            minerLimit = 0;
           }
+          const payoutLimit = minerLimit > processingConfig.payments.minPaymentSatoshis ? minerLimit : processingConfig.payments.minPaymentSatoshis;
+
+          // Determine Amounts Given Mininum Payment
+          if (amount >= payoutLimit) {
+            worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
+            amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
+            totalSent += worker.sent;
+          } else {
+            worker.sent = 0;
+            worker.change = amount;
+          }
+
+          workers[address] = worker;
         }
       });
       
-      console.log('miner: ' + minerLimit);
-      console.log('server: ' + processingConfig.payments.minPaymentSatoshis);
-      minerLimit = utils.coinsToSatoshis(minerLimit, processingConfig.payments.magnitude);
-      const payoutLimit = minerLimit > processingConfig.payments.minPaymentSatoshis ? minerLimit : processingConfig.payments.minPaymentSatoshis;
-      console.log('payout: ' + payoutLimit);
-      console.log('amount: ' + amount);
+      
 
-      // Determine Amounts Given Mininum Payment
-      if (amount >= payoutLimit) {
-        worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
-        amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
-        totalSent += worker.sent;
-      } else {
-        worker.sent = 0;
-        worker.change = amount;
-      }
+      
+      
 
       // End of Test
 
@@ -716,7 +719,7 @@ const PoolPayments = function (logger, client, sequelize) {
       //   worker.change = amount;
       // }
 
-      workers[address] = worker;
+      // workers[address] = worker;
     });
 
     // Check if No Workers/Rounds
