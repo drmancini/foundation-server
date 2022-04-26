@@ -678,7 +678,7 @@ const PoolPayments = function (logger, client, sequelize) {
         if (error) {
           logger.error('Payments', pool, `Could not get miner data from database: ${ JSON.stringify(error) }`);
         } else {
-          console.log('result: ' + result[0]);
+          console.log('result: ' + results[0]);
           const minerObject = JSON.parse(results[0]);
           if (minerObject != null) {
             console.log('object: ' + minerObject);
