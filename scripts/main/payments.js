@@ -671,6 +671,7 @@ const PoolPayments = function (logger, client, sequelize) {
 
       // Test
 
+      // nahraj vsechny minery z db na zacatku, predaj v data objektu sem a tady jen zpracuj
       // let minerLimit;
       // const commands = [['hget', `${ pool }:miners:${ blockType }`, address]];
       // _this.client.multi(commands).exec((error, results) => {
