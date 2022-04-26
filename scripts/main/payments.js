@@ -672,7 +672,6 @@ const PoolPayments = function (logger, client, sequelize) {
       // Test
 
       let minerLimit;
-      console.log('address: ' + address);
       const commands = [['hget', `${ pool }:miners:${ blockType }`, address]];
       _this.client.multi(commands).exec((error, results) => {
         if (error) {
@@ -680,7 +679,6 @@ const PoolPayments = function (logger, client, sequelize) {
         } else {
           const minerObject = JSON.parse(results[0]);
           if (minerObject != null) {
-            console.log('result: ' + results[0]);
             minerLimit = minerObject.payoutLimit;
             minerLimit = utils.coinsToSatoshis(minerLimit, processingConfig.payments.magnitude);
           } else {
