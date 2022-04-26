@@ -695,9 +695,9 @@ const PoolPayments = function (logger, client, sequelize) {
             worker.sent = 0;
             worker.change = amount;
           }
-
-          workers[address] = worker;
         }
+        
+        workers[address] = worker;
       });
       
       
