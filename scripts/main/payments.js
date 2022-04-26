@@ -700,77 +700,6 @@ const PoolPayments = function (logger, client, sequelize) {
         }
 
         workers[address] = worker;
-
-        // Check if No Workers/Rounds
-        if (Object.keys(amounts).length === 0) {
-          callback(null, [rounds, workers]);
-          return;
-        }
-
-        // Send Payments to Workers Through Daemon
-        const rpcTracking = `sendmany "" ${ JSON.stringify(amounts) }`;
-        daemon.cmd('sendmany', ['', amounts], true, (result) => {
-
-          // Check Error Edge Cases
-          if (result.error && result.error.code === -5) {
-            logger.warning('Payments', pool, rpcTracking);
-            logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(result.error)}`);
-            callback(true, []);
-            return;
-          } else if (result.error && result.error.code === -6) {
-            logger.warning('Payments', pool, rpcTracking);
-            logger.error('Payments', pool, `Insufficient funds for payments: ${ JSON.stringify(result.error)}`);
-            callback(true, []);
-            return;
-          } else if (result.error && result.error.message != null) {
-            logger.warning('Payments', pool, rpcTracking);
-            logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(result.error)}`);
-            callback(true, []);
-            return;
-          } else if (result.error) {
-            logger.warning('Payments', pool, rpcTracking);
-            logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(result.error)}`);
-            callback(true, []);
-            return;
-          }
-
-          // Handle Returned Transaction ID
-          if (result.response) {
-            const transaction = result.response;
-            const currentDate = Date.now();
-            const payments = {
-              time: currentDate,
-              paid: totalSent,
-              miners: Object.keys(amounts).length,
-              transaction: transaction,
-            };
-
-            // Update Sequelize with Miner Payment Records
-            for (const [address, amount] of Object.entries(amounts)) {
-              sequelizePayments  
-                .create({
-                  pool: pool,
-                  block_type: blockType,
-                  miner: address,
-                  paid: amount,
-                  transaction: transaction,
-                  time: currentDate,
-                });
-            };
-
-            // Update Redis Database with Payment Record
-            logger.special('Payments', pool, `Sent ${ totalSent } ${ processingConfig.coin.symbol } to ${ Object.keys(amounts).length } workers, txid: ${ transaction }`);
-            commands.push(['zadd', `${ pool }:payments:${ blockType }:records`, dateNow / 1000 | 0, JSON.stringify(payments)]);
-            callback(null, [rounds, workers, commands]);
-            return;
-
-          // Invalid/No Transaction ID
-          } else {
-            logger.error('Payments', pool, 'RPC command did not return txid. Disabling payments to prevent possible double-payouts');
-            callback(true, []);
-            return;
-          }
-        });
       });
       
 
@@ -789,76 +718,76 @@ const PoolPayments = function (logger, client, sequelize) {
       // workers[address] = worker;
     });
 
-    // // Check if No Workers/Rounds
-    // if (Object.keys(amounts).length === 0) {
-    //   callback(null, [rounds, workers]);
-    //   return;
-    // }
+    // Check if No Workers/Rounds
+    if (Object.keys(amounts).length === 0) {
+      callback(null, [rounds, workers]);
+      return;
+    }
 
-    // // Send Payments to Workers Through Daemon
-    // const rpcTracking = `sendmany "" ${ JSON.stringify(amounts) }`;
-    // daemon.cmd('sendmany', ['', amounts], true, (result) => {
+    // Send Payments to Workers Through Daemon
+    const rpcTracking = `sendmany "" ${ JSON.stringify(amounts) }`;
+    daemon.cmd('sendmany', ['', amounts], true, (result) => {
 
-    //   // Check Error Edge Cases
-    //   if (result.error && result.error.code === -5) {
-    //     logger.warning('Payments', pool, rpcTracking);
-    //     logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(result.error)}`);
-    //     callback(true, []);
-    //     return;
-    //   } else if (result.error && result.error.code === -6) {
-    //     logger.warning('Payments', pool, rpcTracking);
-    //     logger.error('Payments', pool, `Insufficient funds for payments: ${ JSON.stringify(result.error)}`);
-    //     callback(true, []);
-    //     return;
-    //   } else if (result.error && result.error.message != null) {
-    //     logger.warning('Payments', pool, rpcTracking);
-    //     logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(result.error)}`);
-    //     callback(true, []);
-    //     return;
-    //   } else if (result.error) {
-    //     logger.warning('Payments', pool, rpcTracking);
-    //     logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(result.error)}`);
-    //     callback(true, []);
-    //     return;
-    //   }
+      // Check Error Edge Cases
+      if (result.error && result.error.code === -5) {
+        logger.warning('Payments', pool, rpcTracking);
+        logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(result.error)}`);
+        callback(true, []);
+        return;
+      } else if (result.error && result.error.code === -6) {
+        logger.warning('Payments', pool, rpcTracking);
+        logger.error('Payments', pool, `Insufficient funds for payments: ${ JSON.stringify(result.error)}`);
+        callback(true, []);
+        return;
+      } else if (result.error && result.error.message != null) {
+        logger.warning('Payments', pool, rpcTracking);
+        logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(result.error)}`);
+        callback(true, []);
+        return;
+      } else if (result.error) {
+        logger.warning('Payments', pool, rpcTracking);
+        logger.error('Payments', pool, `Error sending payments ${ JSON.stringify(result.error)}`);
+        callback(true, []);
+        return;
+      }
 
-    //   // Handle Returned Transaction ID
-    //   if (result.response) {
-    //     const transaction = result.response;
-    //     const currentDate = Date.now();
-    //     const payments = {
-    //       time: currentDate,
-    //       paid: totalSent,
-    //       miners: Object.keys(amounts).length,
-    //       transaction: transaction,
-    //     };
+      // Handle Returned Transaction ID
+      if (result.response) {
+        const transaction = result.response;
+        const currentDate = Date.now();
+        const payments = {
+          time: currentDate,
+          paid: totalSent,
+          miners: Object.keys(amounts).length,
+          transaction: transaction,
+        };
 
-    //     // Update Sequelize with Miner Payment Records
-    //     for (const [address, amount] of Object.entries(amounts)) {
-    //       sequelizePayments  
-    //         .create({
-    //           pool: pool,
-    //           block_type: blockType,
-    //           miner: address,
-    //           paid: amount,
-    //           transaction: transaction,
-    //           time: currentDate,
-    //         });
-    //     };
+        // Update Sequelize with Miner Payment Records
+        for (const [address, amount] of Object.entries(amounts)) {
+          sequelizePayments  
+            .create({
+              pool: pool,
+              block_type: blockType,
+              miner: address,
+              paid: amount,
+              transaction: transaction,
+              time: currentDate,
+            });
+        };
 
-    //     // Update Redis Database with Payment Record
-    //     logger.special('Payments', pool, `Sent ${ totalSent } ${ processingConfig.coin.symbol } to ${ Object.keys(amounts).length } workers, txid: ${ transaction }`);
-    //     commands.push(['zadd', `${ pool }:payments:${ blockType }:records`, dateNow / 1000 | 0, JSON.stringify(payments)]);
-    //     callback(null, [rounds, workers, commands]);
-    //     return;
+        // Update Redis Database with Payment Record
+        logger.special('Payments', pool, `Sent ${ totalSent } ${ processingConfig.coin.symbol } to ${ Object.keys(amounts).length } workers, txid: ${ transaction }`);
+        commands.push(['zadd', `${ pool }:payments:${ blockType }:records`, dateNow / 1000 | 0, JSON.stringify(payments)]);
+        callback(null, [rounds, workers, commands]);
+        return;
 
-    //   // Invalid/No Transaction ID
-    //   } else {
-    //     logger.error('Payments', pool, 'RPC command did not return txid. Disabling payments to prevent possible double-payouts');
-    //     callback(true, []);
-    //     return;
-    //   }
-    // });
+      // Invalid/No Transaction ID
+      } else {
+        logger.error('Payments', pool, 'RPC command did not return txid. Disabling payments to prevent possible double-payouts');
+        callback(true, []);
+        return;
+      }
+    });
   };
 
   // Structure and Apply Redis Updates
