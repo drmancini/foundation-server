@@ -672,7 +672,9 @@ const PoolPayments = function (logger, client, sequelize) {
       }
 
       for (const [key, value] of Object.entries(results[0])) {
-        miners[JSON.parse(key)] = JSON.parse(value);
+        console.log(key);
+        console.log(value);
+        miners[key] = JSON.parse(value);
       }
 
       console.log('miners: ' + miners[rkLV1Thx6d5hctjjTMaH6G4TLbJjZXMVZk]);
