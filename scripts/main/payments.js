@@ -713,7 +713,7 @@ const PoolPayments = function (logger, client, sequelize) {
     const amounts = data[2];
     const pool = config.name;
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
-a
+
     // Check if No Workers/Rounds
     if (Object.keys(amounts).length === 0) {
       callback(null, [rounds, workers]);
