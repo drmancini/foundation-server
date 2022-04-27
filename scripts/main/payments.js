@@ -654,6 +654,7 @@ const PoolPayments = function (logger, client, sequelize) {
 
   this.handleLimits = function(config, blockType, data, callback) {
     const amounts = {};
+    const miners = {};
 
     const pool = config.name;
     const rounds = data[0];
@@ -671,7 +672,8 @@ const PoolPayments = function (logger, client, sequelize) {
       }
 
       for (const [key, value] of Object.entries(results[0])) {
-        console.log('a: ' + key + value);
+        console.log('a: ' + key + ' = ' + JSON.parse(value));
+        miners[key] = JSON.parse(value);
       }
 
     
