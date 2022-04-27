@@ -672,20 +672,18 @@ const PoolPayments = function (logger, client, sequelize) {
       }
 
       for (const [key, value] of Object.entries(results[0])) {
-        console.log('a: ' + key + ' = ' + JSON.parse(value));
         miners[key] = JSON.parse(value);
       }
-
-    
-
-      console.log('results: ' + miners);
 
       // Calculate Amount to Send to Workers
       Object.keys(workers).forEach((address) => {
         const worker = workers[address];
         const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
+        const limit = miners[worker].payoutLimit;
+        console.log(worker);
+        console.log(amount);
+        console.log(limit);
       });
-      // Parse through miners and create manaageable data
 
 
       // Calculate Amount to Send to Workers
@@ -716,14 +714,7 @@ const PoolPayments = function (logger, client, sequelize) {
       // Test
 
       // nahraj vsechny minery z db na zacatku, predaj v data objektu sem a tady jen zpracuj
-      // let minerLimit;
-      // const commands = [['hget', `${ pool }:miners:${ blockType }`, address]];
-      // _this.client.multi(commands).exec((error, results) => {
-      //   if (error) {
-      //     logger.error('Payments', pool, `Could not get miner data from database: ${ JSON.stringify(error) }`);
-      //     callback(true, []);
-      //     return;
-      //   } else {
+      
       //     const minerObject = JSON.parse(results[0]);
       //     if (minerObject != null) {
       //       minerLimit = minerObject.payoutLimit;
@@ -731,6 +722,7 @@ const PoolPayments = function (logger, client, sequelize) {
       //     } else {
       //       minerLimit = 0;
       //     }
+      
       //     const payoutLimit = minerLimit > processingConfig.payments.minPaymentSatoshis ? minerLimit : processingConfig.payments.minPaymentSatoshis;
 
       //     // Determine Amounts Given Mininum Payment
