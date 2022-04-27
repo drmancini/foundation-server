@@ -669,7 +669,7 @@ const PoolPayments = function (logger, client, sequelize) {
         return;
       }
 
-      const miners = results[0].map((miner) => {
+      Object.keys(results[0]).forEach((miner) => {
         JSON.parse(miner);
       });
 
