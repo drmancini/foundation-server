@@ -10,6 +10,7 @@ const utils = require('./utils');
 const Stratum = require('foundation-stratum');
 const Sequelize = require('sequelize');
 const PaymentsModel = require('../../models/payments.model');
+const { Console } = require('console');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -669,8 +670,9 @@ const PoolPayments = function (logger, client, sequelize) {
         return;
       }
 
+
       Object.keys(results[0]).forEach((miner) => {
-        JSON.parse(miner);
+        console.log('a: ' + miner);
       });
 
 
