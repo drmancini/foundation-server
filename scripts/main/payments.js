@@ -674,6 +674,7 @@ const PoolPayments = function (logger, client, sequelize) {
       for (const [key, value] of Object.entries(results[0])) {
         const miner = JSON.parse(value);
         miners[key] = miner.payoutLimit;
+        console.log(miner.payoutLimit);as
       }
 
       console.log('miners: ' + miners.rkLV1Thx6d5hctjjTMaH6G4TLbJjZXMVZk);
@@ -689,6 +690,17 @@ const PoolPayments = function (logger, client, sequelize) {
         //console.log(amount);
         // console.log(limit);
       });
+
+      //     // Determine Amounts Given Mininum Payment
+      //     if (amount >= payoutLimit) {
+      //       worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
+      //       amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
+      //       totalSent += worker.sent;
+      //     } else {
+      //       worker.sent = 0;
+      //       worker.change = amount;
+      //     }
+      //   }
 
 
       // Calculate Amount to Send to Workers
