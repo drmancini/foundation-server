@@ -673,33 +673,37 @@ const PoolPayments = function (logger, client, sequelize) {
 
       for (const [key, value] of Object.entries(results[0])) {
         const miner = JSON.parse(value);
-        console.log('a: ' + key);
         miners[key] = miner.payoutLimit;
-        console.log('b: ' + miners[key]);
       }
 
       // Calculate Amount to Send to Workers
       Object.keys(workers).forEach((address) => {
         const worker = workers[address];
         const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
-        console.log(address);
+        const minerLimit = miners[address];
         // const limit = miners[address].payoutLimit;
         // const limit = miners.address.payoutLimit;
         // console.log(worker);
         //console.log(amount);
         // console.log(limit);
+
+        // Determine Amounts Given Mininum Payment
+        const payoutLimit = minerLimit > processingConfig.payments.minPaymentSatoshis ? minerLimit : processingConfig.payments.minPaymentSatoshis;
+
+        if (amount >= payoutLimit) {
+          worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
+          amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
+          totalSent += worker.sent;
+        } else {
+          worker.sent = 0;
+          worker.change = amount;
+        }
+        
+        workers[address] = worker;
       });
 
-      //     // Determine Amounts Given Mininum Payment
-      //     if (amount >= payoutLimit) {
-      //       worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
-      //       amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
-      //       totalSent += worker.sent;
-      //     } else {
-      //       worker.sent = 0;
-      //       worker.change = amount;
-      //     }
-      //   }
+      
+    
 
 
       // Calculate Amount to Send to Workers
