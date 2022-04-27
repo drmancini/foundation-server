@@ -694,7 +694,7 @@ const PoolPayments = function (logger, client, sequelize) {
           worker.sent = 0;
           worker.change = amount;
         }
-        console.log('amounts: ' + amounts);
+        console.log('amounts: ' + amounts[address]);
         workers[address] = worker;
       });
 
