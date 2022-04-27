@@ -674,7 +674,7 @@ const PoolPayments = function (logger, client, sequelize) {
       });
 
 
-      console.log('results: ' + miners);
+      console.log('results: ' + minersa);
 
       // Calculate Amount to Send to Workers
       Object.keys(workers).forEach((address) => {
