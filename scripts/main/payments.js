@@ -681,11 +681,6 @@ const PoolPayments = function (logger, client, sequelize) {
         const worker = workers[address];
         const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
         const minerLimit = miners[address];
-        // const limit = miners[address].payoutLimit;
-        // const limit = miners.address.payoutLimit;
-        // console.log(worker);
-        //console.log(amount);
-        // console.log(limit);
 
         // Determine Amounts Given Mininum Payment
         const payoutLimit = minerLimit > processingConfig.payments.minPaymentSatoshis ? minerLimit : processingConfig.payments.minPaymentSatoshis;
@@ -702,78 +697,22 @@ const PoolPayments = function (logger, client, sequelize) {
         workers[address] = worker;
       });
 
-      
-    
-
-
-      // Calculate Amount to Send to Workers
-
       // Return Share Data as Callback
-      callback(null, [rounds, workers]);
+      callback(null, [rounds, workers, amounts]);
     });
   };
 
   // Send Payments if Applicable
   this.handleSending = function(daemon, config, blockType, data, callback) {
-
     let totalSent = 0;
-    const amounts = {};
     const commands = [];
     const dateNow = Date.now();
 
     const rounds = data[0];
     const workers = data[1];
+    const amounts = data[2];
     const pool = config.name;
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
-
-    // Calculate Amount to Send to Workers
-    Object.keys(workers).forEach((address) => {
-      const worker = workers[address];
-      const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
-
-      // Test
-
-      // nahraj vsechny minery z db na zacatku, predaj v data objektu sem a tady jen zpracuj
-      
-      //     const minerObject = JSON.parse(results[0]);
-      //     if (minerObject != null) {
-      //       minerLimit = minerObject.payoutLimit;
-      //       minerLimit = utils.coinsToSatoshis(minerLimit, processingConfig.payments.magnitude);
-      //     } else {
-      //       minerLimit = 0;
-      //     }
-      
-      //     const payoutLimit = minerLimit > processingConfig.payments.minPaymentSatoshis ? minerLimit : processingConfig.payments.minPaymentSatoshis;
-
-      //     // Determine Amounts Given Mininum Payment
-      //     if (amount >= payoutLimit) {
-      //       worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
-      //       amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
-      //       totalSent += worker.sent;
-      //     } else {
-      //       worker.sent = 0;
-      //       worker.change = amount;
-      //     }
-      //   }
-
-      //   workers[address] = worker;
-      // });
-      
-
-      // End of Test
-
-      // Determine Amounts Given Mininum Payment
-      if (amount >= processingConfig.payments.minPaymentSatoshis) {
-        worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
-        amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
-        totalSent += worker.sent;
-      } else {
-        worker.sent = 0;
-        worker.change = amount;
-      }
-
-      workers[address] = worker;
-    });
 
     // Check if No Workers/Rounds
     if (Object.keys(amounts).length === 0) {
