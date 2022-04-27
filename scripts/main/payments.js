@@ -660,6 +660,7 @@ const PoolPayments = function (logger, client, sequelize) {
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
 
     const commands = [['hgetall', `${ pool }:miners:${ blockType }`]];
+    console.log(commands);
 
     // Perform Redis Commands
     _this.client.multi(commands).exec((error, results) => {
