@@ -653,6 +653,7 @@ const PoolPayments = function (logger, client, sequelize) {
   };
 
   this.handleLimits = function(config, blockType, data, callback) {
+    let totalSent = 0;
     const amounts = {};
     const miners = {};
 
@@ -704,7 +705,6 @@ const PoolPayments = function (logger, client, sequelize) {
 
   // Send Payments if Applicable
   this.handleSending = function(daemon, config, blockType, data, callback) {
-    let totalSent = 0;
     const commands = [];
     const dateNow = Date.now();
 
