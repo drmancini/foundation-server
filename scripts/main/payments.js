@@ -678,9 +678,8 @@ const PoolPayments = function (logger, client, sequelize) {
 
         // Calculate Amount to Send to Workers
         
-
-        callback(null, [rounds, workers]);
       }
+      callback(null, [rounds, workers]);
     });
   };
 
