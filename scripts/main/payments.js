@@ -670,13 +670,13 @@ const PoolPayments = function (logger, client, sequelize) {
         return;
       }
 
+      for (const [key, value] of Object.entries(results[0])) {
+        console.log('a: ' + key + value);
+      }
 
-      Object.keys(results[0]).forEach((miner) => {
-        console.log('a: ' + miner);
-      });
+    
 
-
-      console.log('results: ' + minersa);
+      console.log('results: ' + miners);
 
       // Calculate Amount to Send to Workers
       Object.keys(workers).forEach((address) => {
