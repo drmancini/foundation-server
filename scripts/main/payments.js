@@ -689,7 +689,6 @@ const PoolPayments = function (logger, client, sequelize) {
         if (amount >= payoutLimit) {
           worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
           amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
-          console.log('amounts: ' + amounts[address]);
           totalSent += worker.sent;
         } else {
           worker.sent = 0;
