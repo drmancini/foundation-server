@@ -682,10 +682,15 @@ const PoolPayments = function (logger, client, sequelize) {
         const worker = workers[address];
         const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
         const minerLimit = miners[address];
+        console.log('w: ' + worker);
+        console.log('a: ' + amount);
+        console.log('l: ' + limit);
 
         // Determine Amounts Given Mininum Payment
         const payoutLimit = minerLimit > processingConfig.payments.minPaymentSatoshis ? minerLimit : processingConfig.payments.minPaymentSatoshis;
 
+        console.log('payoutLimit: ' + payoutLimit);
+        
         if (amount >= payoutLimit) {
           worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
           amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
