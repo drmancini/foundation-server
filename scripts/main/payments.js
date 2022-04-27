@@ -681,8 +681,7 @@ const PoolPayments = function (logger, client, sequelize) {
       Object.keys(workers).forEach((address) => {
         const worker = workers[address];
         const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
-        const minerLimit = miners[address];
-        console.log('w: ' + worker);
+        const minerLimit = utils.coinsToSatoshis(miners[address], processingConfig.payments.magnitude);
         console.log('a: ' + amount);
         console.log('l: ' + minerLimit);
 
