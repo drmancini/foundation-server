@@ -699,7 +699,7 @@ const PoolPayments = function (logger, client, sequelize) {
       });
 
       // Return Share Data as Callback
-      callback(null, [rounds, workers, amounts]);
+      callback(null, [rounds, workers, amounts, totalSent]);
     });
   };
 
@@ -711,6 +711,7 @@ const PoolPayments = function (logger, client, sequelize) {
     const rounds = data[0];
     const workers = data[1];
     const amounts = data[2];
+    const totalSent = data[3];
     const pool = config.name;
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
 
