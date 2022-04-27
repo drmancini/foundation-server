@@ -660,7 +660,6 @@ const PoolPayments = function (logger, client, sequelize) {
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
 
     const commands = [['hgetall', `${ pool }:miners:${ blockType }`]];
-    console.log(commands);
 
     // Perform Redis Commands
     _this.client.multi(commands).exec((error, results) => {
@@ -670,7 +669,12 @@ const PoolPayments = function (logger, client, sequelize) {
         return;
       }
 
-      console.log('results: ' + results[0]);
+      const miners = results[0].map((miner) => {
+        JSON.parse(miner);
+      });
+
+
+      console.log('results: ' + miners);
 
       // Calculate Amount to Send to Workers
       Object.keys(workers).forEach((address) => {
