@@ -679,7 +679,9 @@ const PoolPayments = function (logger, client, sequelize) {
       Object.keys(workers).forEach((address) => {
         const worker = workers[address];
         const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
+        console.log(address);
         const limit = miners[address].payoutLimit;
+        // const limit = miners.address.payoutLimit;
         // console.log(worker);
         //console.log(amount);
         console.log(limit);
