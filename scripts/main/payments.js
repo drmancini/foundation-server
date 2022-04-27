@@ -660,25 +660,28 @@ const PoolPayments = function (logger, client, sequelize) {
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
 
     const commands = [['hgetall', `${ pool }:miners:${ blockType }`]];
+
+    // Perform Redis Commands
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
         logger.error('Payments', pool, `Could not get miner data from database: ${ JSON.stringify(error) }`);
         callback(true, []);
         return;
-      } else {
-        console.log('results: ' + results[0]);
-
-        // Calculate Amount to Send to Workers
-        Object.keys(workers).forEach((address) => {
-          const worker = workers[address];
-          const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
-        });
-        // Parse through miners and create manaageable data
-
-
-        // Calculate Amount to Send to Workers
-        
       }
+
+      console.log('results: ' + results[0]);
+
+      // Calculate Amount to Send to Workers
+      Object.keys(workers).forEach((address) => {
+        const worker = workers[address];
+        const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
+      });
+      // Parse through miners and create manaageable data
+
+
+      // Calculate Amount to Send to Workers
+
+      // Return Share Data as Callback
       callback(null, [rounds, workers]);
     });
   };
