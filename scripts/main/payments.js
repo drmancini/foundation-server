@@ -672,12 +672,11 @@ const PoolPayments = function (logger, client, sequelize) {
       }
 
       for (const [key, value] of Object.entries(results[0])) {
-        console.log(key);
-        console.log(value);
-        miners[key] = JSON.parse(value);
+        const miner = JSON.parse(value);
+        miners[key] = miner.payoutLimit;
       }
 
-      console.log('miners: ' + miners[rkLV1Thx6d5hctjjTMaH6G4TLbJjZXMVZk]);
+      console.log('miners: ' + miners.rkLV1Thx6d5hctjjTMaH6G4TLbJjZXMVZk);
 
       // Calculate Amount to Send to Workers
       Object.keys(workers).forEach((address) => {
