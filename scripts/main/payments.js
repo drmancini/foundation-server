@@ -651,6 +651,39 @@ const PoolPayments = function (logger, client, sequelize) {
     callback(null, [rounds, workers]);
   };
 
+  this.handleLimits = function(config, blockType, data, callback) {
+    const amounts = {};
+
+    const pool = config.name;
+    const rounds = data[0];
+    const workers = data[1];
+    const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
+
+    const commands = [['hgetall', `${ pool }:miners:${ blockType }`]];
+    _this.client.multi(commands).exec((error, results) => {
+      if (error) {
+        logger.error('Payments', pool, `Could not get miner data from database: ${ JSON.stringify(error) }`);
+        callback(true, []);
+        return;
+      } else {
+        console.log('results: ' + results[0]);
+
+        // Calculate Amount to Send to Workers
+        Object.keys(workers).forEach((address) => {
+          const worker = workers[address];
+          const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
+        });
+        // Parse through miners and create manaageable data
+
+
+        // Calculate Amount to Send to Workers
+        
+
+        callback(null, [rounds, workers]);
+      }
+    });
+  };
+
   // Send Payments if Applicable
   this.handleSending = function(daemon, config, blockType, data, callback) {
 
@@ -929,6 +962,7 @@ const PoolPayments = function (logger, client, sequelize) {
       (data, callback) => _this.handleShares(config, blockType, data, callback),
       (data, callback) => _this.handleOwed(daemon, config, category, blockType, data, callback),
       (data, callback) => _this.handleRewards(config, category, blockType, data, callback),
+      (data, callback) => _this.handleLimits(daemon, config, blockType, data, callback),
       (data, callback) => _this.handleSending(daemon, config, blockType, data, callback),
       (data, callback) => _this.handleUpdates(config, category, blockType, interval, data, callback),
     ], (error) => {
