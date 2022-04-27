@@ -674,7 +674,6 @@ const PoolPayments = function (logger, client, sequelize) {
       for (const [key, value] of Object.entries(results[0])) {
         const miner = JSON.parse(value);
         miners[key] = miner.payoutLimit;
-        console.log(miner.payoutLimit);as
       }
 
       console.log('miners: ' + miners.rkLV1Thx6d5hctjjTMaH6G4TLbJjZXMVZk);
