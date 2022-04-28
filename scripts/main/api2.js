@@ -972,6 +972,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     ];
     _this.executeCommands(commands, (results) => {
       const data = JSON.parse(results[0]);
+      console.log(data);
 
       for (const [key, value] of Object.entries(results[1])) {
         if (key.split('.')[0] === address) {
@@ -983,9 +984,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         }
       }
 
-      console.log(workers);
-      workers.sort((a, b) => a.work - b.work);
-      console.log(workers);
+      workers.sort((a, b) => b.work - a.work);
+      const worker = workers[0].worker;
+
       const output = {
         firstJoined: data.firstJoined,
         payoutLimit: data.payoutLimit || 0,
