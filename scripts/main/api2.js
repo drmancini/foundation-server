@@ -974,11 +974,13 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const data = JSON.parse(results[0]);
 
       for (const [key, value] of Object.entries(results[1])) {
-        const workerObject = {
-          worker: key,
-          work: JSON.parse(value).work
+        if (key.split('.')[0] === address) {
+          const workerObject = {
+            worker: key,
+            work: JSON.parse(value).work
+          }
+          workers.push(workerObject);
         }
-        workers.push(workerObject);
       }
 
       console.log(workers);
