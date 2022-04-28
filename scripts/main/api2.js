@@ -965,13 +965,25 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       blockType = 'primary';
     }
     const solo = isSolo ? 'solo' : 'shared';
+    const workers = [];
     const commands = [
       ['hget', `${ pool }:miners:${ blockType }`, address],
       ['hgetall', `${ pool }:rounds:${ blockType }:current:${ solo }:shares`],
     ];
     _this.executeCommands(commands, (results) => {
       const data = JSON.parse(results[0]);
-      console.log(results[1]);
+
+      for (const [key, value] of Object.entries(results[1])) {
+        const workerObject = {
+          worker: key,
+          work: JSON.parse(value).work
+        }
+        workers.push(workerObject);
+      }
+
+      console.log(workers);
+      workers.sort((a, b) => b.work - a.work);
+      console.log(workers);
       const output = {
         firstJoined: data.firstJoined,
         payoutLimit: data.payoutLimit || 0,
