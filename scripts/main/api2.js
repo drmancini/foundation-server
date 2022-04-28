@@ -973,7 +973,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     ];
     _this.executeCommands(commands, (results) => {
       const miner = JSON.parse(results[0]);
-      console.log(miner);
 
       for (const [key, value] of Object.entries(results[2])) {
         if (key.split('.')[0] === address) {
@@ -991,18 +990,16 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       for (const [key, value] of Object.entries(results[1])) {
         if (key.split('.')[0] === address) {
           const workerData = JSON.parse(value);
-          worker.ipAddress = workerData.ip_address;
           worker.ipHash = workerData.ip_hash;
+          worker.ipHint = workerData.ip_hint;
         }
       }
 
-      console.log(worker);
-
       const output = {
-        firstJoined: data.firstJoined,
-        payoutLimit: data.payoutLimit || 0,
-        ipAddress: 123,
-        ipHint: 123
+        firstJoined: miner.firstJoined,
+        payoutLimit: miner.payoutLimit || 0,
+        ipHash: worker.ipHash,
+        ipHint: worker.ipHint
       }
       
       callback(200, {
