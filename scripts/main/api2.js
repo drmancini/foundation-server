@@ -982,7 +982,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       }
 
       console.log(workers);
-      workers.sort((a, b) => b.work - a.work);
+      workers.sort((a, b) => a.work - b.work);
       console.log(workers);
       const output = {
         firstJoined: data.firstJoined,
