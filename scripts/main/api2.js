@@ -964,9 +964,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     if (blockType == '') {
       blockType = 'primary';
     }
-    
+
     const commands = [
-      ['hget', `${ pool }:miners:${ blockType }:${ solo }`, address],
+      ['hget', `${ pool }:miners:${ blockType }`, address],
     ];
     _this.executeCommands(commands, (results) => {
       const data = JSON.parse(results[0]);
