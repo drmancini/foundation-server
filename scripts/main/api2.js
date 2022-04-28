@@ -961,7 +961,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   //  API Endpoint dor /miner/details for miner [address]
   this.minerDetails = function(pool, address, callback) {
-
+    console.log('ki');
     const commands = [
       ['hget', `${ pool }:miners:${ blockType }:${ solo }`, address],
     ];
