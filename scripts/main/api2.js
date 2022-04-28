@@ -967,7 +967,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const solo = isSolo ? 'solo' : 'shared';
     const commands = [
       ['hget', `${ pool }:miners:${ blockType }`, address],
-      ['hget', `${ pool }:rounds:${ blockType }:current:${ solo }:shares`, address],
+      ['hgetall', `${ pool }:rounds:${ blockType }:current:${ solo }:shares`],
     ];
     _this.executeCommands(commands, (results) => {
       const data = JSON.parse(results[0]);
