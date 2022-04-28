@@ -959,6 +959,24 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
   };
 
+  //  API Endpoint dor /miner/details for miner [address]
+  this.minerDetails = function(pool, address, callback) {
+
+    const commands = [
+      ['hget', `${ pool }:miners:${ blockType }:${ solo }`, address],
+    ];
+    _this.executeCommands(commands, (results) => {
+      const data = JSON.parse(results[0]);
+      console.log(data);
+      
+      callback(200, {
+        result: {
+          data
+        }
+      });
+    }, callback);
+  }
+
   //  API Endpoint dor /miner/payments for miner [address]
   this.minerPayments = function(pool, address, page, callback) {
     let totalItems;
@@ -1655,6 +1673,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'chart' && address.length > 0):
             _this.minerChart(pool, address, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'details' && address.length > 0):
+            _this.minerDetails(pool, address, (code, message) => callback(code, message));
             break;
           case (endpoint === 'payments' && address.length > 0):
             _this.minerPayments(pool, address, page, (code, message) => callback(code, message));
