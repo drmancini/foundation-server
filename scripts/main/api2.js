@@ -970,11 +970,14 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     ];
     _this.executeCommands(commands, (results) => {
       const data = JSON.parse(results[0]);
-      console.log(data);
+      const output = {
+        firstJoined: data.firstJoined,
+        payoutLimit: data.payoutLimit || 0
+      }
       
       callback(200, {
         result: {
-          data
+          output
         }
       });
     }, callback);
