@@ -968,7 +968,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const workers = [];
     const commands = [
       ['hget', `${ pool }:miners:${ blockType }`, address],
-      ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`,
+      ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`],
       ['hgetall', `${ pool }:rounds:${ blockType }:current:${ solo }:shares`],
     ];
     _this.executeCommands(commands, (results) => {
