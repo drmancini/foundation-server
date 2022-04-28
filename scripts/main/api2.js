@@ -968,15 +968,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const workers = [];
     const commands = [
       ['hget', `${ pool }:miners:${ blockType }`, address],
+      ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`,
       ['hgetall', `${ pool }:rounds:${ blockType }:current:${ solo }:shares`],
     ];
     _this.executeCommands(commands, (results) => {
-      const data = JSON.parse(results[0]);
-      console.log(data);
+      const miner = JSON.parse(results[0]);
+      console.log(miner);
 
-      for (const [key, value] of Object.entries(results[1])) {
+      for (const [key, value] of Object.entries(results[2])) {
         if (key.split('.')[0] === address) {
-          console.log(value);
           const workerObject = {
             worker: key,
             work: JSON.parse(value).work,
@@ -989,6 +989,16 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
       workers.sort((a, b) => b.work - a.work);
       const worker = workers[0].worker;
+
+      for (const [key, value] of Object.entries(results[1])) {
+        if (key.split('.')[0] === address) {
+          const workerData = JSON.parse(value);
+          worker.ipAddress = workerData.ip_address;
+          worker.ipHash = workerData.ip_hash;
+        }
+      }
+
+      console.log(worker);
 
       const output = {
         firstJoined: data.firstJoined,
