@@ -960,19 +960,23 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   //  API Endpoint dor /miner/details for miner [address]
-  this.minerDetails = function(pool, blockType, address, callback) {
+  this.minerDetails = function(pool, address, blockType, isSolo, callback) {
     if (blockType == '') {
       blockType = 'primary';
     }
-
+    const solo = isSolo ? 'solo' : 'shared';
     const commands = [
       ['hget', `${ pool }:miners:${ blockType }`, address],
+      ['hget', `${ pool }:rounds:${ blockType }:current:${ solo }:shares`, address],
     ];
     _this.executeCommands(commands, (results) => {
       const data = JSON.parse(results[0]);
+      console.log(results[1]);
       const output = {
         firstJoined: data.firstJoined,
-        payoutLimit: data.payoutLimit || 0
+        payoutLimit: data.payoutLimit || 0,
+        ipAddress: 123,
+        ipHint: 123
       }
       
       callback(200, {
@@ -1679,7 +1683,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.minerChart(pool, address, (code, message) => callback(code, message));
             break;
           case (endpoint === 'details' && address.length > 0):
-            _this.minerDetails(pool, blockType, address, (code, message) => callback(code, message));
+            _this.minerDetails(pool, address, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'payments' && address.length > 0):
             _this.minerPayments(pool, address, page, (code, message) => callback(code, message));
