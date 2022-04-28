@@ -987,8 +987,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       workers.sort((a, b) => b.work - a.work);
       const worker = workers[0];
 
-      console.log(worker);
-
       for (const [key, value] of Object.entries(results[1])) {
         if (key.split('.')[0] === address) {
           const workerData = JSON.parse(value);
