@@ -960,8 +960,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   //  API Endpoint dor /miner/details for miner [address]
-  this.minerDetails = function(pool, address, callback) {
-    console.log('ki');
+  this.minerDetails = function(pool, blockType, address, callback) {
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+    
     const commands = [
       ['hget', `${ pool }:miners:${ blockType }:${ solo }`, address],
     ];
@@ -1675,7 +1678,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.minerChart(pool, address, (code, message) => callback(code, message));
             break;
           case (endpoint === 'details' && address.length > 0):
-            _this.minerDetails(pool, address, (code, message) => callback(code, message));
+            _this.minerDetails(pool, blockType, address, (code, message) => callback(code, message));
             break;
           case (endpoint === 'payments' && address.length > 0):
             _this.minerPayments(pool, address, page, (code, message) => callback(code, message));
