@@ -979,9 +979,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         if (key.split('.')[0] === address) {
           const workerObject = {
             worker: key,
-            work: JSON.parse(value).work,
-            ipAddress: 1,
-            ipHash: 1
+            work: JSON.parse(value).work
           }
           workers.push(workerObject);
         }
