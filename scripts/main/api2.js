@@ -985,7 +985,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       }
 
       workers.sort((a, b) => b.work - a.work);
-      const worker = workers[0].worker;
+      const worker = workers[0];
 
       console.log(worker);
 
