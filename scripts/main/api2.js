@@ -985,7 +985,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       }
 
       workers.sort((a, b) => b.work - a.work);
-      const worker = workers[0];
+      const worker = workers[0] || {};
 
       for (const [key, value] of Object.entries(results[1])) {
         if (key.split('.')[0] === address) {
@@ -1362,12 +1362,16 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const dateNow = Date.now();
     const thirtyDays = 30 * 24 * 60 * 60 * 1000;
     const commands = [
-      ['smembers', `${ pool }:blocks:${blockType}:confirmed`]];
+      ['smembers', `${ pool }:blocks:${blockType}:confirmed`],
+      ['smembers', `${ pool }:blocks:${blockType}:pending`]];
     _this.executeCommands(commands, (results) => {
       let output;
       let luckSum = 0;
       
-      const blocks = results[0].map(block => JSON.parse(block)) || [];
+      const confirmedBlocks = results[0].map(block => JSON.parse(block)) || [];
+      const pendingBlocks = results[1].map(block => JSON.parse(block)) || [];
+      const blocks = confirmedBlocks.concat(pendingBlocks);
+      
       blocks.filter((block) => block.time > dateNow - thirtyDays).forEach((block) => luckSum += block.luck);
       const blockCount = blocks.length;
       if (blockCount == 0) {
