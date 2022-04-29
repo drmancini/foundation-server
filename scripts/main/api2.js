@@ -796,10 +796,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
 
       const pending = results[2]
-        .map((block) => JSON.parse(block))
-        .filter((block) => block.worker.split('.')[0] === address);
+        .map((block) => JSON.parse(block));
       pending.forEach((block) => {
-        block.pending = true;
+        block.pending = currentBlock - block.height < 101 ? true : false;
         block.miner = block.worker.split('.')[0];
         delete block['worker'];
         block.type = 'block';
@@ -1371,7 +1370,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const confirmedBlocks = results[0].map(block => JSON.parse(block)) || [];
       const pendingBlocks = results[1].map(block => JSON.parse(block)) || [];
       const blocks = confirmedBlocks.concat(pendingBlocks);
-      
+
       blocks.filter((block) => block.time > dateNow - thirtyDays).forEach((block) => luckSum += block.luck);
       const blockCount = blocks.length;
       if (blockCount == 0) {
