@@ -796,7 +796,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
 
       const pending = results[2]
-        .map((block) => JSON.parse(block));
+        .map((block) => JSON.parse(block))
         .filter((block) => block.worker.split('.')[0] === address);
       pending.forEach((block) => {
         block.pending = currentBlock - block.height < 101 ? true : false;
