@@ -771,10 +771,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const commands = [
       ['smembers', `${ pool }:blocks:${ blockType }:confirmed`],
       ['smembers', `${ pool }:blocks:${ blockType }:kicked`],
-      ['smembers', `${ pool }:blocks:${ blockType }:pending`]];
+      ['smembers', `${ pool }:blocks:${ blockType }:pending`],
+      ['hgetall', `${ pool }:statistics:${ blockType }:network`]];
     _this.executeCommands(commands, (results) => {
       result = {};
-      
+      const currentBlock = results[3].height;
+
       const confirmed = results[0]
         .map((block) => JSON.parse(block))
         .filter((block) => block.worker.split('.')[0] === address);
@@ -795,6 +797,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         block.type = 'orphan';
       });
 
+      //
       const pending = results[2]
         .map((block) => JSON.parse(block))
         .filter((block) => block.worker.split('.')[0] === address);
