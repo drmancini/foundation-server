@@ -1761,6 +1761,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           case (endpoint === 'blocks'):
             _this.poolBlocks(pool, blockType, (code, message) => callback(code, message));
             break;
+          case (endpoint === 'clientIP'):
+            _this.poolClientIP(pool, (code, message) => callback(code, message));
+            break;
           case (endpoint === 'currentLuck'):
             _this.poolCurrentLuck(pool, blockType, isSolo, (code, message) => callback(code, message));
             break;
@@ -1837,7 +1840,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       case (type === 'pool'):
         switch (true) {
           case (endpoint === 'clientIP'):
-            _this.poolClientIP((code, message) => callback(code, message));
+            _this.poolClientIP(pool, (code, message) => callback(code, message));
             break;
           default:
             callback(405, 'The requested endpoint does not exist. Verify your input and try again');
