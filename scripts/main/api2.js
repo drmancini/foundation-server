@@ -994,7 +994,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       for (const [key, value] of Object.entries(results[1])) {
         if (key.split('.')[0] === address) {
           const workerData = JSON.parse(value);
-          worker.ipHash = workerData.ip_hash;
           worker.ipHint = workerData.ip_hint;
         }
       }
@@ -1002,7 +1001,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const output = {
         firstJoined: miner.firstJoined,
         payoutLimit: miner.payoutLimit || 0,
-        ipHash: worker.ipHash,
         ipHint: worker.ipHint
       }
       
@@ -1466,6 +1464,14 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /pool/currentLuck
+  this.poolClientIP = function(callback) {
+    const ipAddress = req.socket.remoteAddress;
+    callback(200, {
+        result: ipAddress,
+      });
+  };
+  
+  // API Endpoint for /pool/currentLuck
   this.poolCurrentLuck = function(pool, blockType, isSolo, callback) {
     if (blockType == '') {
       blockType = 'primary';
@@ -1786,7 +1792,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // Determine API Endpoint Called
   this.handleApiV3 = function(req, callback) {
 
-    let type, endpoint, body, method, blockType, isSolo, address, page;
+    let type, endpoint, body;
     const miscellaneous = ['pools'];
 
     // If Path Params Exist
@@ -1821,6 +1827,16 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         switch (true) {
           case (endpoint === 'payoutSettings'):
             _this.minerPayoutSettings(pool, body, (code, message) => callback(code, message));
+            break;
+          default:
+            callback(405, 'The requested endpoint does not exist. Verify your input and try again');
+            break;
+        }
+        break;
+      case (type === 'pool'):
+        switch (true) {
+          case (endpoint === 'clientIP'):
+            _this.poolClientIP((code, message) => callback(code, message));
             break;
           default:
             callback(405, 'The requested endpoint does not exist. Verify your input and try again');
