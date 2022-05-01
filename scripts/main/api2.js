@@ -1063,11 +1063,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     console.log('min: ' + minPayment);
     const payoutLimit = body.payoutLimit;
     if (minPayment > payoutLimit) {
-      callback(400 {
+      callback(400, {
         result: 'error'
       });
     }
-    
+
     const address = body.address;
     const ipHash = md5(body.ipAddress);
     const dateNow = Date.now();
