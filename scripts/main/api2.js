@@ -1464,13 +1464,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /pool/clientIP
-  this.poolClientIP = function(pool, remoteAddress, callback) {
-    const ipAddress = 123;
-    console.log(remoteAddress);
-    // const ipAddress = 'asd';
-    console.log('a: ' + ipAddress);
+  this.poolClientIP = function(remoteAddress, callback) {
     callback(200, {
-        result: 123,
+        result: remoteAddress,
       });
   };
   
@@ -1844,7 +1840,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       case (type === 'pool'):
         switch (true) {
           case (endpoint === 'clientIP'):
-            _this.poolClientIP(pool, remoteAddress, (code, message) => callback(code, message));
+            _this.poolClientIP(remoteAddress, (code, message) => callback(code, message));
             break;
           default:
             callback(405, 'The requested endpoint does not exist. Verify your input and try again');
