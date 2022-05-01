@@ -1116,7 +1116,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           }
         }, callback);
       } else {
-        
+        callback(200, {
+          result: 'no change'
+        });
       }
     }, callback);
   };
