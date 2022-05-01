@@ -1085,6 +1085,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         const worker = JSON.parse(value);
         const miner = worker.worker.split('.')[0] || '';
         if (miner === address && worker.time >= (dateNow - twentyFourHours)) {
+          console.log('here');
           if (ipHash == worker.ipHash) {
             console.log('hit');
             validated = true;
