@@ -1059,7 +1059,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /miner/paymentStats for miner [address]
   this.minerPayoutSettings = function(pool, body, callback) {
-    console.log('body: ' + body);
+    console.log('body: ' + body.address);
+    console.log('body: ' + body.ipAddress);
+    console.log('body: ' + body.payoutLimit);
     callback(200, {
         result: body,
       });
