@@ -1079,13 +1079,13 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       // miners ... payoutLimit
       // workers ... time, worker, ip_hash
       let minerObject = JSON.parse(results[1]);
-      console.log(minerObject);
 
       for (const [key, value] of Object.entries(results[0])) {
         const worker = JSON.parse(value);
-        console.log(worker);
         const miner = worker.worker.split('.')[0] || '';
-        console.log(miner);
+        console.log('a: ' + worker.time);
+        console.log('b: ' + dateNow - twentyFourHours);
+        
         // && worker.time >= (dateNow - twentyFourHours)
         if (miner === address) {
           console.log('here');
