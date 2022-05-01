@@ -1099,7 +1099,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
       if (validated == true) {
         console.log('update payoutLimit');
-        const commands2 = 
+        const commands2 = [];
       }
       
       callback(200, {
