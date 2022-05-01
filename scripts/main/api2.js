@@ -1083,11 +1083,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       for (const [key, value] of Object.entries(results[0])) {
         const worker = JSON.parse(value);
         const miner = worker.worker.split('.')[0] || '';
-        console.log('a: ' + worker.time * 1000);
-        console.log('b: ' + (dateNow - twentyFourHours));
+        // console.log('a: ' + worker.time * 1000);
+        // console.log('b: ' + (dateNow - twentyFourHours));
         
-        // && worker.time >= (dateNow - twentyFourHours)
-        if (miner === address) {
+        if (miner === address && (worker.time * 1000) >= (dateNow - twentyFourHours)) {
           console.log('here');
           if (ipHash == worker.ip_hash) {
             console.log('hit');
