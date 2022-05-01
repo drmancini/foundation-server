@@ -1111,9 +1111,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           });
         }, callback);
       } else {
-        callback(400, {
-          result: 'error',
-        });
+        // callback(400, {
+        //   result: 'error',
+        // });
       }
     }, callback);
   };
