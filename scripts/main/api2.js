@@ -977,7 +977,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     _this.executeCommands(commands, (results) => {
       const miner = JSON.parse(results[0]);
 
-      for (const [key, value] of Object.entries(results[2])) {
+      const shares = results[2] || {};
+      for (const [key, value] of Object.entries(shares)) {
         if (key.split('.')[0] === address) {
           const workerObject = {
             worker: key,
