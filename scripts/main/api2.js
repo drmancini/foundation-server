@@ -1465,8 +1465,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /pool/clientIP
   this.poolClientIP = function(pool, callback) {
-    //const ipAddress = req.socket.remoteAddress;
-    const ipAddress = 'asd';
+    const ipAddress = req.socket.remoteAddress;
+    // const ipAddress = 'asd';
     console.log('a: ' + ipAddress);
     callback(200, {
         result: 123,
