@@ -1104,7 +1104,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           ['hset', `${ pool }:miners:${ blockType }`, address, JSON.stringify(minerObject)],
         ];
         
-        _this.executeCommands(commands, (results) => {
+        _this.executeCommands(commands2, (results) => {
           callback(200, {
             result: results[0],
           });
