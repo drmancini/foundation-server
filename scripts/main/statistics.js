@@ -83,6 +83,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
 
   // Handle Users Information in Redis
   this.handleUsersInfo = function(blockType, callback, handler) {
+    const minPayment = _this.poolConfigs.primary.payments.minPayment || 1;
     const commands = [];
     const usersLookups = [
       ['hgetall', `${ _this.pool }:workers:${ blockType }:shared`],
@@ -98,7 +99,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
         if (!(miner in miners)) {
           const minerObject = {
             firstJoined: workerObject.time,
-            payoutLimit: 0
+            payoutLimit: minPayment
           }
           const output = JSON.stringify(minerObject);
           commands.push(['hset', `${ _this.pool }:miners:${ blockType }`, miner, output]);  
