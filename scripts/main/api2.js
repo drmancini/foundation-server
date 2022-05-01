@@ -5,6 +5,7 @@
  */
 
 const utils = require('./utils');
+const md5 = require('blueimp-md5');
 const Algorithms = require('foundation-stratum').algorithms;
 const { Sequelize, Op } = require('sequelize');
 const PaymentsModel = require('../../models/payments.model');
@@ -1057,13 +1058,51 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /miner/paymentStats for miner [address]
-  this.minerPayoutSettings = function(pool, body, callback) {
-    console.log('body: ' + body.address);
-    console.log('body: ' + body.ipAddress);
-    console.log('body: ' + body.payoutLimit);
-    callback(200, {
-        result: body,
+  this.minerPayoutSettings = function(pool, body, blockType, isSolo, callback) {
+    let blockType;
+    let validated = false;
+    const dateNow = Date.now();
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+    const address = body.address;
+    const ipHash = md5(body.ipAddress);
+    const payoutLimit = body.payoutLimit;
+    const solo = isSolo ? 'solo' : 'shared';
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+
+    const commands = [
+      ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`],
+      ['hget', `${ pool }:miners:${ blockType }`, address],
+    ];
+    
+    _this.executeCommands(commands, (results) => {
+      // miners ... payoutLimit
+      // workers ... time, worker, ip_hash
+      let minerObject = JSON.parse(result[1]);
+      console.log(minerObject);
+
+      for (const [key, value] of Object.entries(results[0])) {
+        const worker = JSON.parse(value);
+        const miner = worker.worker.split('.')[0] || '';
+        if (miner === address && worket.time >= (dateNow - twentyFourHours)) {
+          if (ipHash == worker.ipHash) {
+            console.log('hit');
+            validated = true;
+          } else {
+            console.log('miss');
+          }
+        }
+      }
+
+      if (validated == true) {
+        console.log('update payoutLimit');
+      }
+      
+      callback(200, {
+        result: 123,
       });
+    }, callback);
   };
 
   // API Endpoint for /miner/paymentStats for miner [address]
@@ -1791,7 +1830,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // Determine API Endpoint Called
   this.handleApiV3 = function(req, callback) {
 
-    let type, endpoint, body, remoteAddress;
+    let type, endpoint, body, isSolo, blockType, remoteAddress;
     const miscellaneous = ['pools'];
 
     // If Socket Params Exist
@@ -1830,7 +1869,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       case (type === 'miner'):
         switch (true) {
           case (endpoint === 'payoutSettings'):
-            _this.minerPayoutSettings(pool, body, (code, message) => callback(code, message));
+            _this.minerPayoutSettings(pool, body, blockType, isSolo, (code, message) => callback(code, message));
             break;
           default:
             callback(405, 'The requested endpoint does not exist. Verify your input and try again');
