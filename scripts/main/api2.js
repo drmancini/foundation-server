@@ -1111,9 +1111,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         }, callback);
       }
       
-      callback(200, {
-        result: 123,
-      });
+      // callback(200, {
+      //   result: 123,
+      // });
     }, callback);
   };
 
