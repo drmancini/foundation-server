@@ -1058,6 +1058,14 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /miner/paymentStats for miner [address]
+  this.minerPayoutSettings = function(pool, body, callback) {
+    console.log('body: ' + body);
+    callback(200, {
+        result: body,
+      });
+  };
+
+  // API Endpoint for /miner/paymentStats for miner [address]
   this.minerPaymentStats = function(pool, address, callback) {
     sequelizePayments
       .findAll({
@@ -1674,7 +1682,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     response.end(JSON.stringify(payload));
   };
 
-    // Determine API Endpoint Called
+  // Determine API Endpoint Called
   this.handleApiV2 = function(req, callback) {
 
     let type, endpoint, method, blockType, isSolo, address, page;
@@ -1760,6 +1768,56 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'workerCount'):
             _this.poolWorkerCount(pool, blockType, isSolo, (code, message) => callback(code, message));
+            break;
+          default:
+            callback(405, 'The requested endpoint does not exist. Verify your input and try again');
+            break;
+        }
+        break;
+      default:
+        callback(405, 'The requested endpoint does not exist. Verify your input and try again');
+      break;
+    }
+  };
+
+  // Determine API Endpoint Called
+  this.handleApiV3 = function(req, callback) {
+
+    let type, endpoint, body, method, blockType, isSolo, address, page;
+    const miscellaneous = ['pools'];
+
+    // If Path Params Exist
+    if (req.params) {
+      pool = utils.validateInput(req.params.pool || '');
+      type = utils.validateInput(req.params.type || '');
+      endpoint = utils.validateInput(req.params.endpoint || '');
+    }
+
+    // If Query Params Exist
+    if (req.query) {
+      method = utils.validateInput(req.query.method || '');
+      blockType = utils.validateInput(req.query.blockType || '');
+      isSolo = utils.validateInput(req.query.isSolo || '');
+      address = utils.validateInput(req.query.address || '');
+      page = utils.validateInput(req.query.page || '');
+    }
+
+    if (req.body) {
+      body = req.body || '';
+    }
+
+    // Check if Requested Pool Exists
+    if (!(pool in _this.poolConfigs) && !(miscellaneous.includes(pool))) {
+      callback(404, 'The requested pool was not found. Verify your input and try again');
+      return;
+    }
+
+    // Select Endpoint from Parameters
+    switch (true) {
+      case (type === 'miner'):
+        switch (true) {
+          case (endpoint === 'payoutSettings'):
+            _this.minerPayoutSettings(pool, body, (code, message) => callback(code, message));
             break;
           default:
             callback(405, 'The requested endpoint does not exist. Verify your input and try again');
