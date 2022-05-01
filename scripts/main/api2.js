@@ -1469,7 +1469,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     // const ipAddress = 'asd';
     console.log('a: ' + ipAddress);
     callback(200, {
-        result: 123,
+        result: ipAddress,
       });
   };
   
