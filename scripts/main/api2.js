@@ -1059,7 +1059,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /miner/paymentStats for miner [address]
   this.minerPayoutSettings = function(pool, body, blockType, isSolo, callback) {
-    let blockType;
     let validated = false;
     const dateNow = Date.now();
     const twentyFourHours = 24 * 60 * 60 * 1000;
