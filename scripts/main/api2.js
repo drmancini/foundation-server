@@ -1105,15 +1105,18 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         ];
         
         _this.executeCommands(commands2, (results) => {
-          console.log('c2: ' + results[0]);
-          callback(200, {
-            result: results[0],
-          });
+          if (results[0] == 0) {
+            callback(200, {
+              result: 'ok'
+            });
+          } else {
+            callback(400, {
+              result: 'error'
+            });
+          }
         }, callback);
       } else {
-        // callback(400, {
-        //   result: 'error',
-        // });
+        
       }
     }, callback);
   };
