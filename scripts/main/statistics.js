@@ -83,7 +83,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
 
   // Handle Users Information in Redis
   this.handleUsersInfo = function(blockType, callback, handler) {
-    const minPayment = _this.poolConfigs.primary.payments.minPayment || 1;
+    const minPayment = _this.poolConfig.primary.payments.minPayment || 1;
     const commands = [];
     const usersLookups = [
       ['hgetall', `${ _this.pool }:workers:${ blockType }:shared`],
