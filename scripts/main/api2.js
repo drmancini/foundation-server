@@ -1061,7 +1061,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   this.minerPayoutSettings = function(pool, body, blockType, isSolo, callback) {
     let validated = false;
     const dateNow = Date.now();
-    const twentyFourHours = 24 * 60 * 60;
+    const twentyFourHours = 24 * 60 * 60 * 1000;
     const address = body.address;
     const ipHash = md5(body.ipAddress);
     const payoutLimit = body.payoutLimit;
@@ -1083,8 +1083,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       for (const [key, value] of Object.entries(results[0])) {
         const worker = JSON.parse(value);
         const miner = worker.worker.split('.')[0] || '';
-        console.log('a: ' + worker.time);
-        console.log('b: ' + dateNow - twentyFourHours);
+        console.log('a: ' + worker.time * 1000);
+        console.log('b: ' + (dateNow - twentyFourHours));
         
         // && worker.time >= (dateNow - twentyFourHours)
         if (miner === address) {
