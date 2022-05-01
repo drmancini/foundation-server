@@ -1463,11 +1463,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
-  // API Endpoint for /pool/currentLuck
-  this.poolClientIP = function(callback) {
+  // API Endpoint for /pool/clientIP
+  this.poolClientIP = function(pool, callback) {
     const ipAddress = req.socket.remoteAddress;
+    console.log('a: ' + ipAddress);
     callback(200, {
-        result: ipAddress,
+        result: 123,
       });
   };
   
