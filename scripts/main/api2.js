@@ -1060,40 +1060,35 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /miner/paymentStats for miner [address]
   this.minerPayoutSettings = function(pool, body, blockType, isSolo, callback) {
     const minPayment = _this.poolConfigs[pool].primary.payments.minPayment;
-    console.log('min: ' + minPayment);
     const payoutLimit = body.payoutLimit;
+
     if (minPayment > payoutLimit) {
       callback(400, {
         result: 'error'
       });
     }
 
+    const solo = isSolo ? 'solo' : 'shared';
+    if (blockType == '') {
+      blockType = 'primary';
+    }
     const address = body.address;
     const ipHash = md5(body.ipAddress);
     const dateNow = Date.now();
     const twentyFourHours = 24 * 60 * 60 * 1000;
     let validated = false;
     
-    const solo = isSolo ? 'solo' : 'shared';
-    if (blockType == '') {
-      blockType = 'primary';
-    }
-
     const commands = [
       ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`],
       ['hget', `${ pool }:miners:${ blockType }`, address],
     ];
     
     _this.executeCommands(commands, (results) => {
-      // miners ... payoutLimit
-      // workers ... time, worker, ip_hash
       let minerObject = JSON.parse(results[1]);
 
       for (const [key, value] of Object.entries(results[0])) {
         const worker = JSON.parse(value);
         const miner = worker.worker.split('.')[0] || '';
-        // console.log('a: ' + worker.time * 1000);
-        // console.log('b: ' + (dateNow - twentyFourHours));
         
         if (miner === address && (worker.time * 1000) >= (dateNow - twentyFourHours)) {
           if (ipHash == worker.ip_hash) {
@@ -1104,8 +1099,16 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       }
 
       if (validated == true) {
-        console.log('update payoutLimit');
-        const commands2 = [];
+        minerObject.payoutLimit = payoutLimit;
+        const commands2 = [
+          ['hset', `${ pool }:miners:${ blockType }`, address, JSON.stringify(minerObject)],
+        ];
+        
+        _this.executeCommands(commands, (results) => {
+          callback(200, {
+            result: results[0],
+          });
+        }, callback);
       }
       
       callback(200, {
