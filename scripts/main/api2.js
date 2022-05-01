@@ -32,7 +32,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   this.headers = {
     'Access-Control-Allow-Headers' : 'Content-Type, Access-Control-Allow-Headers, Access-Control-Allow-Origin, Access-Control-Allow-Methods',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET',
+    'Access-Control-Allow-Methods': 'GET, PUT',
     'Content-Type': 'application/json'
   };
 
