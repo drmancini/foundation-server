@@ -1059,12 +1059,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /miner/paymentStats for miner [address]
   this.minerPayoutSettings = function(pool, body, blockType, isSolo, callback) {
-    let validated = false;
-    const dateNow = Date.now();
-    const twentyFourHours = 24 * 60 * 60 * 1000;
+    const minPayment = _this.poolConfigs[pool][blockType].payments.minPayment;
+    console.log('min: ' + minPayment);
+    const payoutLimit = body.payoutLimit;
     const address = body.address;
     const ipHash = md5(body.ipAddress);
-    const payoutLimit = body.payoutLimit;
+    const dateNow = Date.now();
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+    let validated = false;
+    
     const solo = isSolo ? 'solo' : 'shared';
     if (blockType == '') {
       blockType = 'primary';
@@ -1087,18 +1090,16 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         // console.log('b: ' + (dateNow - twentyFourHours));
         
         if (miner === address && (worker.time * 1000) >= (dateNow - twentyFourHours)) {
-          console.log('here');
           if (ipHash == worker.ip_hash) {
-            console.log('hit');
             validated = true;
-          } else {
-            console.log('miss');
-          }
+            minerObject.payoutLimit
+          } 
         }
       }
 
       if (validated == true) {
         console.log('update payoutLimit');
+        const commands2 = 
       }
       
       callback(200, {
