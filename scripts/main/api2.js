@@ -1059,7 +1059,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /miner/paymentStats for miner [address]
   this.minerPayoutSettings = function(pool, body, blockType, isSolo, callback) {
-    const minPayment = _this.poolConfigs[pool][blockType].payments.minPayment;
+    const minPayment = _this.poolConfigs[pool].primary.payments.minPayment;
     console.log('min: ' + minPayment);
     const payoutLimit = body.payoutLimit;
     const address = body.address;
