@@ -43,7 +43,6 @@ const PoolServer = function (logger, client, sequelize) {
     const app = express();
     const api = new PoolApi(_this.client, _this.poolConfigs, _this.portalConfig);
     const api2 = new PoolApi2(_this.client, _this.sequelize, _this.poolConfigs, _this.portalConfig);
-    const api3 = new PoolApi2(_this.client, _this.sequelize, _this.poolConfigs, _this.portalConfig);
     const limiter = rateLimit({ windowMs: 1 * 60 * 1000, max: 100 });
     const cache = apicache.options({}).middleware;
 
@@ -85,7 +84,6 @@ const PoolServer = function (logger, client, sequelize) {
     app.use((err, req, res, next) => {
       _this.handleErrors(api, err, res);
       _this.handleErrors(api2, err, res);
-      _this.handleErrors(api3, err, res);
     });
 
     // Handle Health Check

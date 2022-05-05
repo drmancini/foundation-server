@@ -721,6 +721,8 @@ const PoolPayments = function (logger, client, sequelize) {
       return;
     }
 
+    console.log(amounts);
+
     // Send Payments to Workers Through Daemon
     const rpcTracking = `sendmany "" ${ JSON.stringify(amounts) }`;
     daemon.cmd('sendmany', ['', amounts], true, (result) => {

@@ -86,17 +86,6 @@ describe('Test loader functionality', () => {
     expect(response).toBe(false);
   });
 
-  test('Test pool configuration validation [7]', () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const algorithms = { mining: 'scrypt', block: 'sha256d', coinbase: 'sha256d' };
-    const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: true, statistics: { historicalInterval: 300 }, primary: { coin: { algorithms: algorithms }, payments: {}}};
-    const response = poolLoader.validatePoolConfigs(poolConfig);
-    expect(consoleSpy).toHaveBeenCalled();
-    expect(response).toBe(false);
-    console.log.mockClear();
-  });
-
   test('Test pool recipient validation [1]', () => {
     const poolLoader = new PoolLoader(logger, configCopy);
     const poolConfig = { enabled: true, name: 'Litecoin', primary: {}};

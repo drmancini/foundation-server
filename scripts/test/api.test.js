@@ -12,22 +12,6 @@ const poolConfig = require('../../configs/pools/example.js');
 const portalConfig = require('../../configs/main/example.js');
 const PoolApi = require('../main/api');
 
-const sequelizeMock = require('sequelize-mock');
-const sequelize = new sequelizeMock();
-
-jest.mock('../../models/payments.model.js', () => () => {  
-  const SequelizeMock = require("sequelize-mock");
-  const dbMock = new SequelizeMock();
-  return dbMock.define('payments', {
-    pool: 'Pool1',
-    block_type: 'primary',  
-    time: 123,
-    paid: 123.4,
-    transaction: 'asd',
-    miner: 'asd'
-  })
-});
-
 const client = redis.createClient({
   'port': portalConfig.redis.port,
   'host': portalConfig.redis.host,
@@ -79,7 +63,7 @@ describe('Test API functionality', () => {
   });
 
   test('Test initialization of API', () => {
-    const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+    const poolApi = new PoolApi(client, poolConfigs, portalConfig);
     expect(typeof poolApi.handleBlocksConfirmed).toBe('function');
     expect(typeof poolApi.handleMinersActive).toBe('function');
     expect(typeof poolApi.handleApiV1).toBe('function');
@@ -95,7 +79,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest();
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -112,7 +96,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest('Pool1', 'unknown', 'unknown');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -130,7 +114,7 @@ describe('Test API functionality', () => {
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest('Pool1', 'unknown', 'unknown');
       const poolConfigsCopy = JSON.parse(JSON.stringify(poolConfigs));
-      const poolApi = new PoolApi(client, sequelize, poolConfigsCopy, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigsCopy, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -174,7 +158,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'blocks', 'confirmed');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -201,7 +185,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'blocks', 'kicked');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -228,7 +212,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'blocks', 'pending');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -262,7 +246,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'blocks');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -307,7 +291,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'blocks', 'worker1');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -326,7 +310,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest('pools');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -351,7 +335,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'historical');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -385,7 +369,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'miners', 'active');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -428,7 +412,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'miners', 'worker2');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -468,7 +452,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'miners', 'worker1');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -501,7 +485,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'miners');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -530,7 +514,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'balances');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -559,7 +543,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'generate');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -588,27 +572,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'immature');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
-      poolApi.handleApiV1(request, (code, message) => {
-        poolApi.buildResponse(code, message, response);
-      });
-    });
-  });
-
-  test('Test handlePaymentsMinerRecords API endpoint', (done) => {
-    const commands = [];
-    const response = mockResponse();
-      response.on('end', (payload) => {
-        const processed = JSON.parse(payload);
-        expect(processed.statusCode).toBe(200);
-        expect(typeof processed.body).toBe('object');
-        expect(Object.keys(processed.body.primary).length).toBe(1);
-        expect(Object.keys(processed.body.auxiliary).length).toBe(0);
-        done();
-      });
-    mockSetupClient(client, commands, 'Pool1', () => {
-      const request = mockRequest('Pool1', 'payments', 'asd');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -637,7 +601,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'paid');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -661,7 +625,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest('Pool1', 'ports');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -693,7 +657,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments', 'records');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -737,7 +701,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'payments');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -763,7 +727,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'rounds', 'current');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -788,7 +752,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'rounds', '180');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -816,7 +780,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'rounds');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -836,7 +800,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = mockRequest('Pool1', 'rounds');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -875,7 +839,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'statistics');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -914,7 +878,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -946,7 +910,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'workers', 'active');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -987,7 +951,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'workers', 'worker2.w1');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -1026,7 +990,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'workers', 'worker1');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
@@ -1058,7 +1022,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, commands, 'Pool1', () => {
       const request = mockRequest('Pool1', 'workers');
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
