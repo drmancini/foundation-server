@@ -253,7 +253,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       ['hgetall', `${ pool }:rounds:${ blockType }:current:${ solo }:shares`],
     ];
     _this.executeCommands(commands, (results) => {
-      const miner = JSON.parse(results[0]);
+      const miner = JSON.parse(results[0]) || {};
 
       const shares = results[2] || {};
       for (const [key, value] of Object.entries(shares)) {
