@@ -190,7 +190,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
     const minuteEnd = Math.floor(dateNow / oneMinute) * oneMinute;
     const minuteStart = minuteEnd - oneMinute;
     const workerLookups = [
-      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, minuteStart / 1000, minuteEnd / 1000],
+      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, `(${ minuteStart / 1000 }`, minuteEnd / 1000],
       ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, minuteEnd / 1000, minuteEnd / 1000]];
     _this.executeCommands(workerLookups, (results) => {
       const workerData = results[0] || []; // no solo
@@ -267,7 +267,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
     const tenMinutesStart = tenMinutesEnd - tenMinutes;
     const oneDayAgo = tenMinutesEnd - oneDay;
     const workerLookups = [
-      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, tenMinutesStart / 1000, tenMinutesEnd / 1000],
+      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, `(${ tenMinutesStart / 1000 }`, tenMinutesEnd / 1000],
       ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:historical`, tenMinutesEnd / 1000, tenMinutesEnd / 1000]];
     _this.executeCommands(workerLookups, (results) => {
       const workerData = results[0] || []; // no solo
