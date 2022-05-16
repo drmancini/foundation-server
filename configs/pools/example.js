@@ -59,6 +59,7 @@ config.p2p.port = 8333;
 
 // Statistics Configuration
 config.statistics = {};
+config.statistics.enabled = true;
 config.statistics.blocksInterval = 20; // s;
 config.statistics.hashrateInterval = 20; // s;
 config.statistics.historicalInterval = 1800; // s;
