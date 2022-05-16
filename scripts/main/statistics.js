@@ -203,7 +203,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
           const objectTemplate = {
             worker: workerObject.worker,
             work: workerObject.work || 0,
-            timestamp: minuteEnd,
+            timestamp: minuteEnd / 1000,
             validMin: workerObject.types.valid || 0,
             validMax: workerObject.types.valid || 0,
             staleMax: workerObject.types.stale || 0,
@@ -276,7 +276,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
           const objectTemplate = {
             worker: workerObject.worker,
             work: workerObject.work || 0,
-            timestamp: tenMinutesEnd,
+            timestamp: tenMinutesEnd / 1000,
             valid: workerObject.valid || 0,
             stale: workerObject.stale || 0,
             invalid: workerObject.invalid || 0,
@@ -296,7 +296,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
 
       commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, 0, `(${ tenMinutesEnd / 1000 }`]);
       commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:historical`, 0, `(${ oneDayAgo / 1000 }`]);
-      
+
       callback(commands);
     }, handler);
   };
