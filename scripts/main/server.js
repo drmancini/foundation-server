@@ -72,6 +72,14 @@ const PoolServer = function (logger, client, sequelize) {
 
     // Handle v3 API PUT Requests
     /* istanbul ignore next */
+    app.put('/api/v2/:pool/:type/:endpoint?', (req, res) => {
+      api2.handleApiV3(req, (code, message) => {
+        api2.buildResponse(code, message, res);
+      });
+    });
+
+    // Handle v3 API PUT Requests
+    /* istanbul ignore next */
     app.put('/api/v3/:pool/:type/:endpoint?', (req, res) => {
       api2.handleApiV3(req, (code, message) => {
         api2.buildResponse(code, message, res);
