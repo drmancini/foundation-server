@@ -536,6 +536,91 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   //          workers: utils.combineWorkers(results[5], results[6]),
 
+  // API Endpoint for /miner/stats2 for miner [address]
+  this.minerStats2 = function(pool, address, blockType, isSolo, callback) {
+    const solo = isSolo ? 'solo' : 'shared';
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
+    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
+    const hashrate12Window = 60 * 60 * 12;
+    const hashrate12WindowTime = (((Date.now() / 1000) - hashrate12Window) | 0);
+    const hashrate24Window = 60 * 60 * 24;
+    const hashrate24WindowTime = (((Date.now() / 1000) - hashrate24Window) | 0);
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    
+    const commands = [
+      ['hgetall', `${ pool }:rounds:${ blockType }:current:${ solo }:historical`],
+      ['hgetall', `${ pool }:rounds:${ blockType }:current:${ solo }:snapshots`],
+      ['hgetall', `${ pool }:rounds:${ blockType }:current:${ solo }:hashrate`]];
+    _this.executeCommands(commands, (results) => {
+      let hashrateData = 0;
+      let hashrate12Data = 0; // change to round hashrate
+      let hashrate24Data = 0;
+      let valid = 0;
+      let invalid = 0;
+      let stale = 0;
+
+      const historical = results[0] || {};
+      historical.forEach((entry) => {
+        const snapshot = JSON.parse(entry);
+        if (snapshot.worker.split('.')[0] == address) {
+          valid += snapshot.valid;
+          stale += snapshot.stale;
+          invalid += snapshot.invalid;
+          hashrate24Data += /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
+          if (snapshot.timestamp > hashrate12WindowTime) {
+            hashrate12Data += /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
+          }
+        }
+      });
+
+      const snapshots = result[1] || {};
+      let maxSnapshotTime = 0;
+      snapshots.forEach((entry) => {
+        const snapshot = JSON.parse(entry);
+        if (snapshot.time * 1000 > maxSnapshotTime) {
+          maxSnapshotTime = snapshot.time;
+        }
+        if (snapshot.worker.split('.')[0] == address) {
+          valid += snapshot.valid;
+          stale += snapshot.stale;
+          invalid += snapshot.invalid;
+          hashrate24Data += /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
+          hashrate12Data += /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
+        }
+      });
+
+      const shares = result[2] || {};
+      shares.forEach((entry) => {
+        const share = JSON.parse(entry);
+        if (share.worker.split('.')[0] == address) {
+          const timestamp = share.timestamp / 1000 | 0;
+          if (timestamp > maxSnapshotTime) {
+            // do the min max value mashup
+            // valid += snapshot.valid;
+            // stale += snapshot.stale;
+            // invalid += snapshot.invalid;
+            hashrate24Data += /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
+            hashrate12Data += /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
+          }
+
+        }
+      });
+      
+        callback(200, {
+        validShares: valid,
+        invalidShares: invalid,
+        staleShares: stale,
+        currentHashrate: (multiplier * hashrateData) / hashrateWindow,
+        averageHalfDayHashrate: (multiplier * hashrate12Data) / hashrate12Window,
+        averageDayHashrate: (multiplier * hashrate24Data) / hashrate24Window,
+      });
+    }, callback);
+  };
+
   // API Endpoint for /miner/workers for miner [address]
   this.minerWorkers = function(pool, address, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
@@ -1073,6 +1158,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'stats' && address.length > 0):
             _this.minerStats(pool, address, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'stats2' && address.length > 0):
+            _this.minerStats2(pool, address, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'workerCount' && address.length > 0):
             _this.minerWorkerCount(pool, address, blockType, isSolo, (code, message) => callback(code, message));
