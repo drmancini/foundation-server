@@ -240,6 +240,174 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
   };
 
+  // API Endpoint for /miner/chart2 for miner [address]
+  this.minerChart2 = function(pool, address, blockType, isSolo, worker, callback) {
+    const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
+    const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    const tenMinutes = 1000 * 60 * 10;
+    const maxSteps = 24 * 6;
+    const lastTimestamp = Math.floor(Date.now() / tenMinutes) * tenMinutes;
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+    const solo = isSolo ? 'solo' : 'shared';
+
+    const commands = [
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:historical`, 0, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:snapshots`, 0, '+inf']];
+    _this.executeCommands(commands, (results) => {
+      const historical = results[0] || {};
+      const snapshots = results[1] || {};
+      const output = [];
+      console.log('worker: ' + worker);
+      console.log('worker type: ' + typeof(worker));
+
+      for (const [key, value] of Object.entries(historical)) {
+        const snapshot = JSON.parse(value);
+
+        if (snapshot.worker.split('.')[0] == address) {
+          const workerHashrateArray = [];
+          //const 
+          const tempObject = {
+            timestamp: snapshot.timestamp,
+            hashrate: snapshot.work * multiplier / (tenMinutes / 1000),
+            //averageHashrate: minerHashrateMA,
+            validShares: snapshot.valid,
+            staleShares: snapshot.stale,
+            invalidShares: snapshot.invalid
+          };
+          output.push(tempObject);
+        }
+      };
+      callback(200, {
+        result: output
+      });
+    }, callback);
+    
+    // sequelizeShares
+    //   .findAll({
+    //     raw: true,
+    //     attributes: ['share', 'share_type'],
+    //     where: {
+    //       pool: pool,
+    //       block_type: 'primary',
+    //       share: {
+    //         worker: {
+    //           [Op.like]: address + '%',
+    //         },
+    //         time: {
+    //           [Op.gte]: 25 * 60 * 60 * 1000,
+    //         },
+    //       }, 
+    //     },
+    //     order: [
+    //       ['share.time', 'asc']
+    //     ],
+    //   })
+    //   .catch((err) => {
+    //     callback(400, [] );
+    //   })
+    //   .then((data) => {
+    //     const output = [];
+    //     const minerHashrateArray = [];
+    //     const movingAverageSteps = 10;
+    //     let firstShare = true;
+    //     let validShares = 0;
+    //     let invalidShares = 0;
+    //     let staleShares = 0;
+    //     let minerWork = 0;
+    //     let timestampDataSteps;
+    //     let workingTimestamp;
+    //     let minerHashrateMA;
+        
+    //     data.forEach((share) => {
+    //       const shareTimestamp = share.share.time;
+
+    //       if (firstShare) {
+    //         if (!shareTimestamp) {
+    //           timestampDataSteps = 0;  
+    //         } else {
+    //           timestampDataSteps = Math.floor((lastTimestamp - shareTimestamp) / tenMinutes) * tenMinutes;
+    //           timestampDataSteps = (timestampDataSteps >= maxSteps) ? maxSteps : timestampDataSteps;
+    //         }
+            
+    //         workingTimestamp = lastTimestamp - (timestampDataSteps * tenMinutes);
+            
+    //         // fill empty steps with zero values
+    //         if (timestampDataSteps < maxSteps) {
+    //           const missingSteps = maxSteps - timestampDataSteps;
+    //           let tempTimestamp = workingTimestamp - ((maxSteps - timestampDataSteps) * tenMinutes);
+
+    //           // for (let i = 0; i < missingSteps; i++) {
+    //           for (let i = 0; i < 0; i++) {  
+                
+    //             const tempObject = {
+    //               timestamp: tempTimestamp / 1000,
+    //               hashrate: 0,
+    //               averageHashrate: 0,
+    //               validShares: 0,
+    //               staleShares: 0,
+    //               invalidShares: 0
+    //             }
+    //             output.push(tempObject);
+    //             tempTimestamp += tenMinutes;
+    //           }
+    //         }
+
+    //         firstShare = false;
+    //       }
+
+    //       if (shareTimestamp >= workingTimestamp && shareTimestamp < (workingTimestamp + tenMinutes)) {
+    //         const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
+            
+    //         switch (share.share_type) {
+    //           case 'valid':
+    //             minerWork += work;
+    //             validShares += 1;
+    //             break;
+    //           case 'invalid':
+    //             invalidShares += 1;
+    //             break;
+    //           case 'stale':
+    //             staleShares += 1;
+    //             break;
+    //           default:
+    //             break;
+    //         }
+    //       } else if (shareTimestamp >= (workingTimestamp + tenMinutes)) {
+    //         const minerHashrate = (minerWork * multiplier) / tenMinutes * 1000;
+    //         minerHashrateArray.push(minerHashrate);
+
+    //         if (minerHashrateArray.length > movingAverageSteps) {
+    //           minerHashrateArray.shift();
+    //         }
+
+    //         const hashrateArrayLength = minerHashrateArray.length;
+    //         minerHashrateMA = minerHashrateArray.reduce((a, b) => a + b) / hashrateArrayLength;
+
+    //         const tempObject = {
+    //           timestamp: workingTimestamp / 1000,
+    //           hashrate: minerHashrate,
+    //           averageHashrate: minerHashrateMA,
+    //           validShares: validShares,
+    //           staleShares: staleShares,
+    //           invalidShares: invalidShares
+    //         }
+
+    //         output.push(tempObject);
+
+    //         validShares = 0;
+    //         invalidShares = 0;
+    //         staleShares = 0;
+    //         minerWork = 0;
+    //         workingTimestamp += tenMinutes;
+
+    //       }
+    //     })
+    //     callback(200, output );
+    //   });
+  };
+
   //  API Endpoint dor /miner/details for miner [address]
   this.minerDetails = function(pool, address, blockType, isSolo, callback) {
     if (blockType == '') {
@@ -1103,7 +1271,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // Determine API Endpoint Called
   this.handleApiV2 = function(req, callback) {
 
-    let type, endpoint, method, blockType, isSolo, address, page;
+    let type, endpoint, method, blockType, isSolo, address, worker, page;
     const miscellaneous = ['pools'];
 
     // If Path Params Exist
@@ -1119,6 +1287,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       blockType = utils.validateInput(req.query.blockType || '');
       isSolo = utils.validateInput(req.query.isSolo || '');
       address = utils.validateInput(req.query.address || '');
+      worker = utils.validateInput(req.query.worker || '');
       page = utils.validateInput(req.query.page || '');
     }
 
@@ -1137,6 +1306,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'chart' && address.length > 0):
             _this.minerChart(pool, address, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'chart' && address.length > 0):
+            _this.minerChart2(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
             break;
           case (endpoint === 'details' && address.length > 0):
             _this.minerDetails(pool, address, blockType, isSolo, (code, message) => callback(code, message));
