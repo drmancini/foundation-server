@@ -259,9 +259,9 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
     const dateNow = Date.now();
     const tenMinutes = 10 * 60 * 1000;
     const oneDay = 24 * 60 * 60 * 1000;
-    const oneDayAgo = tenMinutesEnd - oneDay;
     const tenMinutesEnd = Math.floor(dateNow / tenMinutes) * tenMinutes;
     const tenMinutesStart = tenMinutesEnd - tenMinutes;
+    const oneDayAgo = tenMinutesEnd - oneDay;
     const workerLookups = [
       ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, tenMinutesStart / 1000, tenMinutesEnd / 1000]];
     _this.executeCommands(workerLookups, (results) => {
