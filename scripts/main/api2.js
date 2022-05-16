@@ -544,7 +544,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
-    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
+    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
     const hashrate12Window = 60 * 60 * 12;
     const hashrate12WindowTime = (((Date.now() / 1000) - hashrate12Window) | 0);
     const hashrate24Window = 60 * 60 * 24;
@@ -554,7 +554,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const commands = [
       ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:historical`, 0, '+inf'],
       ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:snapshots`, 0, '+inf'],
-      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:hashrate`, 0, '+inf']];
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:hashrate`, hashrateWindowTime, '+inf']];
     _this.executeCommands(commands, (results) => {
       let hashrateData = 0;
       let hashrate12Data = 0; // change to round hashrate
