@@ -45,7 +45,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
   _this.hashrateWindow = _this.poolConfig.statistics.hashrateWindow || 300;
   _this.historicalWindow = _this.poolConfig.statistics.historicalWindow || 86400;
 
-  // Calculate Historical Information TEST
+  // Calculate Historical Information
   this.calculateHistoricalInfo = function(results, blockType) {
     const commands = [];
     const dateNow = Date.now();
@@ -190,66 +190,70 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
     const minuteEnd = Math.floor(dateNow / oneMinute) * oneMinute;
     const minuteStart = minuteEnd - oneMinute;
     const workerLookups = [
-      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, minuteStart / 1000, minuteEnd / 1000]];
+      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, minuteStart / 1000, minuteEnd / 1000],
+      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, minuteEnd / 1000, minuteEnd / 1000]];
     _this.executeCommands(workerLookups, (results) => {
-      const workerData = results[0] || {}; // no solo
-      const workers = [];
+      const workerData = results[0] || []; // no solo
+      const snapshots = results[1] || [];
       const commands = [];
 
-      workerData.forEach((entry) => {
-        const workerObject = JSON.parse(entry);
-        const workerFound = workers.findIndex(element => element.worker == workerObject.worker)
-        if (workerFound == -1) {
-          const objectTemplate = {
-            worker: workerObject.worker,
-            work: workerObject.work || 0,
-            timestamp: minuteEnd / 1000,
-            validMin: workerObject.types.valid || 0,
-            validMax: workerObject.types.valid || 0,
-            staleMax: workerObject.types.stale || 0,
-            staleMin: workerObject.types.stale || 0,
-            invalidMin: workerObject.types.invalid || 0,
-            invalidMax: workerObject.types.invalid || 0,
-          };
-          workers.push(objectTemplate);
-        } else {
-          workers[workerFound].work += workerObject.work;
-          if (workers[workerFound].validMin > workerObject.types.valid) {
-            workers[workerFound].validMin = workerObject.types.valid;
+      if (snapshots.length == 0) {
+        const workers = [];
+        workerData.forEach((entry) => {
+          const workerObject = JSON.parse(entry);
+          const workerFound = workers.findIndex(element => element.worker == workerObject.worker)
+          if (workerFound == -1) {
+            const objectTemplate = {
+              worker: workerObject.worker,
+              work: workerObject.work || 0,
+              timestamp: minuteEnd / 1000,
+              validMin: workerObject.types.valid || 0,
+              validMax: workerObject.types.valid || 0,
+              staleMax: workerObject.types.stale || 0,
+              staleMin: workerObject.types.stale || 0,
+              invalidMin: workerObject.types.invalid || 0,
+              invalidMax: workerObject.types.invalid || 0,
+            };
+            workers.push(objectTemplate);
+          } else {
+            workers[workerFound].work += workerObject.work;
+            if (workers[workerFound].validMin > workerObject.types.valid) {
+              workers[workerFound].validMin = workerObject.types.valid;
+            }
+            if (workers[workerFound].invalidMin > workerObject.types.invalid) {
+              workers[workerFound].invalidMin = workerObject.types.invalid;
+            }
+            if (workers[workerFound].staleMin > workerObject.types.stale) {
+              workers[workerFound].staleMin = workerObject.types.stale;
+            }
+            if (workers[workerFound].validMax < workerObject.types.valid) {
+              workers[workerFound].validMax = workerObject.types.valid;
+            }
+            if (workers[workerFound].invalidMax < workerObject.types.invalid) {
+              workers[workerFound].invalidMax = workerObject.types.invalid;
+            }
+            if (workers[workerFound].staleMax < workerObject.types.stale) {
+              workers[workerFound].staleMax = workerObject.types.stale;
+            }
           }
-          if (workers[workerFound].invalidMin > workerObject.types.invalid) {
-            workers[workerFound].invalidMin = workerObject.types.invalid;
-          }
-          if (workers[workerFound].staleMin > workerObject.types.stale) {
-            workers[workerFound].staleMin = workerObject.types.stale;
-          }
-          if (workers[workerFound].validMax < workerObject.types.valid) {
-            workers[workerFound].validMax = workerObject.types.valid;
-          }
-          if (workers[workerFound].invalidMax < workerObject.types.invalid) {
-            workers[workerFound].invalidMax = workerObject.types.invalid;
-          }
-          if (workers[workerFound].staleMax < workerObject.types.stale) {
-            workers[workerFound].staleMax = workerObject.types.stale;
-          }
-        }
-      });
+        });
 
-      workers.forEach((entry) => {
-        const valid = entry.validMin > 0 ? entry.validMax - entry.validMin + 1 : entry.validMax - entry.validMin;
-        const stale = entry.staleMin > 0 ? entry.staleMax - entry.staleMin + 1 : entry.staleMax - entry.staleMin;
-        const invalid = entry.invalidMin > 0 ? entry.invalidMax - entry.invalidMin + 1 : entry.invalidMax - entry.invalidMin;
-        entry.valid = valid;
-        entry.stale = stale;
-        entry.invalid = invalid;
-        delete entry.validMin;
-        delete entry.validMax;
-        delete entry.staleMin;
-        delete entry.staleMax;
-        delete entry.invalidMin;
-        delete entry.invalidMax;
-        commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, minuteEnd / 1000, JSON.stringify(entry)]);
-      });
+        workers.forEach((entry) => {
+          const valid = entry.validMin > 0 ? entry.validMax - entry.validMin + 1 : entry.validMax - entry.validMin;
+          const stale = entry.staleMin > 0 ? entry.staleMax - entry.staleMin + 1 : entry.staleMax - entry.staleMin;
+          const invalid = entry.invalidMin > 0 ? entry.invalidMax - entry.invalidMin + 1 : entry.invalidMax - entry.invalidMin;
+          entry.valid = valid;
+          entry.stale = stale;
+          entry.invalid = invalid;
+          delete entry.validMin;
+          delete entry.validMax;
+          delete entry.staleMin;
+          delete entry.staleMax;
+          delete entry.invalidMin;
+          delete entry.invalidMax;
+          commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, minuteEnd / 1000, JSON.stringify(entry)]);
+        });
+      }
       callback(commands);
     }, handler);
   };
@@ -263,13 +267,16 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
     const tenMinutesStart = tenMinutesEnd - tenMinutes;
     const oneDayAgo = tenMinutesEnd - oneDay;
     const workerLookups = [
-      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, tenMinutesStart / 1000, tenMinutesEnd / 1000]];
+      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, tenMinutesStart / 1000, tenMinutesEnd / 1000],
+      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:historical`, tenMinutesEnd / 1000, tenMinutesEnd / 1000]];
     _this.executeCommands(workerLookups, (results) => {
-      const workerData = results[0] || {}; // no solo
+      const workerData = results[0] || []; // no solo
+      const snapshots = results[1] || [];
       const workers = [];
       const commands = [];
 
-      workerData.forEach((entry) => {
+      if (snapshots.length == 0) {
+        workerData.forEach((entry) => {
         const workerObject = JSON.parse(entry);
         const workerFound = workers.findIndex(element => element.worker == workerObject.worker)
         if (workerFound == -1) {
@@ -282,20 +289,21 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
             invalid: workerObject.invalid || 0,
           };
           workers.push(objectTemplate);
-        } else {
-          workers[workerFound].work += workerObject.work;
-          workers[workerFound].valid += workerObject.valid;
-          workers[workerFound].stale += workerObject.stale;
-          workers[workerFound].invalid += workerObject.invalid;
-        }
-      });
+          } else {
+            workers[workerFound].work += workerObject.work;
+            workers[workerFound].valid += workerObject.valid;
+            workers[workerFound].stale += workerObject.stale;
+            workers[workerFound].invalid += workerObject.invalid;
+          }
+        });
 
-      workers.forEach((entry) => {
-        commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:shared:historical`, tenMinutesEnd / 1000, JSON.stringify(entry)]);
-      });
+        workers.forEach((entry) => {
+          commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:shared:historical`, tenMinutesEnd / 1000, JSON.stringify(entry)]);
+        });
 
-      commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, 0, `(${ tenMinutesEnd / 1000 }`]);
-      commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:historical`, 0, `(${ oneDayAgo / 1000 }`]);
+        commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, 0, tenMinutesEnd / 1000]);
+        commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:historical`, 0, `(${ oneDayAgo / 1000 }`]);
+      }
 
       callback(commands);
     }, handler);
@@ -338,7 +346,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
           }
         }, () => {});
       }, () => {});
-    }, 1 * 60 * 1000); // every minute
+    }, 20 * 1000); // every 20 seconds
 
     setInterval(() => {
       _this.handleWorkerInfo2(blockType, (results) => {
@@ -348,7 +356,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
           }
         }, () => {});
       }, () => {});
-    },  10 * 60 * 1000); // every 10 minutes
+    },  3 * 60 * 1000); // every 3 minutes
 
     // Handle Blocks Info Interval
     // This merely deletes blocks if there's more than 100 confirmed ... no need for this until I reach 10% share
