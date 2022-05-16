@@ -548,13 +548,13 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const hashrate12Window = 60 * 60 * 12;
     const hashrate12WindowTime = (((Date.now() / 1000) - hashrate12Window) | 0);
     const hashrate24Window = 60 * 60 * 24;
-    const hashrate24WindowTime = (((Date.now() / 1000) - hashrate24Window) | 0);
+    // const hashrate24WindowTime = (((Date.now() / 1000) - hashrate24Window) | 0);
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     
     const commands = [
-      ['hgetall', `${ pool }:rounds:${ blockType }:current:${ solo }:historical`],
-      ['hgetall', `${ pool }:rounds:${ blockType }:current:${ solo }:snapshots`],
-      ['hgetall', `${ pool }:rounds:${ blockType }:current:${ solo }:hashrate`]];
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:historical`, 0, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:snapshots`, 0, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:hashrate`, 0, '+inf']];
     _this.executeCommands(commands, (results) => {
       let hashrateData = 0;
       let hashrate12Data = 0; // change to round hashrate
@@ -564,8 +564,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       let stale = 0;
 
       const historical = results[0] || {};
-      historical.forEach((entry) => {
-        const snapshot = JSON.parse(entry);
+      for (const [key, value] of Object.entries(historical)) {
+        const snapshot = JSON.parse(value);
         if (snapshot.worker.split('.')[0] == address) {
           valid += snapshot.valid;
           stale += snapshot.stale;
@@ -575,13 +575,13 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             hashrate12Data += /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
           }
         }
-      });
+      };
 
-      const snapshots = result[1] || {};
+      const snapshots = results[1] || {};
       let maxSnapshotTime = 0;
-      snapshots.forEach((entry) => {
-        const snapshot = JSON.parse(entry);
-        if (snapshot.time * 1000 > maxSnapshotTime) {
+      for (const [key, value] of Object.entries(snapshots)) {
+        const snapshot = JSON.parse(value);
+        if (snapshot.time > maxSnapshotTime) {
           maxSnapshotTime = snapshot.time;
         }
         if (snapshot.worker.split('.')[0] == address) {
@@ -591,26 +591,17 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           hashrate24Data += /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
           hashrate12Data += /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
         }
-      });
+      };
 
-      const shares = result[2] || {};
-      shares.forEach((entry) => {
-        const share = JSON.parse(entry);
+      const shares = results[2] || {};
+      for (const [key, value] of Object.entries(shares)) {
+        const share = JSON.parse(value);
         if (share.worker.split('.')[0] == address) {
-          const timestamp = share.timestamp / 1000 | 0;
-          if (timestamp > maxSnapshotTime) {
-            // do the min max value mashup
-            // valid += snapshot.valid;
-            // stale += snapshot.stale;
-            // invalid += snapshot.invalid;
-            hashrate24Data += /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
-            hashrate12Data += /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
-          }
-
+          hashrateData += share.work;
         }
-      });
-      
-        callback(200, {
+      };
+
+      callback(200, {
         validShares: valid,
         invalidShares: invalid,
         staleShares: stale,
