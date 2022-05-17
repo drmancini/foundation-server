@@ -285,7 +285,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
               work: snapshot.work,
               validShares: snapshot.valid,
               staleShares: snapshot.stale,
-              invalidShares: snapshot.valid
+              invalidShares: snapshot.invalid
             };
             workerArray.push(tempObject);
           }
@@ -296,7 +296,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             work: snapshot.work,
             validShares: snapshot.valid,
             staleShares: snapshot.stale,
-            invalidShares: snapshot.valid
+            invalidShares: snapshot.invalid
           };
           workerArray.push(tempObject);
         }
