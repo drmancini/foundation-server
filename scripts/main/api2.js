@@ -241,6 +241,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /miner/chart2 for miner [address]
+  // fill snapshots without data with zeroes
+  // calculate moving average based on parameter
   this.minerChart2 = function(pool, address, blockType, isSolo, worker, callback) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
@@ -258,154 +260,65 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     _this.executeCommands(commands, (results) => {
       const historical = results[0] || {};
       const snapshots = results[1] || {};
-      const output = [];
-      console.log('worker: ' + worker);
-      console.log('worker type: ' + typeof(worker));
+      
+      const workerArray = [];
+      const movingAverageArray = [];
 
       for (const [key, value] of Object.entries(historical)) {
         const snapshot = JSON.parse(value);
+        
+        // We want Miner Stats
+        if (snapshot.worker.split('.')[0] == address && worker === '') {
+          const temp = workerArray.find((obj, index) => {
+            if (obj.timestamp == snapshot.timestamp) {
+              workerArray[index].work += snapshot.work;
+              workerArray[index].validShares += snapshot.valid;
+              workerArray[index].staleShares += snapshot.stale;
+              workerArray[index].invalidShares += snapshot.invalid;
+              return true;
+            }
+          });
 
-        if (snapshot.worker.split('.')[0] == address) {
-          const workerHashrateArray = [];
-          //const 
+          if (!temp) {
+            const tempObject = {
+              timestamp: snapshot.timestamp,
+              work: snapshot.work,
+              validShares: snapshot.valid,
+              staleShares: snapshot.stale,
+              invalidShares: snapshot.valid
+            };
+            workerArray.push(tempObject);
+          }
+        // We want Worker Stats
+        } else if (snapshot.worker == address + '.' + worker && worker != '') {
           const tempObject = {
             timestamp: snapshot.timestamp,
-            hashrate: snapshot.work * multiplier / (tenMinutes / 1000),
-            //averageHashrate: minerHashrateMA,
+            work: snapshot.work,
             validShares: snapshot.valid,
             staleShares: snapshot.stale,
-            invalidShares: snapshot.invalid
+            invalidShares: snapshot.valid
           };
-          output.push(tempObject);
+          workerArray.push(tempObject);
         }
       };
+      
+      workerArray.forEach((element) => {
+        element.hashrate = element.work * multiplier / (tenMinutes / 1000);
+        delete element.work;
+        movingAverageArray.push(element.hashrate);
+        if (movingAverageArray.length > 5) {
+          movingAverageArray.shift();
+        }
+        const movingAverageSum = movingAverageArray.reduce((partialSum, a) => partialSum + a, 0);
+        element.averageHashrate = movingAverageSum / movingAverageArray.length;
+      });
+
+      console.log(workerArray);
+        
       callback(200, {
-        result: output
+        result: workerArray
       });
     }, callback);
-    
-    // sequelizeShares
-    //   .findAll({
-    //     raw: true,
-    //     attributes: ['share', 'share_type'],
-    //     where: {
-    //       pool: pool,
-    //       block_type: 'primary',
-    //       share: {
-    //         worker: {
-    //           [Op.like]: address + '%',
-    //         },
-    //         time: {
-    //           [Op.gte]: 25 * 60 * 60 * 1000,
-    //         },
-    //       }, 
-    //     },
-    //     order: [
-    //       ['share.time', 'asc']
-    //     ],
-    //   })
-    //   .catch((err) => {
-    //     callback(400, [] );
-    //   })
-    //   .then((data) => {
-    //     const output = [];
-    //     const minerHashrateArray = [];
-    //     const movingAverageSteps = 10;
-    //     let firstShare = true;
-    //     let validShares = 0;
-    //     let invalidShares = 0;
-    //     let staleShares = 0;
-    //     let minerWork = 0;
-    //     let timestampDataSteps;
-    //     let workingTimestamp;
-    //     let minerHashrateMA;
-        
-    //     data.forEach((share) => {
-    //       const shareTimestamp = share.share.time;
-
-    //       if (firstShare) {
-    //         if (!shareTimestamp) {
-    //           timestampDataSteps = 0;  
-    //         } else {
-    //           timestampDataSteps = Math.floor((lastTimestamp - shareTimestamp) / tenMinutes) * tenMinutes;
-    //           timestampDataSteps = (timestampDataSteps >= maxSteps) ? maxSteps : timestampDataSteps;
-    //         }
-            
-    //         workingTimestamp = lastTimestamp - (timestampDataSteps * tenMinutes);
-            
-    //         // fill empty steps with zero values
-    //         if (timestampDataSteps < maxSteps) {
-    //           const missingSteps = maxSteps - timestampDataSteps;
-    //           let tempTimestamp = workingTimestamp - ((maxSteps - timestampDataSteps) * tenMinutes);
-
-    //           // for (let i = 0; i < missingSteps; i++) {
-    //           for (let i = 0; i < 0; i++) {  
-                
-    //             const tempObject = {
-    //               timestamp: tempTimestamp / 1000,
-    //               hashrate: 0,
-    //               averageHashrate: 0,
-    //               validShares: 0,
-    //               staleShares: 0,
-    //               invalidShares: 0
-    //             }
-    //             output.push(tempObject);
-    //             tempTimestamp += tenMinutes;
-    //           }
-    //         }
-
-    //         firstShare = false;
-    //       }
-
-    //       if (shareTimestamp >= workingTimestamp && shareTimestamp < (workingTimestamp + tenMinutes)) {
-    //         const work = /^-?\d*(\.\d+)?$/.test(share.share.work) ? parseFloat(share.share.work) : 0;
-            
-    //         switch (share.share_type) {
-    //           case 'valid':
-    //             minerWork += work;
-    //             validShares += 1;
-    //             break;
-    //           case 'invalid':
-    //             invalidShares += 1;
-    //             break;
-    //           case 'stale':
-    //             staleShares += 1;
-    //             break;
-    //           default:
-    //             break;
-    //         }
-    //       } else if (shareTimestamp >= (workingTimestamp + tenMinutes)) {
-    //         const minerHashrate = (minerWork * multiplier) / tenMinutes * 1000;
-    //         minerHashrateArray.push(minerHashrate);
-
-    //         if (minerHashrateArray.length > movingAverageSteps) {
-    //           minerHashrateArray.shift();
-    //         }
-
-    //         const hashrateArrayLength = minerHashrateArray.length;
-    //         minerHashrateMA = minerHashrateArray.reduce((a, b) => a + b) / hashrateArrayLength;
-
-    //         const tempObject = {
-    //           timestamp: workingTimestamp / 1000,
-    //           hashrate: minerHashrate,
-    //           averageHashrate: minerHashrateMA,
-    //           validShares: validShares,
-    //           staleShares: staleShares,
-    //           invalidShares: invalidShares
-    //         }
-
-    //         output.push(tempObject);
-
-    //         validShares = 0;
-    //         invalidShares = 0;
-    //         staleShares = 0;
-    //         minerWork = 0;
-    //         workingTimestamp += tenMinutes;
-
-    //       }
-    //     })
-    //     callback(200, output );
-    //   });
   };
 
   //  API Endpoint dor /miner/details for miner [address]
@@ -1307,7 +1220,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           case (endpoint === 'chart' && address.length > 0):
             _this.minerChart(pool, address, (code, message) => callback(code, message));
             break;
-          case (endpoint === 'chart' && address.length > 0):
+          case (endpoint === 'chart2' && address.length > 0):
             _this.minerChart2(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
             break;
           case (endpoint === 'details' && address.length > 0):
