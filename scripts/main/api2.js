@@ -1085,31 +1085,30 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         }
       };
 
-      const shares = [];
+      const miners = [];
       results[1].forEach((entry) => {
         const share = JSON.parse(entry);
         const work = /^-?\d*(\.\d+)?$/.test(share.work) ? parseFloat(share.work) : 0;
         const miner = share.worker.split('.')[0];
-        minerIndex = shares.findIndex((obj => obj.miner == miner));
+        minerIndex = miners.findIndex((obj => obj.miner == miner));
         if (minerIndex == -1) {
           minerObject = {
             miner: miner,
             work: work
           };
-          shares.push(minerObject);
+          miners.push(minerObject);
         } else {
-          shares[minerIndex].work += work;
+          miners[minerIndex].work += work;
         }
       });
 
-      const miners = [];
+      const topMiners = miners.sort((a,b) => b.work - a.work).slice(0, 10);
+
       for (const [key, value] of Object.entries(results[2])) {
-        const index = topMiners.indexOf((element) => element.miner = key);
+        const index = topMiners.findIndex(element => element.miner === key);
         const miner = JSON.parse(value);
         topMiners[index].firstJoined = miner.firstJoined;
       };
-
-      const topMiners = shares.sort((a,b) => b.work - a.work).slice(0, 10);
 
       topMiners.forEach((miner) => {
         let workerCount = 0;
@@ -1120,7 +1119,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         })
         miner.workerCount = workerCount;
         miner.hashrate = miner.work * multiplier / hashrateWindow;
-        miner.firstJoined = 123;
+        miner.firstJoined = miner.firstJoined * 1000;
         delete miner.work;
       });
 
