@@ -5,7 +5,6 @@
  */
 
 const utils = require('./utils');
-const md5 = require('blueimp-md5');
 const Algorithms = require('foundation-stratum').algorithms;
 const { Sequelize, Op } = require('sequelize');
 const PaymentsModel = require('../../models/payments.model');
@@ -348,7 +347,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       for (const [key, value] of Object.entries(results[1])) {
         if (key.split('.')[0] === address) {
           const workerData = JSON.parse(value);
-          worker.ipHint = workerData.ip_hint;
+          worker.ipHint = '*.*.*.' + workerData.ip.split('.')[3];
         }
       }
 
@@ -426,7 +425,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       blockType = 'primary';
     }
     const address = body.address;
-    const ipHash = md5(body.ipAddress);
+    const ipAddress = body.ipAddress;
     const dateNow = Date.now();
     const twentyFourHours = 24 * 60 * 60 * 1000;
     let validated = false;
@@ -444,7 +443,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         const miner = worker.worker.split('.')[0] || '';
         
         if (miner === address && (worker.time * 1000) >= (dateNow - twentyFourHours)) {
-          if (ipHash == worker.ip_hash) {
+          if (ipAddress == worker.ip) {
             validated = true;
             minerObject.payoutLimit
           } 
