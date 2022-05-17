@@ -1105,9 +1105,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
       for (const [key, value] of Object.entries(results[2])) {
         const index = topMiners.findIndex(element => element.miner === key);
-        console.log(index);
         const miner = JSON.parse(value);
-        topMiners[index].firstJoined = miner.firstJoined;
+        if (index >= 0) {
+          topMiners[index].firstJoined = miner.firstJoined;
+        }
       };
 
       topMiners.forEach((miner) => {
