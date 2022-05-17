@@ -858,7 +858,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       blockType = 'primary';
     }
     const dateNow = Date.now();
-    const thirtyDays = 90 * 24 * 60 * 60 * 1000;
+    const historyDays = 100 * 24 * 60 * 60 * 1000; // 100 days
     const commands = [
       ['smembers', `${ pool }:blocks:${blockType}:confirmed`],
       ['smembers', `${ pool }:blocks:${blockType}:pending`]];
@@ -870,7 +870,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const pendingBlocks = results[1].map(block => JSON.parse(block)) || [];
       const blocks = confirmedBlocks.concat(pendingBlocks);
 
-      blocks.filter((block) => block.time > dateNow - thirtyDays).forEach((block) => luckSum += block.luck);
+      blocks.filter((block) => block.time > dateNow - historyDays).forEach((block) => luckSum += block.luck);
       const blockCount = blocks.length;
       if (blockCount == 0) {
         output = null;
