@@ -1056,7 +1056,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
-  // API Endpoint for /pool/topMiners2
+  // API Endpoint for /pool/topMiners
   this.poolTopMiners = function(pool, blockType, isSolo, callback) {
     const config = _this.poolConfigs[pool] || {};
     const algorithm = config.primary.coin.algorithms.mining;
@@ -1074,6 +1074,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const commands = [
       ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`],
       ['zrangebyscore', `${ pool }:rounds:${ blockType}:current:${ solo }:hashrate`, hashrateWindowTime, '+inf'],
+      ['hgetall', `${ pool }:miners:${ blockType }`],
     ];
     _this.executeCommands(commands, (results) => {
       const workers = [];
@@ -1084,23 +1085,31 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         }
       };
 
-      const miners = [];
+      const shares = [];
       results[1].forEach((entry) => {
         const share = JSON.parse(entry);
         const work = /^-?\d*(\.\d+)?$/.test(share.work) ? parseFloat(share.work) : 0;
         const miner = share.worker.split('.')[0];
-        minerIndex = miners.findIndex((obj => obj.miner == miner));
+        minerIndex = shares.findIndex((obj => obj.miner == miner));
         if (minerIndex == -1) {
           minerObject = {
             miner: miner,
             work: work
           };
-          miners.push(minerObject);
+          shares.push(minerObject);
         } else {
-          miners[minerIndex].work += work;
+          shares[minerIndex].work += work;
         }
       });
-      const topMiners = miners.sort((a,b) => b.work - a.work).slice(0, 10);
+
+      const miners = [];
+      for (const [key, value] of Object.entries(results[2])) {
+        const index = topMiners.indexOf((element) => element.miner = key);
+        const miner = JSON.parse(value);
+        topMiners[index].firstJoined = miner.firstJoined;
+      };
+
+      const topMiners = shares.sort((a,b) => b.work - a.work).slice(0, 10);
 
       topMiners.forEach((miner) => {
         let workerCount = 0;
