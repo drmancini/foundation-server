@@ -174,6 +174,7 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
       time: dateNow / 1000 | 0,
       worker: worker,
       ip_hash: md5(ip),
+      ip: ip,
       ip_hint: '*.*.*.' + ip.split('.')[3]
     };
 
@@ -281,6 +282,7 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
       time: dateNow / 1000 | 0,
       worker: worker,
       ip_hash: md5(ip),
+      ip: ip,
       ip_hint: '*.*.*.' + ip.split('.')[3]
     };
     
