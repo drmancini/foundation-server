@@ -312,12 +312,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         const movingAverageSum = movingAverageArray.reduce((partialSum, a) => partialSum + a, 0);
         element.averageHashrate = movingAverageSum / movingAverageArray.length;
       });
-
-      console.log(workerArray);
-        
-      callback(200, {
-        result: workerArray
-      });
+      callback(200, workerArray);
     }, callback);
   };
 
