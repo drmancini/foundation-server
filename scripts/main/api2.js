@@ -858,7 +858,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       blockType = 'primary';
     }
     const dateNow = Date.now();
-    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    const thirtyDays = 90 * 24 * 60 * 60 * 1000;
     const commands = [
       ['smembers', `${ pool }:blocks:${blockType}:confirmed`],
       ['smembers', `${ pool }:blocks:${blockType}:pending`]];
