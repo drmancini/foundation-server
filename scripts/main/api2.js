@@ -344,17 +344,17 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       workers.sort((a, b) => b.work - a.work);
       const worker = workers[0] || {};
 
-      for (const [key, value] of Object.entries(results[1])) {
-        if (key.split('.')[0] === address) {
-          const workerData = JSON.parse(value);
-          worker.ipHint = '*.*.*.' + workerData.ip.split('.')[3];
-        }
-      }
+      // for (const [key, value] of Object.entries(results[1])) {
+      //   if (key.split('.')[0] === address) {
+      //     const workerData = JSON.parse(value);
+      //     //worker.ipHint = '*.*.*.' + workerData.ip.split('.')[3];
+      //   }
+      // }
 
       const output = {
         firstJoined: miner.firstJoined,
         payoutLimit: miner.payoutLimit || 0,
-        ipHint: worker.ipHint
+        // ipHint: worker.ipHint
       }
       
       callback(200, {
@@ -1104,7 +1104,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const topMiners = miners.sort((a,b) => b.work - a.work).slice(0, 10);
 
       for (const [key, value] of Object.entries(results[2])) {
-        const index = topMiners.findIndex(element => element.miner === key);
         const miner = JSON.parse(value);
         if (index >= 0) {
           topMiners[index].firstJoined = miner.firstJoined;
