@@ -191,10 +191,12 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
     const minuteStart = minuteEnd - oneMinute;
     const workerLookups = [
       ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, `(${ minuteStart / 1000 }`, minuteEnd / 1000],
-      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, minuteEnd / 1000, minuteEnd / 1000]];
+      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, minuteEnd / 1000, minuteEnd / 1000],
+      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, 0, minuteStart / 1000]];
     _this.executeCommands(workerLookups, (results) => {
       const workerData = results[0] || []; // no solo
       const snapshots = results[1] || [];
+      const workerHistory = results[2] || [];
       const commands = [];
 
       if (snapshots.length == 0) {
@@ -206,11 +208,11 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
             const objectTemplate = {
               worker: workerObject.worker,
               work: workerObject.work || 0,
-              timestamp: minuteEnd / 1000,
+              timestamp: minuteEnd / 1000 | 0,
               validMin: workerObject.types.valid || 0,
               validMax: workerObject.types.valid || 0,
-              staleMax: workerObject.types.stale || 0,
               staleMin: workerObject.types.stale || 0,
+              staleMax: workerObject.types.stale || 0,
               invalidMin: workerObject.types.invalid || 0,
               invalidMax: workerObject.types.invalid || 0,
             };
@@ -239,6 +241,8 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
         });
 
         workers.forEach((entry) => {
+          const test = workerHistory.filter((share) => share.worker == entry.worker);
+          console.log('a: ' + test);
           const valid = entry.validMin > 0 ? entry.validMax - entry.validMin + 1 : entry.validMax - entry.validMin;
           const stale = entry.staleMin > 0 ? entry.staleMax - entry.staleMin + 1 : entry.staleMax - entry.staleMin;
           const invalid = entry.invalidMin > 0 ? entry.invalidMax - entry.invalidMin + 1 : entry.invalidMax - entry.invalidMin;
