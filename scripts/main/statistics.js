@@ -196,7 +196,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
     _this.executeCommands(workerLookups, (results) => {
       const workerData = results[0] || []; // no solo
       const snapshots = results[1] || [];
-      const workerHistory = [];
+      const workerHistory = results[2] || [];
       if (workerHistory.length > 0) {
         results[2].forEach((entry) => {
           workerHistory.push(JSON.parse(entry));
