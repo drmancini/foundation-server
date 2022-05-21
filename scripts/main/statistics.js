@@ -225,15 +225,15 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
             workers.push(objectTemplate);
           } else {
             workers[workerFound].work += workerObject.work;
-            if (workers[workerFound].validMin > workerObject.types.valid) {
-              workers[workerFound].validMin = workerObject.types.valid;
-            }
-            if (workers[workerFound].invalidMin > workerObject.types.invalid) {
-              workers[workerFound].invalidMin = workerObject.types.invalid;
-            }
-            if (workers[workerFound].staleMin > workerObject.types.stale) {
-              workers[workerFound].staleMin = workerObject.types.stale;
-            }
+            // if (workers[workerFound].validMin > workerObject.types.valid) {
+            //   workers[workerFound].validMin = workerObject.types.valid;
+            // }
+            // if (workers[workerFound].invalidMin > workerObject.types.invalid) {
+            //   workers[workerFound].invalidMin = workerObject.types.invalid;
+            // }
+            // if (workers[workerFound].staleMin > workerObject.types.stale) {
+            //   workers[workerFound].staleMin = workerObject.types.stale;
+            // }
             if (workers[workerFound].validMax < workerObject.types.valid) {
               workers[workerFound].validMax = workerObject.types.valid;
             }
@@ -249,15 +249,15 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
         workers.forEach((entry) => {
           const test = workerHistory.filter((share) => share.worker == entry.worker).sort((a, b) => a.time - b.time);
           console.log(test[0]);
-          const valid = entry.validMin > 0 ? entry.validMax - entry.validMin + 1 : entry.validMax - entry.validMin;
-          const stale = entry.staleMin > 0 ? entry.staleMax - entry.staleMin + 1 : entry.staleMax - entry.staleMin;
-          const invalid = entry.invalidMin > 0 ? entry.invalidMax - entry.invalidMin + 1 : entry.invalidMax - entry.invalidMin;
+          const valid = entry.validMax - test.types.valid;
+          const stale = entry.staleMax - test.types.stale;
+          const invalid = entry.invalidMax - test.types.invalid;
           entry.valid = valid;
           entry.stale = stale;
           entry.invalid = invalid;
-          delete entry.validMin;
-          delete entry.validMax;
-          delete entry.staleMin;
+          // delete entry.validMin;
+          // delete entry.validMax;
+          // delete entry.staleMin;
           delete entry.staleMax;
           delete entry.invalidMin;
           delete entry.invalidMax;
