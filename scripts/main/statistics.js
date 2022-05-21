@@ -199,7 +199,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
       const workerHistory = [];
       if (workerHistory.length > 0) {
         results[2].forEach((entry) => {
-          JSON.parse(entry).push(workerHistory);
+          workerHistory.push(JSON.parse(entry));
         });
       }
       
