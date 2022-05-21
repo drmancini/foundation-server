@@ -247,8 +247,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
         });
 
         workers.forEach((entry) => {
-          const test = workerHistory.filter((share) => share.worker == entry.worker).sort((a, b) => a.time - b.time);
-          console.log(test[0]);
+          const test = workerHistory.filter((share) => share.worker == entry.worker).sort((a, b) => a.time - b.time)[0];
           const valid = entry.validMax - test.types.valid;
           const stale = entry.staleMax - test.types.stale;
           const invalid = entry.invalidMax - test.types.invalid;
