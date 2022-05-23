@@ -149,6 +149,7 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
       solo: isSoloMining,
       times: times,
       types: types,
+      type: shareType,
       work: work,
       worker: worker,
     };

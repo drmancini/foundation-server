@@ -184,105 +184,138 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
   };
 
   // Handle Worker Minute-snapshots in Redis 
-  // this.handleWorkerInfo = function(blockType, callback, handler) {
-  //   const dateNow = Date.now();
-  //   const oneMinute = 1 * 60 * 1000;
-  //   const minuteEnd = Math.floor(dateNow / oneMinute) * oneMinute;
-  //   const minuteStart = minuteEnd - oneMinute;
-  //   const workerLookups = [
-  //     ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, `(${ minuteStart / 1000 }`, minuteEnd / 1000],
-  //     ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, minuteEnd / 1000, minuteEnd / 1000],
-  //     ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, 0, minuteStart / 1000]];
-  //   _this.executeCommands(workerLookups, (results) => {
-  //     const workerData = results[0] || []; // no solo
-  //     const snapshots = results[1] || [];
-  //     const workerHistory = results[2] || [];
-  //     if (workerHistory.length > 0) {
-  //       results[2].forEach((entry) => {
-  //         workerHistory.push(JSON.parse(entry));
-  //       });
-  //     }
-      
-  //     const commands = [];
+  this.handleWorkerInfo = function(blockType, callback, handler) {
+    const dateNow = Date.now();
+    const oneMinute = 1 * 60 * 1000;
+    const minuteEnd = Math.floor(dateNow / oneMinute) * oneMinute;
+    const minuteStart = minuteEnd - oneMinute;
+    const workerLookups = [
+      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, 0, minuteEnd / 1000],
+      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, minuteEnd / 1000, minuteEnd / 1000]
+    ];
+    _this.executeCommands(workerLookups, (results) => {
+      const commands = [];
+      const snapshotShares = [];
+      const snapshotWorkers = [];
+      const previousShares = [];
+      const snapshots = [];
 
-  //     if (snapshots.length == 0) {
-  //       const workers = [];
-  //       workerData.forEach((entry) => {
-  //         const workerObject = JSON.parse(entry);
-  //         const workerFound = workers.findIndex(element => element.worker == workerObject.worker)
-  //         if (workerFound == -1) {
-  //           const objectTemplate = {
-  //             worker: workerObject.worker,
-  //             work: workerObject.work || 0,
-  //             timestamp: minuteEnd / 1000 | 0,
-  //             validMin: workerObject.types.valid || 0,
-  //             validMax: workerObject.types.valid || 0,
-  //             staleMin: workerObject.types.stale || 0,
-  //             staleMax: workerObject.types.stale || 0,
-  //             invalidMin: workerObject.types.invalid || 0,
-  //             invalidMax: workerObject.types.invalid || 0,
-  //           };
-  //           workers.push(objectTemplate);
-  //         } else {
-  //           workers[workerFound].work += workerObject.work;
-  //           // if (workers[workerFound].validMin > workerObject.types.valid) {
-  //           //   workers[workerFound].validMin = workerObject.types.valid;
-  //           // }
-  //           // if (workers[workerFound].invalidMin > workerObject.types.invalid) {
-  //           //   workers[workerFound].invalidMin = workerObject.types.invalid;
-  //           // }
-  //           // if (workers[workerFound].staleMin > workerObject.types.stale) {
-  //           //   workers[workerFound].staleMin = workerObject.types.stale;
-  //           // }
-  //           if (workers[workerFound].validMax < workerObject.types.valid) {
-  //             workers[workerFound].validMax = workerObject.types.valid;
-  //           }
-  //           if (workers[workerFound].invalidMax < workerObject.types.invalid) {
-  //             workers[workerFound].invalidMax = workerObject.types.invalid;
-  //           }
-  //           if (workers[workerFound].staleMax < workerObject.types.stale) {
-  //             workers[workerFound].staleMax = workerObject.types.stale;
-  //           }
-  //         }
-  //       });
+      results[0].forEach((share) => {
+        share = JSON.parse(share);
+        if (share.time > minuteStart) {
+          
+          snapshotShares.push(share);
+        } else if (share.time <= minuteStart) {
+          const workerIndex = previousShares.findIndex(worker => worker.worker === share.worker);
+          if (workerIndex != -1 && previousShares[workerIndex].time < share.time) {
+            previousShares[workerIndex].time = share.time;
+            previousShares[workerIndex].valid = share.types.valid;
+            previousShares[workerIndex].stale = share.types.stale;
+            previousShares[workerIndex].invalid = share.types.invalid;
+          } else if (workerIndex === -1) {
+            const workerObject = {
+              worker: share.worker,
+              valid: share.types.valid,
+              stale: share.types.stale,
+              invalid: share.types.invalid,
+              time: share.time
+            };
+            previousShares.push(workerObject);
+          }          
+        }
+      });
 
-  //       workers.forEach((entry) => {
-  //         const test = workerHistory.filter((share) => share.worker == entry.worker).sort((a, b) => a.time - b.time)[0];
-  //         const valid = entry.validMax - test.types.valid;
-  //         const stale = entry.staleMax - test.types.stale;
-  //         const invalid = entry.invalidMax - test.types.invalid;
-  //         entry.valid = valid;
-  //         entry.stale = stale;
-  //         entry.invalid = invalid;
-  //         // delete entry.validMin;
-  //         // delete entry.validMax;
-  //         // delete entry.staleMin;
-  //         delete entry.staleMax;
-  //         delete entry.invalidMin;
-  //         delete entry.invalidMax;
-  //         commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, minuteEnd / 1000, JSON.stringify(entry)]);
-  //       });
-  //     }
-  //     callback(commands);
-  //   }, handler);
-  // };
+      console.log(previousShares);
 
-  // // Handle Worker Ten-minute-snapshots in Redis 
-  // this.handleWorkerInfo2 = function(blockType, callback, handler) {
+      results[1].forEach((snapshot) => {
+        snapshots.push(JSON.parse(snapshot));
+      });
+
+      if (snapshotShares.length > 0) {
+      //   const workers = [];
+      //   snapshotShares.forEach((snapshotShare) => {
+      //     const workerIndex = workers.findIndex(worker => worker.worker === snapshotShare.worker);
+
+      //     // test snapshots somewhere
+      //     if (workerIndex == -1) {
+      //       console.log('new');
+      //       // Find last worker share ...
+      //       let previousShare;
+      //       if (previousShares.filter((share) => share.worker === snapshotShare.worker).length > 0) {
+      //         // ... either from previous snapshot
+      //         previousShare = previousShares.sort((a, b) => b.time - a.time)[0];
+      //       } else {
+      //         // ... or first share from current snapshot
+      //         previousShare = snapshotShares
+      //           .filter((share) => share.worker === snapshotShare.worker)
+      //           .sort((a, b) => a.time - b.time)[0];
+      //       }   
+          
+      //       const objectTemplate = {
+      //         worker: snapshotShare.worker,
+      //         work: snapshotShare.work || 0,
+      //         time: minuteEnd / 1000 | 0,
+      //         validMin: previousShare.types.valid || 0,
+      //         validMax: snapshotShare.types.valid || 0,
+      //         staleMin: previousShare.types.stale || 0,
+      //         staleMax: snapshotShare.types.stale || 0,
+      //         invalidMin: previousShare.types.invalid || 0,
+      //         invalidMax: snapshotShare.types.invalid || 0,
+      //       };
+      //       workers.push(objectTemplate);
+      //     } else {
+      //       workers[workerIndex].work += snapshotShare.work;
+      //       if (workers[workerIndex].validMax < snapshotShare.types.valid) {
+      //         workers[workerIndex].validMax = snapshotShare.types.valid;
+      //       }
+      //       if (workers[workerIndex].invalidMax < snapshotShare.types.invalid) {
+      //         workers[workerIndex].invalidMax = snapshotShare.types.invalid;
+      //       }
+      //       if (workers[workerIndex].staleMax < snapshotShare.types.stale) {
+      //         workers[workerIndex].staleMax = snapshotShare.types.stale;
+      //       }
+      //     }
+      //   });
+
+      //   workers.forEach((worker) => {
+      //     worker.valid = worker.validMax - worker.validMin;
+      //     worker.stale = worker.staleMax - worker.staleMin;
+      //     worker.invalid = worker.invalidMax - worker.invalidMin;
+      //     delete worker.validMin;
+      //     delete worker.validMax;
+      //     delete worker.staleMin;
+      //     delete worker.staleMax;
+      //     delete worker.invalidMin;
+      //     delete worker.invalidMax;
+
+      //     console.log(worker);
+      //     if (snapshots.filter(snapshot => snapshot.worker == worker.worker).length == 0) {
+      //       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, minuteEnd / 1000, JSON.stringify(worker)]);  
+      //     }
+          
+      //   });
+      }
+      callback(commands);
+    }, handler);
+  };
+
+  // Handle Worker Ten-minute-snapshots in Redis 
+  this.handleWorkerInfo2 = function(blockType, callback, handler) {
   //   const dateNow = Date.now();
   //   const tenMinutes = 10 * 60 * 1000;
   //   const oneDay = 24 * 60 * 60 * 1000;
   //   const tenMinutesEnd = Math.floor(dateNow / tenMinutes) * tenMinutes;
   //   const tenMinutesStart = tenMinutesEnd - tenMinutes;
   //   const oneDayAgo = tenMinutesEnd - oneDay;
-  //   const workerLookups = [
-  //     ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, `(${ tenMinutesStart / 1000 }`, tenMinutesEnd / 1000],
+  const workerLookups = [];
+    // const workerLookups = [
+      // ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, `(${ tenMinutesStart / 1000 }`, tenMinutesEnd / 1000],
   //     ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:historical`, tenMinutesEnd / 1000, tenMinutesEnd / 1000]];
-  //   _this.executeCommands(workerLookups, (results) => {
+    _this.executeCommands(workerLookups, (results) => {
   //     const workerData = results[0] || []; // no solo
   //     const snapshots = results[1] || [];
   //     const workers = [];
-  //     const commands = [];
+      const commands = [];
 
   //     if (snapshots.length == 0) {
   //       workerData.forEach((entry) => {
@@ -314,9 +347,9 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
   //       commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:historical`, 0, `(${ oneDayAgo / 1000 }`]);
   //     }
 
-  //     callback(commands);
-  //   }, handler);
-  // };
+      callback(commands);
+    }, handler);
+  };
 
   // Execute Redis Commands
   /* istanbul ignore next */
@@ -355,7 +388,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
     //       }
     //     }, () => {});
     //   }, () => {});
-    // }, 20 * 1000); // every 20 seconds
+    // }, 10 * 1000); // every 20 seconds
 
     // setInterval(() => {
     //   _this.handleWorkerInfo2(blockType, (results) => {
