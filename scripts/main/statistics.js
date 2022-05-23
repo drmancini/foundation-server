@@ -190,163 +190,112 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
     const minuteEnd = Math.floor(dateNow / oneMinute) * oneMinute;
     const minuteStart = minuteEnd - oneMinute;
     const workerLookups = [
-      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, 0, minuteEnd / 1000],
+      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, `(${ minuteStart / 1000 }`, minuteEnd / 1000],
       ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, minuteEnd / 1000, minuteEnd / 1000]
     ];
     _this.executeCommands(workerLookups, (results) => {
       const commands = [];
-      const snapshotShares = [];
       const snapshotWorkers = [];
-      const previousShares = [];
       const snapshots = [];
 
-      results[0].forEach((share) => {
-        share = JSON.parse(share);
-        if (share.time > minuteStart) {
-          
-          snapshotShares.push(share);
-        } else if (share.time <= minuteStart) {
-          const workerIndex = previousShares.findIndex(worker => worker.worker === share.worker);
-          if (workerIndex != -1 && previousShares[workerIndex].time < share.time) {
-            previousShares[workerIndex].time = share.time;
-            previousShares[workerIndex].valid = share.types.valid;
-            previousShares[workerIndex].stale = share.types.stale;
-            previousShares[workerIndex].invalid = share.types.invalid;
-          } else if (workerIndex === -1) {
-            const workerObject = {
+      if (results[1]) {
+        results[1].forEach((snapshot) => {
+          snapshots.push(JSON.parse(snapshot));
+        });
+      };
+
+      if (results[0]) {
+        results[0].forEach((share) => {
+          share = JSON.parse(share);
+          const workerIndex = snapshotWorkers.findIndex(worker => worker.worker === share.worker);
+          if (workerIndex === -1) {
+            const objectTemplate = {
               worker: share.worker,
-              valid: share.types.valid,
-              stale: share.types.stale,
-              invalid: share.types.invalid,
-              time: share.time
+              valid: share.type === 'valid' ? 1 : 0,
+              stale: share.type === 'stale' ? 1 : 0,
+              invalid: share.type === 'invalid' ? 1 : 0,
+              time: minuteEnd,
+              work: share.type === 'valid' ? share.work : 0,
             };
-            previousShares.push(workerObject);
-          }          
+            snapshotWorkers.push(objectTemplate);
+          } else {
+            if (share.type === 'valid') {
+              snapshotWorkers[workerIndex].valid += 1;
+              snapshotWorkers[workerIndex].work += share.work;
+            }
+            if (share.type === 'stale') {
+              snapshotWorkers[workerIndex].stale += 1;
+            }
+            if (share.type === 'invalid') {
+              snapshotWorkers[workerIndex].invalid += 1;
+            }
+          }
+        });  
+      };
+      
+      snapshotWorkers.forEach((worker) => {
+        if (!snapshots.find((snapshot) => snapshot.worker === worker.worker)) {
+          // console.log(worker);
+          commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, minuteEnd / 1000, JSON.stringify(worker)]);  
         }
       });
-
-      console.log(previousShares);
-
-      results[1].forEach((snapshot) => {
-        snapshots.push(JSON.parse(snapshot));
-      });
-
-      if (snapshotShares.length > 0) {
-      //   const workers = [];
-      //   snapshotShares.forEach((snapshotShare) => {
-      //     const workerIndex = workers.findIndex(worker => worker.worker === snapshotShare.worker);
-
-      //     // test snapshots somewhere
-      //     if (workerIndex == -1) {
-      //       console.log('new');
-      //       // Find last worker share ...
-      //       let previousShare;
-      //       if (previousShares.filter((share) => share.worker === snapshotShare.worker).length > 0) {
-      //         // ... either from previous snapshot
-      //         previousShare = previousShares.sort((a, b) => b.time - a.time)[0];
-      //       } else {
-      //         // ... or first share from current snapshot
-      //         previousShare = snapshotShares
-      //           .filter((share) => share.worker === snapshotShare.worker)
-      //           .sort((a, b) => a.time - b.time)[0];
-      //       }   
-          
-      //       const objectTemplate = {
-      //         worker: snapshotShare.worker,
-      //         work: snapshotShare.work || 0,
-      //         time: minuteEnd / 1000 | 0,
-      //         validMin: previousShare.types.valid || 0,
-      //         validMax: snapshotShare.types.valid || 0,
-      //         staleMin: previousShare.types.stale || 0,
-      //         staleMax: snapshotShare.types.stale || 0,
-      //         invalidMin: previousShare.types.invalid || 0,
-      //         invalidMax: snapshotShare.types.invalid || 0,
-      //       };
-      //       workers.push(objectTemplate);
-      //     } else {
-      //       workers[workerIndex].work += snapshotShare.work;
-      //       if (workers[workerIndex].validMax < snapshotShare.types.valid) {
-      //         workers[workerIndex].validMax = snapshotShare.types.valid;
-      //       }
-      //       if (workers[workerIndex].invalidMax < snapshotShare.types.invalid) {
-      //         workers[workerIndex].invalidMax = snapshotShare.types.invalid;
-      //       }
-      //       if (workers[workerIndex].staleMax < snapshotShare.types.stale) {
-      //         workers[workerIndex].staleMax = snapshotShare.types.stale;
-      //       }
-      //     }
-      //   });
-
-      //   workers.forEach((worker) => {
-      //     worker.valid = worker.validMax - worker.validMin;
-      //     worker.stale = worker.staleMax - worker.staleMin;
-      //     worker.invalid = worker.invalidMax - worker.invalidMin;
-      //     delete worker.validMin;
-      //     delete worker.validMax;
-      //     delete worker.staleMin;
-      //     delete worker.staleMax;
-      //     delete worker.invalidMin;
-      //     delete worker.invalidMax;
-
-      //     console.log(worker);
-      //     if (snapshots.filter(snapshot => snapshot.worker == worker.worker).length == 0) {
-      //       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, minuteEnd / 1000, JSON.stringify(worker)]);  
-      //     }
-          
-      //   });
-      }
       callback(commands);
     }, handler);
   };
 
   // Handle Worker Ten-minute-snapshots in Redis 
   this.handleWorkerInfo2 = function(blockType, callback, handler) {
-  //   const dateNow = Date.now();
-  //   const tenMinutes = 10 * 60 * 1000;
-  //   const oneDay = 24 * 60 * 60 * 1000;
-  //   const tenMinutesEnd = Math.floor(dateNow / tenMinutes) * tenMinutes;
-  //   const tenMinutesStart = tenMinutesEnd - tenMinutes;
-  //   const oneDayAgo = tenMinutesEnd - oneDay;
-  const workerLookups = [];
-    // const workerLookups = [
-      // ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, `(${ tenMinutesStart / 1000 }`, tenMinutesEnd / 1000],
-  //     ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:historical`, tenMinutesEnd / 1000, tenMinutesEnd / 1000]];
+    const dateNow = Date.now();
+    const tenMinutes = 10 * 60 * 1000;
+    const tenMinutesEnd = Math.floor(dateNow / tenMinutes) * tenMinutes;
+    const tenMinutesStart = tenMinutesEnd - tenMinutes;
+    const oneDay = 24 * 60 * 60 * 1000;
+    const oneDayAgo = tenMinutesEnd - oneDay;
+    const workerLookups = [
+      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, `(${ tenMinutesStart / 1000 }`, tenMinutesEnd / 1000],
+      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:historical`, tenMinutesEnd / 1000, tenMinutesEnd / 1000]];
     _this.executeCommands(workerLookups, (results) => {
-  //     const workerData = results[0] || []; // no solo
-  //     const snapshots = results[1] || [];
-  //     const workers = [];
       const commands = [];
+      const historicals = [];
+      const historicalWorkers = [];
 
-  //     if (snapshots.length == 0) {
-  //       workerData.forEach((entry) => {
-  //       const workerObject = JSON.parse(entry);
-  //       const workerFound = workers.findIndex(element => element.worker == workerObject.worker)
-  //       if (workerFound == -1) {
-  //         const objectTemplate = {
-  //           worker: workerObject.worker,
-  //           work: workerObject.work || 0,
-  //           timestamp: tenMinutesEnd / 1000,
-  //           valid: workerObject.valid || 0,
-  //           stale: workerObject.stale || 0,
-  //           invalid: workerObject.invalid || 0,
-  //         };
-  //         workers.push(objectTemplate);
-  //         } else {
-  //           workers[workerFound].work += workerObject.work;
-  //           workers[workerFound].valid += workerObject.valid;
-  //           workers[workerFound].stale += workerObject.stale;
-  //           workers[workerFound].invalid += workerObject.invalid;
-  //         }
-  //       });
+      if (results[1]) {
+        results[1].forEach((historical) => {
+          historicals.push(JSON.parse(historical));
+        });
+      };
 
-  //       workers.forEach((entry) => {
-  //         commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:shared:historical`, tenMinutesEnd / 1000, JSON.stringify(entry)]);
-  //       });
+      if (results[0]) {
+        results[0].forEach((snapshot) => {
+          snapshot = JSON.parse(snapshot);
+          const workerIndex = historicalWorkers.findIndex(worker => worker.worker === snapshot.worker);
+          if (workerIndex === -1) {
+            const objectTemplate = {
+              worker: snapshot.worker,
+              valid: snapshot.valid,
+              stale: snapshot.stale,
+              invalid: snapshot.invalid,
+              time: tenMinutesEnd,
+              work: snapshot.work,
+            };
+            historicalWorkers.push(objectTemplate);
+          } else {
+            historicalWorkers[workerIndex].valid += snapshot.valid,
+            historicalWorkers[workerIndex].stale += snapshot.stale,
+            historicalWorkers[workerIndex].invalid += snapshot.invalid,
+            historicalWorkers[workerIndex].work += snapshot.work
+          };
+        });
+      };
 
-  //       commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, 0, tenMinutesEnd / 1000]);
-  //       commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:historical`, 0, `(${ oneDayAgo / 1000 }`]);
-  //     }
-
+      historicalWorkers.forEach((worker) => {
+        if (!historicals.find((historical) => historical.worker === worker.worker)) {
+          // console.log(worker);
+          commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:shared:historicals`, tenMinutesEnd / 1000, JSON.stringify(worker)]);  
+          // commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, 0, tenMinutesEnd / 1000]);
+          commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:historicals`, 0, `(${ oneDayAgo / 1000 }`]);
+        }
+      });
       callback(commands);
     }, handler);
   };
@@ -380,25 +329,25 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
     }, _this.usersInterval * 1000);
 
     // Handle Worker Mining History
-    // setInterval(() => {
-    //   _this.handleWorkerInfo(blockType, (results) => {
-    //     _this.executeCommands(results, () => {
-    //       if (_this.poolConfig.debug) {
-    //         logger.debug('Statistics', _this.pool, `Finished updating worker snapshots for ${ blockType } configuration.`);
-    //       }
-    //     }, () => {});
-    //   }, () => {});
-    // }, 10 * 1000); // every 20 seconds
+    setInterval(() => {
+      _this.handleWorkerInfo(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating worker snapshots for ${ blockType } configuration.`);
+          }
+        }, () => {});
+      }, () => {});
+    }, 10 * 1000); // every 20 seconds
 
-    // setInterval(() => {
-    //   _this.handleWorkerInfo2(blockType, (results) => {
-    //     _this.executeCommands(results, () => {
-    //       if (_this.poolConfig.debug) {
-    //         logger.debug('Statistics', _this.pool, `Finished updating historical worker snapshots for ${ blockType } configuration.`);
-    //       }
-    //     }, () => {});
-    //   }, () => {});
-    // },  3 * 60 * 1000); // every 3 minutes
+    setInterval(() => {
+      _this.handleWorkerInfo2(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating historical worker snapshots for ${ blockType } configuration.`);
+          }
+        }, () => {});
+      }, () => {});
+    },  1 * 60 * 1000); // every 3 minutes
 
     // Handle Blocks Info Interval
     // This merely deletes blocks if there's more than 100 confirmed ... no need for this until I reach 10% share
