@@ -741,14 +741,18 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       blockType = 'primary';
     }
     const solo = isSolo ? 'solo' : 'shared';
+    const dateNow = Date.now();
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
+    const onlineWindow = _this.poolConfigs[pool].statistics.onlineWindow;
+    const onlineWindowTime = (((dateNow / 1000) - hashrateWindow) | 0);
     const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
-    const hashrateWindowTime = (((Date.now() / 1000) - hashrateWindow) | 0);
+    const hashrateWindowTime = (((dateNow / 1000) - hashrateWindow) | 0);
     const hashrate24Window = 60 * 60 * 24;
     
     const commands = [
       ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:historicals`, 0, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:snapshots`, 0, '+inf'],
       ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:hashrate`, hashrateWindowTime, '+inf']];
     _this.executeCommands(commands, (results) => {
       const output = [];
@@ -770,7 +774,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
                 validShares: historical.valid,
                 staleShares: historical.stale,
                 invalidShares: historical.invalid,
-                lastSeen: 0,
+                lastSeen: historical.time,
               };
               output.push(workerData);
             } else {
@@ -778,26 +782,43 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
               output[workerIndex].validShares += historical.valid;
               output[workerIndex].staleShares += historical.stale;
               output[workerIndex].invalidShares += historical.invalid;
+              output[workerIndex].lastSeen = output[workerIndex].lastSeen < historical.time ? historical.time : output[workerIndex].lastSeen;
             }
 
           };
         });
       }
 
-      if (results[1]) {
+      if (result[1]) {
         results[1].forEach((entry) => {
+          const snapshot = JSON.parse(entry);
+          if (snapshot.worker.split('.')[0] === address) {
+            const worker = snapshot.worker.split('.')[1];
+            let workerIndex = output.findIndex((obj => obj.name === worker));
+            output[workerIndex].lastSeen = output[workerIndex].lastSeen < snapshot.time ? snapshot.time : output[workerIndex].lastSeen;
+            if (snapshot.time >= onlineWindowTime && snapshot.work > 0) {
+              output[workerIndex].isOnline = true;
+            }
+          }
+        });
+      }
+
+      if (results[2]) {
+        results[2].forEach((entry) => {
           const share = JSON.parse(entry);
           if (share.worker.split('.')[0] === address) {
             const worker = share.worker.split('.')[1];
             let workerIndex = output.findIndex((obj => obj.name === worker));
             output[workerIndex].hashrateData += share.work;
-            output[workerIndex].isOnline = true;
             output[workerIndex].lastSeen = output[workerIndex].lastSeen < share.time ? share.time : output[workerIndex].lastSeen;
           }
         });
       }
 
       output.forEach((worker) => {
+        if (worker.hashrateData > 0) {
+          worker.isOnline = true;
+        }
         worker.currentHashrate = worker.hashrateData * multiplier / hashrateWindow;
         worker.averageHashrate = worker.averageHashrateData * multiplier / hashrate24Window;
         delete worker.hashrateData;
