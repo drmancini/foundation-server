@@ -794,7 +794,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           const snapshot = JSON.parse(entry);
           if (snapshot.worker.split('.')[0] === address) {
             const worker = snapshot.worker.split('.')[1];
-            let workerIndex = output.findIndex((obj => obj.name === worker));
+            const workerIndex = output.findIndex((obj => obj.name === worker));
             if (workerIndex != -1) {
               output[workerIndex].lastSeen = output[workerIndex].lastSeen < snapshot.time ? snapshot.time : output[workerIndex].lastSeen;
               if (snapshot.time >= onlineWindowTime && snapshot.work > 0) {
@@ -811,9 +811,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           const share = JSON.parse(entry);
           if (share.worker.split('.')[0] === address) {
             const worker = share.worker.split('.')[1];
-            let workerIndex = output.findIndex((obj => obj.name === worker));
-            output[workerIndex].hashrateData += share.work;
-            output[workerIndex].lastSeen = output[workerIndex].lastSeen < share.time ? share.time : output[workerIndex].lastSeen;
+            const workerIndex = output.findIndex((obj => obj.name === worker));
+            if (workerIndex != -1) {
+              output[workerIndex].hashrateData += share.work;
+              output[workerIndex].lastSeen = output[workerIndex].lastSeen < share.time ? share.time : output[workerIndex].lastSeen;
+            }
           }
         });
       }
