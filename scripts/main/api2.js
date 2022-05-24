@@ -1147,15 +1147,14 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
 
       const topMiners = miners.sort((a,b) => b.work - a.work).slice(0, 10);
-      console.log(topMiners);
 
-      for (const [key, value] of Object.entries(results[2])) {
-        const miner = JSON.parse(value);
+      // for (const [key, value] of Object.entries(results[2])) {
+      //   const miner = JSON.parse(value);
 
-        if (minerIndex >= 0) {
-          topMiners[minerIndex].firstJoined = miner.firstJoined;
-        }
-      };
+      //   if (minerIndex >= 0) {
+      //     topMiners[minerIndex].firstJoined = miner.firstJoined;
+      //   }
+      // };
 
       topMiners.forEach((miner) => {
         let workerCount = 0;
