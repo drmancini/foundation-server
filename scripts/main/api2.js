@@ -745,9 +745,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const onlineWindow = _this.poolConfigs[pool].statistics.onlineWindow;
-    const onlineWindowTime = (((dateNow / 1000) - hashrateWindow) | 0);
+    const onlineWindowTime = dateNow / 1000 - onlineWindow | 0;
     const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
-    const hashrateWindowTime = (((dateNow / 1000) - hashrateWindow) | 0);
+    const hashrateWindowTime = (dateNow / 1000 - hashrateWindow | 0).toString();
     const hashrate24Window = 60 * 60 * 24;
     
     const commands = [
