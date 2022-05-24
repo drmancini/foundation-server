@@ -795,10 +795,13 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           if (snapshot.worker.split('.')[0] === address) {
             const worker = snapshot.worker.split('.')[1];
             let workerIndex = output.findIndex((obj => obj.name === worker));
-            output[workerIndex].lastSeen = output[workerIndex].lastSeen < snapshot.time ? snapshot.time : output[workerIndex].lastSeen;
-            if (snapshot.time >= onlineWindowTime && snapshot.work > 0) {
-              output[workerIndex].isOnline = true;
+            if (workerIndex != -1) {
+              output[workerIndex].lastSeen = output[workerIndex].lastSeen < snapshot.time ? snapshot.time : output[workerIndex].lastSeen;
+              if (snapshot.time >= onlineWindowTime && snapshot.work > 0) {
+                output[workerIndex].isOnline = true;
+              }
             }
+            
           }
         });
       }
