@@ -789,7 +789,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         });
       }
 
-      if (result[1]) {
+      if (results[1]) {
         results[1].forEach((entry) => {
           const snapshot = JSON.parse(entry);
           if (snapshot.worker.split('.')[0] === address) {
