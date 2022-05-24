@@ -292,7 +292,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
         if (!historicals.find((historical) => historical.worker === worker.worker)) {
           // console.log(worker);
           commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:shared:historicals`, tenMinutesEnd / 1000, JSON.stringify(worker)]);  
-          // commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, 0, tenMinutesEnd / 1000]);
+          commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, 0, tenMinutesEnd / 1000]);
           commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:historicals`, 0, `(${ oneDayAgo / 1000 }`]);
         }
       });
