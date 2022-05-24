@@ -394,7 +394,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
   };
 
-  // API Endpoint for /miner/paymentStats for miner [address]
+  // API Endpoint for /miner/payoutSettings for miner [address]
   this.minerPayoutSettings = function(pool, body, blockType, isSolo, callback) {
     const minPayment = _this.poolConfigs[pool].primary.payments.minPayment;
     const payoutLimit = body.payoutLimit;
@@ -869,29 +869,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         }
       });
     }, callback);
-  };
-
-  // API Endpoint for /historical/[miner]
-  // primary: {"time":1647200759587,"hashrate":{"shared":[{"identifier":"EU","hashrate":55.75289296213342}],"solo":[{"identifier":"","hashrate":0}]}
-  this.handleMinerHistorical = function(pool, miner, callback) {
-    sequelizeShares
-      .findAll({
-        raw:true,
-        attributes: ['worker', 'work', 'share_type', 'miner_type', 'identifier', 'time'],
-        where: {
-          pool: pool,
-          worker: {
-            [Op.like]: miner + '%',
-          },
-        }
-      })
-      .then((data) => {
-        callback(200, {
-          test: data,
-          primary: utils.processMinerHistorical(data, 'primary'),
-          auxiliary: utils.processMinerHistorical(data, 'auxiliary'),
-        });
-      });
   };
 
   // API Endpoint for /payments/[miner]

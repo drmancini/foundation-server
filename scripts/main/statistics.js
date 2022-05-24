@@ -136,8 +136,9 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
 
   // Get Historical Information from Redis
   this.handleHistoricalInfo = function(blockType, callback, handler) {
-    const windowTime = (((Date.now() / 1000) - _this.hashrateWindow) | 0).toString();
-    const windowHistorical = (((Date.now() / 1000) - _this.historicalWindow) | 0).toString();
+    const dateNow = Date.now();
+    const windowTime = (dateNow / 1000 - _this.hashrateWindow | 0).toString();
+    const windowHistorical = (dateNow / 1000 - _this.historicalWindow | 0).toString();
     const historicalLookups = [
       ['hgetall', `${ _this.pool }:statistics:${ blockType }:network`],
       ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, windowTime, '+inf'],
