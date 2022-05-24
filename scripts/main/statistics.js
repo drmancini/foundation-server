@@ -214,7 +214,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
               valid: share.type === 'valid' ? 1 : 0,
               stale: share.type === 'stale' ? 1 : 0,
               invalid: share.type === 'invalid' ? 1 : 0,
-              time: minuteEnd,
+              time: minuteEnd / 1000,
               work: share.type === 'valid' ? share.work : 0,
             };
             snapshotWorkers.push(objectTemplate);
@@ -275,7 +275,7 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
               valid: snapshot.valid,
               stale: snapshot.stale,
               invalid: snapshot.invalid,
-              time: tenMinutesEnd,
+              time: tenMinutesEnd / 1000,
               work: snapshot.work,
             };
             historicalWorkers.push(objectTemplate);

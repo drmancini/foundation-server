@@ -254,64 +254,96 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const solo = isSolo ? 'solo' : 'shared';
 
     const commands = [
-      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:historical`, 0, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:historicals`, 0, '+inf'],
       ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:snapshots`, 0, '+inf']];
     _this.executeCommands(commands, (results) => {
-      const historical = results[0] || {};
-      const snapshots = results[1] || {};
-      
-      const workerArray = [];
-      const movingAverageArray = [];
 
-      for (const [key, value] of Object.entries(historical)) {
-        const snapshot = JSON.parse(value);
-        
-        // We want Miner Stats
-        if (snapshot.worker.split('.')[0] == address && worker === '') {
-          const temp = workerArray.find((obj, index) => {
-            if (obj.timestamp == snapshot.timestamp) {
-              workerArray[index].work += snapshot.work;
-              workerArray[index].validShares += snapshot.valid;
-              workerArray[index].staleShares += snapshot.stale;
-              workerArray[index].invalidShares += snapshot.invalid;
-              return true;
+      let output = [];
+      if (results[0]) {
+        results[0].forEach((entry) => {
+          const historical = JSON.parse(entry);
+          historical.time = historical.time / 1000 | 0;
+          if (historical.worker.split('.')[0] === address) {
+            const timeIndex = output.findIndex(entry => entry.timestamp === historical.time);
+            console.log(timeIndex);
+            if(timeIndex == -1) {
+              const tempObject = {
+                timestamp: historical.time,
+                work: historical.work,
+                validShares: historical.valid,
+                staleShares: historical.stale,
+                invalidShares: historical.invalid
+              }
+              output.push(tempObject);
+            } else {
+              console.log('asd');
+              output[timeIndex].work += historical.work;
+              output[timeIndex].validShares += historical.valid,
+              output[timeIndex].staleShares += historical.stale,
+              output[timeIndex].invalidShares += historical.invalid
             }
-          });
-
-          if (!temp) {
-            const tempObject = {
-              timestamp: snapshot.timestamp,
-              work: snapshot.work,
-              validShares: snapshot.valid,
-              staleShares: snapshot.stale,
-              invalidShares: snapshot.invalid
-            };
-            workerArray.push(tempObject);
           }
-        // We want Worker Stats
-        } else if (snapshot.worker == address + '.' + worker && worker != '') {
-          const tempObject = {
-            timestamp: snapshot.timestamp,
-            work: snapshot.work,
-            validShares: snapshot.valid,
-            staleShares: snapshot.stale,
-            invalidShares: snapshot.invalid
-          };
-          workerArray.push(tempObject);
-        }
-      };
+        });      
+      }
+        
+        output = output.sort((a,b) => (a.timestamp - b.timestamp));
+
+
+      // const historicals = results[0] || {};
+      // const snapshots = results[1] || {};
       
-      workerArray.forEach((element) => {
-        element.hashrate = element.work * multiplier / (tenMinutes / 1000);
-        delete element.work;
-        movingAverageArray.push(element.hashrate);
-        if (movingAverageArray.length > 5) {
-          movingAverageArray.shift();
-        }
-        const movingAverageSum = movingAverageArray.reduce((partialSum, a) => partialSum + a, 0);
-        element.averageHashrate = movingAverageSum / movingAverageArray.length;
-      });
-      callback(200, workerArray);
+      // const workerArray = [];
+      // const movingAverageArray = [];
+
+      // for (const [key, value] of Object.entries(historical)) {
+      //   const snapshot = JSON.parse(value);
+        
+      //   // We want Miner Stats
+      //   if (snapshot.worker.split('.')[0] == address && worker === '') {
+      //     const temp = workerArray.find((obj, index) => {
+      //       if (obj.timestamp == snapshot.timestamp) {
+      //         workerArray[index].work += snapshot.work;
+      //         workerArray[index].validShares += snapshot.valid;
+      //         workerArray[index].staleShares += snapshot.stale;
+      //         workerArray[index].invalidShares += snapshot.invalid;
+      //         return true;
+      //       }
+      //     });
+
+      //     if (!temp) {
+      //       const tempObject = {
+      //         timestamp: snapshot.timestamp,
+      //         work: snapshot.work,
+      //         validShares: snapshot.valid,
+      //         staleShares: snapshot.stale,
+      //         invalidShares: snapshot.invalid
+      //       };
+      //       workerArray.push(tempObject);
+      //     }
+      //   // We want Worker Stats
+      //   } else if (snapshot.worker == address + '.' + worker && worker != '') {
+      //     const tempObject = {
+      //       timestamp: snapshot.timestamp,
+      //       work: snapshot.work,
+      //       validShares: snapshot.valid,
+      //       staleShares: snapshot.stale,
+      //       invalidShares: snapshot.invalid
+      //     };
+      //     workerArray.push(tempObject);
+      //   }
+      // };
+      
+      // workerArray.forEach((element) => {
+      //   element.hashrate = element.work * multiplier / (tenMinutes / 1000);
+      //   delete element.work;
+      //   movingAverageArray.push(element.hashrate);
+      //   if (movingAverageArray.length > 5) {
+      //     movingAverageArray.shift();
+      //   }
+      //   const movingAverageSum = movingAverageArray.reduce((partialSum, a) => partialSum + a, 0);
+      //   element.averageHashrate = movingAverageSum / movingAverageArray.length;
+      // });
+      callback(200, output);
     }, callback);
   };
 
