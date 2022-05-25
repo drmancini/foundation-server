@@ -1188,6 +1188,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         delete entry.work;
       });
 
+      console.log(output);
+
       callback(200, {
         result: output
       });
