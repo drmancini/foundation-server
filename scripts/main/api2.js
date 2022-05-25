@@ -1137,23 +1137,28 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       ['hgetall', `${ pool }:miners:${ blockType }`],
     ];
     _this.executeCommands(commands, (results) => {
-      const newWorkers = {};
-      const workers = [];
+      const workers = {};
       if (results[0]) {
         for (const [key, value] of Object.entries(results[0])) {
           const worker = JSON.parse(value);
           if (worker.time > onlineWindowTime) {
-            workers.push(worker.worker);
             const miner = worker.worker.split('.')[0];
-            if (newWorkers[miner]) {
-              newWorkers[miner] += 1;
+            if (workers[miner]) {
+              workers[miner] += 1;
             } else {
-              newWorkers[miner] = 1;
+              workers[miner] = 1;
             }
           }
         };
       }
 
+      const joined = {};
+      if (results[2]) {
+        for (const [key, value] of Object.entries(results[2])) {
+          const miner = JSON.parse(value);
+          joined[miner] = firstJoined;
+        };
+      }
 
       const miners = [];
       if (results[1]) {
@@ -1166,7 +1171,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           minerObject = {
             miner: miner,
             work: work,
-            workerCount: newWorkers[miner]
+            workerCount: workers[miner]
           };
           miners.push(minerObject);
           } else {
@@ -1175,34 +1180,16 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         });
       }
 
-      const topMiners = miners.sort((a,b) => b.work - a.work).slice(0, 10);
-      console.log(topMiners);
-      console.log(workers);
-      console.log(newWorkers);
+      const output = miners.sort((a,b) => b.work - a.work).slice(0, 10);
 
-      // for (const [key, value] of Object.entries(results[2])) {
-      //   const miner = JSON.parse(value);
-
-      //   if (minerIndex >= 0) {
-      //     topMiners[minerIndex].firstJoined = miner.firstJoined;
-      //   }
-      // };
-
-      topMiners.forEach((miner) => {
-        let workerCount = 0;
-        workers.forEach((worker) => {
-          if (miner.miner == worker.split('.')[0]) {
-            workerCount ++;
-          }
-        })
-        miner.firstJoined = JSON.parse(results[2][miner.miner]).firstJoined;
-        miner.workerCount = workerCount;
-        miner.hashrate = miner.work * multiplier / hashrateWindow;
-        delete miner.work;
+      output.forEach((entry) => {
+        entry.firstJoined = joined[entry.miner];
+        entry.hashrate = entry.work * multiplier / hashrateWindow;
+        delete entry.work;
       });
 
       callback(200, {
-        result: topMiners
+        result: output
       });
     }, callback);
   };
