@@ -993,6 +993,22 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
+  // API Endpoint for /pool/coin
+  this.poolCoin = function(pool, blockType, callback) {
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+
+    const commands = [
+      ['hgetall', `${ pool }:coin:${ blockType }`]];
+
+    _this.executeCommands(commands, (results) => { 
+      const output = results[0] || [];
+      
+      callback(200, output);
+    }, callback);   
+  };
+
   // API Endpoint for /pool/clientIP
   this.poolClientIP = function(remoteAddress, callback) {
     callback(200, {
@@ -1308,6 +1324,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'blocks'):
             _this.poolBlocks(pool, blockType, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'coin'):
+            _this.poolCoin(pool, blockType, (code, message) => callback(code, message));
             break;
           case (endpoint === 'currentLuck'):
             _this.poolCurrentLuck(pool, blockType, isSolo, (code, message) => callback(code, message));
