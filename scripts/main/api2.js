@@ -1165,7 +1165,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         if (minerIndex == -1) {
           minerObject = {
             miner: miner,
-            work: work
+            work: work,
+            workerCount: newWorkers[miner]
           };
           miners.push(minerObject);
           } else {
