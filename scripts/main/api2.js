@@ -1137,15 +1137,23 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       ['hgetall', `${ pool }:miners:${ blockType }`],
     ];
     _this.executeCommands(commands, (results) => {
+      const newWorkers = {};
       const workers = [];
       if (results[0]) {
         for (const [key, value] of Object.entries(results[0])) {
           const worker = JSON.parse(value);
           if (worker.time > onlineWindowTime) {
             workers.push(worker.worker);
+            const miner = worker.worker.split('.')[0];
+            if (newWorkers[miner]) {
+              newWorkers[miner] += 1;
+            } else {
+              newWorkers[miner] = 1;
+            }
           }
         };
       }
+
 
       const miners = [];
       if (results[1]) {
@@ -1169,6 +1177,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const topMiners = miners.sort((a,b) => b.work - a.work).slice(0, 10);
       console.log(topMiners);
       console.log(workers);
+      console.log(newWorkers);
 
       // for (const [key, value] of Object.entries(results[2])) {
       //   const miner = JSON.parse(value);
