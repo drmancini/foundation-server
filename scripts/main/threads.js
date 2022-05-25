@@ -45,7 +45,7 @@ const PoolThreads = function(logger, client, sequelize, portalConfig) {
         new PoolServer(logger, _this.client, _this.sequelize).setupServer(() => {});
         break;
       case 'worker':
-        new PoolWorkers(logger, _this.client, _this.sequelize).setupWorkers(() => {});
+        new PoolWorkers(logger, _this.client).setupWorkers(() => {});
         break;
       }
     }

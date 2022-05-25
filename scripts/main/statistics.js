@@ -6,29 +6,21 @@
 
 const https = require('https');
 const utils = require('./utils');
-const { Sequelize, Op } = require('sequelize');
-const SharesModel = require('../../models/shares.model');
 const Algorithms = require('foundation-stratum').algorithms;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Statistics Function
-const PoolStatistics = function (logger, client, sequelize, poolConfig, portalConfig) {
+const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 
   const _this = this;
   process.setMaxListeners(0);
 
   this.pool = poolConfig.name;
   this.client = client;
-  this.sequelize = sequelize;
   this.poolConfig = poolConfig;
   this.portalConfig = portalConfig;
   this.forkId = process.env.forkId;
-
-  const sequelizeShares = SharesModel(sequelize, Sequelize);
-  if (typeof(sequelizeShares) === 'function') {
-    this.sequelize.sync({ force: false })
-  };
 
   const logSystem = 'Pool';
   const logComponent = poolConfig.name;
@@ -412,25 +404,6 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
         }, () => {});
       });
     }, _this.hashrateInterval * 1000);
-
-    // Delete old shares cache
-    setInterval(() => {
-      sequelizeShares
-        .destroy({
-          where: {
-            share: {
-              time: {
-                [Op.lte]: (Date.now() - (_this.historicalWindow * 1000)),
-              }
-            }
-          }
-        })
-        .then(() => {
-          if (_this.poolConfig.debug) {
-            logger.debug('Statistics', _this.pool, `Finished deleting share cache for ${ blockType } configuration.`);
-          }
-        })
-    }, _this.historicalInterval * 1000);
 
     // Handle Historical Data Interval
     setInterval(() => {

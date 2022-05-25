@@ -5,34 +5,21 @@
  */
 
 const utils = require('./utils');
-const md5 = require('blueimp-md5');
-const { Sequelize, Op } = require('sequelize');
-const SharesModel = require('../../models/shares.model');
-// const BlocksModel = require('../../models/blocks.model');
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Shares Function
-const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig) {
+const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
   const _this = this;
   process.setMaxListeners(0);
 
   this.pool = poolConfig.name;
   this.client = client;
-  this.sequelize = sequelize;
   this.poolConfig = poolConfig;
   this.portalConfig = portalConfig;
   this.forkId = process.env.forkId;
-
-  const sequelizeShares = SharesModel(sequelize, Sequelize);
-  // const sequelizeBlocks = BlocksModel(sequelize, Sequelize);
-  /* istanbul ignore next */
-  // if (typeof(sequelizeShares) === 'function' && typeof(sequelizeBlocks) === 'function') {
-  if (typeof(sequelizeShares) === 'function') {
-    this.sequelize.sync({ force: false })
-  };
-  
+    
   const logSystem = 'Pool';
   const logComponent = poolConfig.name;
   const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
@@ -212,14 +199,6 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
       commands.push(['hset', `${ _this.pool }:workers:${ blockType }:${ minerType }`, worker, JSON.stringify(workerShare)]);
     }
 
-    // Save Share Data to Historic Database
-    sequelizeShares  
-      .create({
-        pool: _this.pool,
-        block_type: blockType,
-        share: hashrateShare,
-        share_type: shareType
-      });  
     return commands;
   };
 
@@ -323,17 +302,6 @@ const PoolShares = function (logger, client, sequelize, poolConfig, portalConfig
     } else if (shareData.transaction) {
       commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'invalid', 1]);
     }
-
-    // Write New Pending Block to Sequelize
-    // if (blockValid) {
-    //   sequelizeBlocks
-    //   .create({
-    //     pool: _this.pool,
-    //     block_type: blockType,
-    //     block: outputBlock,
-    //     block_category: 'pending',
-    //   })
-    // }
 
     return commands;
   };
