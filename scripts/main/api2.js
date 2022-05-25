@@ -1026,7 +1026,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const algorithm = config.primary.coin.algorithms.mining;
     const hashrateWindow = config.statistics.hashrateWindow;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
-    const windowTime = (((Date.now() / 1000) - hashrateWindow) | 0).toString();
+    const windowTime = (Date.now() / 1000 - hashrateWindow | 0).toString();
     const commands = [
       ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:hashrate`, windowTime, '+inf']
     ];
@@ -1042,7 +1042,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /pool/hashrateChart
   this.poolHashrateChart = function(pool, blockType, callback) {
     const historicalWindow = _this.poolConfigs[pool].statistics.historicalWindow;
-    const windowHistorical = (((Date.now() / 1000) - historicalWindow) | 0).toString();
+    const windowHistorical = (Date.now() / 1000 - historicalWindow | 0).toString();
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -1074,7 +1074,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const config = _this.poolConfigs[pool] || {};
     const solo = isSolo ? 'solo' : 'shared';
     const onlineWindow = config.statistics.onlineWindow;
-    const onlineWindowTime = (((Date.now() / 1000) - onlineWindow) | 0);
+    const onlineWindowTime = Date.now() / 1000 - onlineWindow | 0;
 
     if (blockType == '') {
       blockType = 'primary';
@@ -1107,9 +1107,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const dateNow = Date.now();
     const hashrateWindow = config.statistics.hashrateWindow;
-    const hashrateWindowTime = ((dateNow / 1000) - hashrateWindow | 0);
+    const hashrateWindowTime = (dateNow / 1000 - hashrateWindow | 0).toString();
     const onlineWindow = config.statistics.onlineWindow;
-    const onlineWindowTime = ((dateNow / 1000) - onlineWindow | 0);
+    const onlineWindowTime = dateNow / 1000 - onlineWindow | 0;
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -1180,7 +1180,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const config = _this.poolConfigs[pool] || {};
     const solo = isSolo ? 'solo' : 'shared';
     const onlineWindow = config.statistics.onlineWindow;
-    const onlineWindowTime = (((Date.now() / 1000) - onlineWindow) | 0);
+    const onlineWindowTime = Date.now() / 1000 - onlineWindow | 0;
 
     if (blockType == '') {
       blockType = 'primary';

@@ -4,6 +4,7 @@
  *
  */
 
+const https = require('https');
 const utils = require('./utils');
 const { Sequelize, Op } = require('sequelize');
 const SharesModel = require('../../models/shares.model');
@@ -79,6 +80,34 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
     } 
 
     return commands;
+  };
+
+  // Handle Users Information in Redis
+  this.handleCoingeckoData = function(blockType, callback, handler) {
+    const coinName = _this.poolConfig[blockType].coin.name.toLowerCase()  || '';
+    let commands = [];
+
+    const request = https.get('https://api.coingecko.com/api/v3/coins/' + coinName, response => {
+      let chunks = [];
+      
+      response.on('data', data => {
+        chunks.push(data);
+      }).on('end', () => {
+        const data = Buffer.concat(chunks);
+        const schema = JSON.parse(data);
+        const outputObject = schema.market_data.current_price;
+        for (const [key, value] of Object.entries(outputObject)) {
+          commands.push(['hset', `${ _this.pool }:coin:${ blockType }`, key, value]);
+        }
+        callback(commands);
+      });
+    });
+
+    request.on('error', error => {
+      console.error(error);
+    });
+
+    request.end(); 
   };
 
   // Handle Users Information in Redis
@@ -317,6 +346,17 @@ const PoolStatistics = function (logger, client, sequelize, poolConfig, portalCo
   // Start Interval Initialization
   /* istanbul ignore next */
   this.handleIntervals = function(daemon, blockType) {
+
+    // Handle Coingecko Data
+    setInterval(() => {
+      _this.handleCoingeckoData(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating Raptoreum data from Coingecko.`);
+          }
+        }, () => {});
+      }, () => {});
+    }, _this.refreshInterval * 10 * 1000);
 
     // Handle User Info Interval
     setInterval(() => {
