@@ -814,7 +814,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             const workerIndex = output.findIndex((obj => obj.name === worker));
             if (workerIndex != -1) {
               output[workerIndex].hashrateData += share.work;
-              output[workerIndex].lastSeen = share.time > output[workerIndex].lastSeen ? share.time : output[workerIndex].lastSeen;
+              output[workerIndex].lastSeen = share.time / 1000 | 0 > output[workerIndex].lastSeen ? share.time / 1000 | 0 : output[workerIndex].lastSeen;
             }
           }
         });
