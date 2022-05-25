@@ -1161,6 +1161,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       }
 
       console.log(joined);
+      
       const miners = [];
       if (results[1]) {
         results[1].forEach((entry) => {
