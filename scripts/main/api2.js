@@ -1138,15 +1138,18 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     ];
     _this.executeCommands(commands, (results) => {
       const workers = [];
-      for (const [key, value] of Object.entries(results[0])) {
-        const worker = JSON.parse(value);
-        if (worker.time > onlineWindowTime) {
-          workers.push(worker.worker);
-        }
-      };
+      if (results[0]) {
+        for (const [key, value] of Object.entries(results[0])) {
+          const worker = JSON.parse(value);
+          if (worker.time > onlineWindowTime) {
+            workers.push(worker.worker);
+          }
+        };
+      }
 
       const miners = [];
-      results[1].forEach((entry) => {
+      if (results[1]) {
+        results[1].forEach((entry) => {
         const share = JSON.parse(entry);
         const work = /^-?\d*(\.\d+)?$/.test(share.work) ? parseFloat(share.work) : 0;
         const miner = share.worker.split('.')[0];
@@ -1157,13 +1160,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             work: work
           };
           miners.push(minerObject);
-        } else {
-          miners[minerIndex].work += work;
-        }
-      });
+          } else {
+            miners[minerIndex].work += work;
+          }
+        });
+      }
 
       const topMiners = miners.sort((a,b) => b.work - a.work).slice(0, 10);
       console.log(topMiners);
+      console.log(workers);
 
       // for (const [key, value] of Object.entries(results[2])) {
       //   const miner = JSON.parse(value);
