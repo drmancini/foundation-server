@@ -1156,7 +1156,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       if (results[2]) {
         for (const [key, value] of Object.entries(results[2])) {
           const miner = JSON.parse(value);
-          joined[miner] = firstJoined;
+          joined[miner] = miner.firstJoined;
         };
       }
 
