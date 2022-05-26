@@ -1320,39 +1320,33 @@ describe('Test payments functionality', () => {
     });
   });
 
-  test('Test sending currency through daemon [1]', (done) => {
-    mockDaemon.mockSendMany();
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+  test('Test individual limits for payouts [1]', (done) => {
     const poolPayments = new PoolPayments(logger, client, sequelize);
-    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
-    const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Pool1'];
-    const expected = [
-      ["zadd", "Pool1:payments:primary:records", 1637878085, "{\"time\":1637878085886,\"paid\":117.12181095,\"miners\":3,\"transaction\":\"transactionID\"}"]];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
-      expect(error).toBe(null);
-      expect(results.length).toBe(3);
-      expect(results[2]).toStrictEqual(expected);
-      nock.cleanAll();
-      console.log.mockClear();
-      done();
+    const commands = [
+      ['hset', 'Pool1:miners:primary', 'miner1', '{"payoutLimit":1}'],
+      ['hset', 'Pool1:miners:primary', 'miner2', '{"payoutLimit":100}'],
+      ['hset', 'Pool1:miners:primary', 'miner3', '{"payoutLimit":2}']];
+    mockSetupClient(client, commands, 'Pool1', () => {
+      poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+      poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+      poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+      const config = poolPayments.poolConfigs['Pool1'];
+      const workers = { miner1: { balance: 100}, miner2: { balance: 100}, miner3: {balance: 100}};
+      poolPayments.handleLimits(config, 'primary', [mockPayments.rounds, workers], (error, results) => {
+        expect(error).toBe(null);
+        expect(results.length).toBe(4);
+        console.log.mockClear();
+        done();
+      });
     });
   });
 
-  test('Test sending currency through daemon [2]', (done) => {
+  test('Test sending currency through daemon [1]', (done) => {
     mockDaemon.mockSendMany();
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client, sequelize);
-    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers2], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1, [], 0], (error, results) => {
       expect(error).toBe(null);
       expect(results.length).toBe(2);
       nock.cleanAll();
@@ -1365,13 +1359,9 @@ describe('Test payments functionality', () => {
     mockDaemon.mockSendManyError1();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client, sequelize);
-    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1, {a: 1, b: 2}, 3], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('RPC command did not return txid. Disabling payments to prevent possible double-payouts'));
       expect(results).toStrictEqual([]);
@@ -1385,13 +1375,9 @@ describe('Test payments functionality', () => {
     mockDaemon.mockSendManyError2();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client, sequelize);
-    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1, {a: 1, b: 2}, 3], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error sending payments {"code":-5}'));
       expect(results).toStrictEqual([]);
@@ -1405,13 +1391,9 @@ describe('Test payments functionality', () => {
     mockDaemon.mockSendManyError3();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client, sequelize);
-    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1, {a: 1, b: 2}, 3], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Insufficient funds for payments: {"code":-6}'));
       expect(results).toStrictEqual([]);
@@ -1425,13 +1407,9 @@ describe('Test payments functionality', () => {
     mockDaemon.mockSendManyError4();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client, sequelize);
-    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1, {a: 1, b: 2}, 3], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error sending payments {"message":"error"}'));
       expect(results).toStrictEqual([]);
@@ -1445,13 +1423,9 @@ describe('Test payments functionality', () => {
     mockDaemon.mockSendManyError5();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client, sequelize);
-    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1, {a: 1, b: 2}, 3], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error sending payments'));
       expect(results).toStrictEqual([]);
@@ -1463,16 +1437,11 @@ describe('Test payments functionality', () => {
 
   test('Test sending currency through daemon [8]', (done) => {
     mockDaemon.mockSendMany();
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].auxiliary = { coin: { symbol: 'BTC' }, payments: {} };
-    poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].auxiliary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].auxiliary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].auxiliary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'auxiliary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'auxiliary', [mockPayments.rounds, mockPayments.workers1, {a: 1, b: 2}, 3], (error, results) => {
       expect(error).toBe(null);
       expect(results.length).toBe(3);
       nock.cleanAll();

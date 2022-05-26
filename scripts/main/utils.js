@@ -268,18 +268,6 @@ exports.processLuck = function(pending, confirmed) {
   return output;
 };
 
-// Process Miner History for API Endpoints
-exports.processMinerHistorical = function(shares, blockType) {
-  let output = {};
-  if(shares) {
-    output = shares.filter((share) => share.block_type === blockType);
-    output.forEach((share) => {
-      const hashrateValue = exports.processWork(hashrate, address, 'miner');
-    });
-  };
-  return output;
-}
-
 // Process Miner Payments for API Endpoints
 exports.processMinerPayments = function(payments, blockType) {
   let output = {};
@@ -516,36 +504,4 @@ exports.validateInput = function(address) {
     address = address.toString().replace(/[^a-zA-Z0-9.-]+/g, '');
   }
   return address;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-
-// Process Worker Count for API Endpoint /miner/workerCount
-exports.processMinerWorkerCount = function(shares, hashrate, address) {
-  let output = {};
-  let workersOnline = 0; 
-  let workerCount = 0;
-  if (shares) {
-    Object.keys(shares).forEach((entry) => {
-      const details = JSON.parse(shares[entry]);
-
-      // Generate Worker Data
-      const hashrateValue = exports.processWork(hashrate, entry, 'worker');
-      const workValue = /^-?\d*(\.\d+)?$/.test(details.work) ? parseFloat(details.work) : 0;
-      const miner = details.worker.split('.')[0];
-
-      // Calculate Worker Information
-      if (details.worker && workValue > 0 && miner === address) {
-        workerCount += 1;
-        if (hashrateValue > 0) {
-          workersOnline += 1;
-        }
-      }
-    });
-    output = {
-      workersOnline: workersOnline,
-      workersOffline: workerCount - workersOnline,
-    }
-  }
-  return output;
 };
