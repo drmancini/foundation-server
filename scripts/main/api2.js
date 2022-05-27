@@ -39,6 +39,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /miner/blocks for miner [address]
   this.minerBlocks = function(pool, address, blockType, callback, ) {
+
+    /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
 
@@ -111,6 +113,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const tenMinutes = 1000 * 60 * 10;
+
+    /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -168,6 +172,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   //  API Endpoint dor /miner/details for miner [address]
   this.minerDetails = function(pool, address, blockType, isSolo, callback) {
+    /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -367,8 +372,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /miner/stats for miner [address]
-  this.minerStats = function(pool, address, blockType, isSolo, callback) {
+  this.minerStats = function(pool, address, blockType, isSolo, worker, callback) {
     const solo = isSolo ? 'solo' : 'shared';
+    /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -417,6 +423,16 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         });
       }
 
+      if (worker != '') {
+        callback(200, {
+          validShares: 1,
+          invalidShares: 2,
+          staleShares: 3,
+          currentHashrate: 1,
+          averageHalfDayHashrate: 2,
+          averageDayHashrate: 3
+        })
+      }
       callback(200, {
         validShares: valid,
         invalidShares: invalid,
@@ -430,6 +446,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /miner/workers for miner [address]
   this.minerWorkers = function(pool, address, blockType, isSolo, callback) {
+    /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -537,6 +554,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const offlineWindow = config.statistics.offlineWindow;
     const offlineWindowTime = ((dateNow - offlineWindow) || 0);
 
+    /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -569,28 +587,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
-  // API Endpoint for /payments/[miner]
-  /* istanbul ignore next */
-  this.handlePaymentsMinerRecords = function(pool, miner, callback) {
-    sequelizePayments
-      .findAll({
-        raw: true,
-        attributes: ['block_type', 'time', 'paid', 'transaction', 'miner'],
-        where: {
-          pool: pool,
-          miner: miner,
-        }
-      })
-      .then((data) => {
-        callback(200, {
-          primary: utils.processMinerPayments(data, 'primary'),
-          auxiliary: utils.processMinerPayments(data, 'auxiliary'),
-        });
-      });
-  };
-  
   // API Endpoint for /pool/averageLuck
   this.poolAverageLuck = function(pool, blockType, callback) {
+    /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -623,6 +622,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /pool/blocks
   this.poolBlocks = function(pool, blockType, callback) {
+    /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -688,6 +688,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /pool/coin
   this.poolCoin = function(pool, blockType, callback) {
+    /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -711,6 +712,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   
   // API Endpoint for /pool/currentLuck
   this.poolCurrentLuck = function(pool, blockType, isSolo, callback) {
+    
+    /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -752,6 +755,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   this.poolHashrateChart = function(pool, blockType, callback) {
     const historicalWindow = _this.poolConfigs[pool].statistics.historicalWindow;
     const windowHistorical = (Date.now() / 1000 - historicalWindow | 0).toString();
+    
+    /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -774,6 +779,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         outputObject.total = total;
         output.push(outputObject);
       });
+
+      output.sort((a,b) => a.timestamp - b.timestamp);
+
       callback(200, output);
     }, callback);   
   };
@@ -785,6 +793,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const onlineWindow = config.statistics.onlineWindow;
     const onlineWindowTime = Date.now() / 1000 - onlineWindow | 0;
 
+    /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -819,6 +828,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const hashrateWindowTime = (dateNow / 1000 - hashrateWindow | 0).toString();
     const onlineWindow = config.statistics.onlineWindow;
     const onlineWindowTime = dateNow / 1000 - onlineWindow | 0;
+    
+    /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -894,6 +905,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const onlineWindow = config.statistics.onlineWindow;
     const onlineWindowTime = Date.now() / 1000 - onlineWindow | 0;
 
+    /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
     }
@@ -1005,10 +1017,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.minerPayoutSettings(pool, body, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'stats' && address.length > 0):
-            _this.minerStats(pool, address, blockType, isSolo, (code, message) => callback(code, message));
+            _this.minerStats(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
             break;
           case (endpoint === 'stats2' && address.length > 0):
-            _this.minerStats(pool, address, blockType, isSolo, (code, message) => callback(code, message));
+            _this.minerStats(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
             break;
           case (endpoint === 'workerCount' && address.length > 0):
             _this.minerWorkerCount(pool, address, blockType, isSolo, (code, message) => callback(code, message));
