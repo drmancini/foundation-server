@@ -945,8 +945,13 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // Determine API Endpoint Called
   this.handleApiV2 = function(req, callback) {
 
-    let type, endpoint, method, blockType, isSolo, address, worker, page;
+    let type, endpoint, body, blockType, isSolo, address, worker, page, remoteAddress;
     const miscellaneous = ['pools'];
+
+    // If Socket Params Exist
+    if (req.socket) {
+      remoteAddress = req.socket.remoteAddress;
+    }
 
     // If Path Params Exist
     if (req.params) {
@@ -957,12 +962,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     // If Query Params Exist
     if (req.query) {
-      method = utils.validateInput(req.query.method || '');
       blockType = utils.validateInput(req.query.blockType || '');
       isSolo = utils.validateInput(req.query.isSolo || '');
       address = utils.validateInput(req.query.address || '');
       worker = utils.validateInput(req.query.worker || '');
       page = utils.validateInput(req.query.page || '');
+    }
+
+    if (req.body) {
+      body = req.body || '';
     }
 
     // Check if Requested Pool Exists
@@ -993,6 +1001,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           case (endpoint === 'paymentStats' && address.length > 0):
             _this.minerPaymentStats(pool, address, (code, message) => callback(code, message));
             break;
+          case (endpoint === 'payoutSettings'):
+            _this.minerPayoutSettings(pool, body, blockType, isSolo, (code, message) => callback(code, message));
+            break;
           case (endpoint === 'stats' && address.length > 0):
             _this.minerStats(pool, address, blockType, isSolo, (code, message) => callback(code, message));
             break;
@@ -1020,6 +1031,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'blocks'):
             _this.poolBlocks(pool, blockType, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'clientIP'):
+            _this.poolClientIP(remoteAddress, (code, message) => callback(code, message));
             break;
           case (endpoint === 'coin'):
             _this.poolCoin(pool, blockType, (code, message) => callback(code, message));
@@ -1073,7 +1087,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     // If Query Params Exist
     if (req.query) {
-      method = utils.validateInput(req.query.method || '');
       blockType = utils.validateInput(req.query.blockType || '');
       isSolo = utils.validateInput(req.query.isSolo || '');
       address = utils.validateInput(req.query.address || '');

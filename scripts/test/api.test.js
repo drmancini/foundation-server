@@ -7,9 +7,6 @@
 const redis = require('redis-mock');
 jest.mock('redis', () => jest.requireActual('redis-mock'));
 
-const sequelizeMock = require('sequelize-mock');
-const sequelize = new sequelizeMock();
-
 const events = require('events');
 const poolConfig = require('../../configs/pools/example.js');
 const portalConfig = require('../../configs/main/example.js');
@@ -134,7 +131,7 @@ describe('Test API functionality', () => {
     });
     mockSetupClient(client, [], 'Pool1', () => {
       const request = {};
-      const poolApi = new PoolApi(client, sequelize, poolConfigs, portalConfig);
+      const poolApi = new PoolApi(client, poolConfigs, portalConfig);
       poolApi.handleApiV1(request, (code, message) => {
         poolApi.buildResponse(code, message, response);
       });
