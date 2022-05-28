@@ -132,24 +132,46 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           const historical = JSON.parse(entry);
           maxHistoricalTime = historical.time > maxHistoricalTime ? historical.time : maxHistoricalTime;
 
-          if (historical.worker.split('.')[0] === address) {
-            const timeIndex = output.findIndex(entry => entry.timestamp === historical.time);
-            if(timeIndex == -1) {
-              const tempObject = {
-                timestamp: historical.time,
-                work: historical.work,
-                validShares: historical.valid,
-                staleShares: historical.stale,
-                invalidShares: historical.invalid
+          if (worker == null || worker == '') {
+            if (historical.worker.split('.')[0] === address) {
+              const timeIndex = output.findIndex(entry => entry.timestamp === historical.time);
+              if(timeIndex == -1) {
+                const tempObject = {
+                  timestamp: historical.time,
+                  work: historical.work,
+                  validShares: historical.valid,
+                  staleShares: historical.stale,
+                  invalidShares: historical.invalid
+                }
+                output.push(tempObject);
+              } else {
+                output[timeIndex].work += historical.work;
+                output[timeIndex].validShares += historical.valid,
+                output[timeIndex].staleShares += historical.stale,
+                output[timeIndex].invalidShares += historical.invalid
               }
-              output.push(tempObject);
-            } else {
-              output[timeIndex].work += historical.work;
-              output[timeIndex].validShares += historical.valid,
-              output[timeIndex].staleShares += historical.stale,
-              output[timeIndex].invalidShares += historical.invalid
+            }
+          } else {
+            if (historical.worker.split('.')[0] === address && historical.worker.split('.')[1] === worker) {
+              const timeIndex = output.findIndex(entry => entry.timestamp === historical.time);
+              if(timeIndex == -1) {
+                const tempObject = {
+                  timestamp: historical.time,
+                  work: historical.work,
+                  validShares: historical.valid,
+                  staleShares: historical.stale,
+                  invalidShares: historical.invalid
+                }
+                output.push(tempObject);
+              } else {
+                output[timeIndex].work += historical.work;
+                output[timeIndex].validShares += historical.valid,
+                output[timeIndex].staleShares += historical.stale,
+                output[timeIndex].invalidShares += historical.invalid
+              }
             }
           }
+          
         });      
       }
         
@@ -403,13 +425,25 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         results[0].forEach((entry) => {
           const historical = JSON.parse(entry);
 
-          if (historical.worker.split('.')[0] == address) {
-            valid += historical.valid;
-            stale += historical.stale;
-            invalid += historical.invalid;
-            hashrate24Data += /^-?\d*(\.\d+)?$/.test(historical.work) ? parseFloat(historical.work) : 0;
-            if (historical.time > hashrate12WindowTime) {
-              hashrate12Data += /^-?\d*(\.\d+)?$/.test(historical.work) ? parseFloat(historical.work) : 0;
+          if (worker == null || worker == '') {
+            if (historical.worker.split('.')[0] == address) {
+              valid += historical.valid;
+              stale += historical.stale;
+              invalid += historical.invalid;
+              hashrate24Data += /^-?\d*(\.\d+)?$/.test(historical.work) ? parseFloat(historical.work) : 0;
+              if (historical.time > hashrate12WindowTime) {
+                hashrate12Data += /^-?\d*(\.\d+)?$/.test(historical.work) ? parseFloat(historical.work) : 0;
+              }
+            }
+          } else {
+            if (historical.worker.split('.')[0] == address && historical.worker.split('.')[1] == worker) {
+              valid += historical.valid;
+              stale += historical.stale;
+              invalid += historical.invalid;
+              hashrate24Data += /^-?\d*(\.\d+)?$/.test(historical.work) ? parseFloat(historical.work) : 0;
+              if (historical.time > hashrate12WindowTime) {
+                hashrate12Data += /^-?\d*(\.\d+)?$/.test(historical.work) ? parseFloat(historical.work) : 0;
+              }
             }
           }
         });
@@ -418,8 +452,14 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       if (results[1]) {
         results[1].forEach((entry) => {
           const share = JSON.parse(entry);
-          if (share.worker.split('.')[0] === address) {
-            hashrateData += share.work;
+          if (worker == null || worker == '') {
+            if (share.worker.split('.')[0] === address) {
+              hashrateData += share.work;
+            }
+          } else {
+            if (share.worker.split('.')[0] === address && share.worker.split('.')[1] == worker) {
+              hashrateData += share.work;
+            }
           }
         });
       }
