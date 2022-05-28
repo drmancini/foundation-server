@@ -398,6 +398,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       let invalid = 0;
       let stale = 0;
 
+      console.log('worker: ' + worker);
       if (results[0]) {
         results[0].forEach((entry) => {
           const historical = JSON.parse(entry);
@@ -423,24 +424,16 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         });
       }
 
-      if (worker != '') {
-        callback(200, {
-          validShares: 1,
-          invalidShares: 2,
-          staleShares: 3,
-          currentHashrate: 1,
-          averageHalfDayHashrate: 2,
-          averageDayHashrate: 3
-        })
-      }
-      callback(200, {
+      let output = {
         validShares: valid,
         invalidShares: invalid,
         staleShares: stale,
         currentHashrate: (multiplier * hashrateData) / hashrateWindow,
         averageHalfDayHashrate: (multiplier * hashrate12Data) / hashrate12Window,
         averageDayHashrate: (multiplier * hashrate24Data) / hashrate24Window,
-      });
+      }
+
+      callback(200, output);
     }, callback);
   };
 
