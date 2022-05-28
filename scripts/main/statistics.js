@@ -182,7 +182,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         logger.error('Statistics', _this.pool, `Error with statistics daemon: ${ JSON.stringify(result.error) }`);
         handler(result.error);
       } else {
-        console.log('res: ' + result.response);
+        console.log(result.response);
         const data = result.response;
         commands.push(['hset', `${ _this.pool }:statistics:${ blockType }:network`, 'difficulty', data.difficulty]);
         commands.push(['hset', `${ _this.pool }:statistics:${ blockType }:network`, 'hashrate', data.networkhashps]);
