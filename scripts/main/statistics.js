@@ -87,8 +87,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       }).on('end', () => {
         const data = Buffer.concat(chunks);
         const schema = JSON.parse(data);
-        const outputObject = schema.market_data.current_price;
-        if (typeof outputObject == 'object') {
+        if (typeof schema.market_data.current_price == 'object') {
+          const outputObject = schema.market_data.current_price;
           for (const [key, value] of Object.entries(outputObject)) {
             commands.push(['hset', `${ _this.pool }:coin:${ blockType }`, key, value]);
           }
