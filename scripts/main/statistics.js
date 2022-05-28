@@ -351,7 +351,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         }, () => {});
       }, () => {});
-    }, _this.refreshInterval * 10 * 1000);
+    }, 5 * 60 * 1000);
 
     // Handle User Info Interval
     setInterval(() => {
