@@ -93,7 +93,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         const apiData = await getCoin()
 
         if (apiData.data) {
-          console.log(apiData.data.market_data.current_price);
+          const data = apiData.data.market_data.current_price;
+          for (const [key, value] of Object.entries(data)) {
+            commands.push(['hset', `${ _this.pool }:coin:${ blockType }`, key, value]);
+          }
           callback(commands);
         }
       }
