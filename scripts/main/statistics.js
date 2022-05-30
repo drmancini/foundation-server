@@ -93,7 +93,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         const apiData = await getCoin()
 
         if (apiData.data) {
-          console.log(`Got ${apiData.data}`);
+          console.log(apiData.data);
           callback(commands);
         }
       }
