@@ -80,24 +80,27 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const coinName = _this.poolConfig[blockType].coin.name.toLowerCase()  || '';
     let commands = [];
 
-    const getCoin = async () => {
-      try {
-        return await axios.get('https://api.coingecko.com/api/v3/coins/' + coinName);
-      } catch (error) {
-        console.error(error);
+    if (coinName == 'raptoreum') {
+      const getCoin = async () => {
+        try {
+          return await axios.get('https://api.coingecko.com/api/v3/coins/' + coinName);
+        } catch (error) {
+          console.error(error);
+        }
       }
-    }
 
-    const getData = async () => {
-      const apiData = await getCoin()
+      const getData = async () => {
+        const apiData = await getCoin()
 
-      if (apiData.data) {
-        console.log(`Got ${apiData.data}`);
-        callback(commands);
+        if (apiData.data) {
+          console.log(`Got ${apiData.data}`);
+          callback(commands);
+        }
       }
-    }
 
-    getData();
+      getData();
+    }
+    
 
 
     // const request = https.get('https://api.coingecko.com/api/v3/coins/' + coinName, response => {
