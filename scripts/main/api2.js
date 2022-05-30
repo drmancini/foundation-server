@@ -420,7 +420,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       let invalid = 0;
       let stale = 0;
 
-      console.log('worker: ' + worker);
       if (results[0]) {
         results[0].forEach((entry) => {
           const historical = JSON.parse(entry);

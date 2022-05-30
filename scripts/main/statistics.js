@@ -6,6 +6,7 @@
 
 const https = require('https');
 const utils = require('./utils');
+const axios = require('axios');
 const Algorithms = require('foundation-stratum').algorithms;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,35 +80,55 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const coinName = _this.poolConfig[blockType].coin.name.toLowerCase()  || '';
     let commands = [];
 
-    const request = https.get('https://api.coingecko.com/api/v3/coins/' + coinName, response => {
-      let chunks = [];
-      
-      response.on('data', data => {
-        console.log('so far so good');
-        chunks.push(data);
-        console.log('chunks pushed');
-      }).on('end', () => {
-        const data = Buffer.concat(chunks);
-        console.log('got data');
-        const schema = JSON.parse(data);
-        console.log('data parsed');
-        console.log(schema.market_data.current_price);
-        // if (typeof schema.market_data.current_price == 'object') {
-          // const outputObject = schema.market_data.current_price;
-          // console.log(outputObject);
-          // for (const [key, value] of Object.entries(outputObject)) {
-          //   commands.push(['hset', `${ _this.pool }:coin:${ blockType }`, key, value]);
-          // }
-        //}
+    const getCoin = async () => {
+      try {
+        return await axios.get('https://api.coingecko.com/api/v3/coins/' + coinName);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    const getData = async () => {
+      const apiData = await getCoin()
+
+      if (apiData.data) {
+        console.log(`Got ${apiData.data}`);
         callback(commands);
-      });
-    });
+      }
+    }
 
-    request.on('error', error => {
-      console.error(error);
-    });
+    getData();
 
-    request.end(); 
+
+    // const request = https.get('https://api.coingecko.com/api/v3/coins/' + coinName, response => {
+    //   let chunks = [];
+      
+    //   response.on('data', data => {
+    //     console.log('so far so good');
+    //     chunks.push(data);
+    //     console.log('chunks pushed');
+    //   }).on('end', () => {
+    //     const data = Buffer.concat(chunks);
+    //     console.log('got data');
+    //     const schema = JSON.parse(data);
+    //     console.log('data parsed');
+    //     console.log(schema.market_data.current_price);
+    //     // if (typeof schema.market_data.current_price == 'object') {
+    //       // const outputObject = schema.market_data.current_price;
+    //       // console.log(outputObject);
+    //       // for (const [key, value] of Object.entries(outputObject)) {
+    //       //   commands.push(['hset', `${ _this.pool }:coin:${ blockType }`, key, value]);
+    //       // }
+    //     //}
+    //     callback(commands);
+    //   });
+    // });
+
+    // request.on('error', error => {
+    //   console.error(error);
+    // });
+
+    // request.end(); 
   };
 
   // Handle Users Information in Redis
