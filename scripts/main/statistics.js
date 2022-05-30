@@ -83,10 +83,15 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       let chunks = [];
       
       response.on('data', data => {
+        console.log('so far so good');
         chunks.push(data);
+        console.log('chunks pushed');
       }).on('end', () => {
         const data = Buffer.concat(chunks);
+        console.log('got data');
         const schema = JSON.parse(data);
+        console.log('data parsed');
+        console.log(schema.market_data.current_price);
         // if (typeof schema.market_data.current_price == 'object') {
           // const outputObject = schema.market_data.current_price;
           // console.log(outputObject);
