@@ -25,7 +25,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 
   const logSystem = 'Pool';
   const logComponent = poolConfig.name;
-  const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
+  const logSubCat = `Thread ${parseInt(_this.forkId) + 1}`;
 
   // Current Statistics Intervals
   _this.blocksInterval = _this.poolConfig.statistics.blocksInterval || 20;
@@ -40,12 +40,12 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   _this.historicalWindow = _this.poolConfig.statistics.historicalWindow || 86400;
 
   // Calculate Historical Information
-  this.calculateHistoricalInfo = function(results, blockType) {
+  this.calculateHistoricalInfo = function (results, blockType) {
     const commands = [];
     const dateNow = Date.now();
     const algorithm = _this.poolConfig.primary.coin.algorithms.mining;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
-    
+
     const tenMinutes = 10 * 60 * 1000;
     const potentialTimestamp = Math.floor(dateNow / tenMinutes) * tenMinutes;
     const lastTimestamp = results[4][1] * 1000;
@@ -69,15 +69,15 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       };
 
       // Handle Historical Updates
-      commands.push(['zadd', `${ _this.pool }:statistics:${ blockType }:historical`, potentialTimestamp / 1000 | 0, JSON.stringify(output)]);
-    } 
+      commands.push(['zadd', `${_this.pool}:statistics:${blockType}:historical`, potentialTimestamp / 1000 | 0, JSON.stringify(output)]);
+    }
 
     return commands;
   };
 
   // Handle Users Information in Redis
-  this.handleCoingeckoData = function(blockType, callback, handler) {
-    const coinName = _this.poolConfig[blockType].coin.name.toLowerCase()  || '';
+  this.handleCoingeckoData = function (blockType, callback, handler) {
+    const coinName = _this.poolConfig[blockType].coin.name.toLowerCase() || '';
     let commands = [];
 
     if (coinName == 'raptoreum') {
@@ -95,7 +95,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         if (apiData.data) {
           const data = apiData.data.market_data.current_price;
           for (const [key, value] of Object.entries(data)) {
-            commands.push(['hset', `${ _this.pool }:coin:${ blockType }`, key, value]);
+            commands.push(['hset', `${_this.pool}:coin:${blockType}`, key, value]);
           }
           callback(commands);
         }
@@ -103,12 +103,12 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 
       getData();
     }
-    
+
 
 
     // const request = https.get('https://api.coingecko.com/api/v3/coins/' + coinName, response => {
     //   let chunks = [];
-      
+
     //   response.on('data', data => {
     //     console.log('so far so good');
     //     chunks.push(data);
@@ -138,12 +138,12 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   };
 
   // Handle Users Information in Redis
-  this.handleUsersInfo = function(blockType, callback, handler) {
+  this.handleUsersInfo = function (blockType, callback, handler) {
     const minPayment = _this.poolConfig.primary.payments.minPayment || 1;
     const commands = [];
     const usersLookups = [
-      ['hgetall', `${ _this.pool }:workers:${ blockType }:shared`],
-      ['hgetall', `${ _this.pool }:miners:${ blockType }`]
+      ['hgetall', `${_this.pool}:workers:${blockType}:shared`],
+      ['hgetall', `${_this.pool}:miners:${blockType}`]
     ];
     _this.executeCommands(usersLookups, (results) => {
       const workers = results[0] || {};
@@ -158,7 +158,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             payoutLimit: minPayment
           }
           const output = JSON.stringify(minerObject);
-          commands.push(['hset', `${ _this.pool }:miners:${ blockType }`, miner, output]);  
+          commands.push(['hset', `${_this.pool}:miners:${blockType}`, miner, output]);
         }
       };
       callback(commands);
@@ -166,15 +166,15 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   };
 
   // Handle Blocks Information in Redis
-  this.handleBlocksInfo = function(blockType, callback, handler) {
+  this.handleBlocksInfo = function (blockType, callback, handler) {
     const commands = [];
     const blocksLookups = [
-      ['smembers', `${ _this.pool }:blocks:${ blockType }:confirmed`]];
+      ['smembers', `${_this.pool}:blocks:${blockType}:confirmed`]];
     _this.executeCommands(blocksLookups, (results) => {
       const blocks = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time);
       if (blocks.length > 100) {
         blocks.slice(0, blocks.length - 100).forEach((block) => {
-          commands.push(['srem', `${ _this.pool }:blocks:${ blockType }:confirmed`, block]);
+          commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed`, block]);
         });
       }
       callback(commands);
@@ -182,25 +182,25 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   };
 
   // Handle Hashrate Information in Redis
-  this.handleHashrateInfo = function(blockType, callback) {
+  this.handleHashrateInfo = function (blockType, callback) {
     const commands = [];
     const windowTime = (((Date.now() / 1000) - _this.hashrateWindow) | 0).toString();
-    commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, 0, `(${ windowTime }`]);
-    commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:solo:hashrate`, 0, `(${ windowTime }`]);
+    commands.push(['zremrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:hashrate`, 0, `(${windowTime}`]);
+    commands.push(['zremrangebyscore', `${_this.pool}:rounds:${blockType}:current:solo:hashrate`, 0, `(${windowTime}`]);
     callback(commands);
   };
 
   // Get Historical Information from Redis
-  this.handleHistoricalInfo = function(blockType, callback, handler) {
+  this.handleHistoricalInfo = function (blockType, callback, handler) {
     const dateNow = Date.now();
     const windowTime = (dateNow / 1000 - _this.hashrateWindow | 0).toString();
     const windowHistorical = (dateNow / 1000 - _this.historicalWindow | 0).toString();
     const historicalLookups = [
-      ['hgetall', `${ _this.pool }:statistics:${ blockType }:network`],
-      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, windowTime, '+inf'],
-      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:solo:hashrate`, windowTime, '+inf'],
-      ['zremrangebyscore', `${ _this.pool }:statistics:${ blockType }:historical`, 0, `(${ windowHistorical }`],
-      ['zrevrangebyscore', `${ _this.pool }:statistics:${ blockType }:historical`, '+inf', '-inf', 'WITHSCORES', 'LIMIT', 0, 1]]; 
+      ['hgetall', `${_this.pool}:statistics:${blockType}:network`],
+      ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:hashrate`, windowTime, '+inf'],
+      ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:solo:hashrate`, windowTime, '+inf'],
+      ['zremrangebyscore', `${_this.pool}:statistics:${blockType}:historical`, 0, `(${windowHistorical}`],
+      ['zrevrangebyscore', `${_this.pool}:statistics:${blockType}:historical`, '+inf', '-inf', 'WITHSCORES', 'LIMIT', 0, 1]];
     _this.executeCommands(historicalLookups, (results) => {
       const commands = _this.calculateHistoricalInfo(results, blockType);
       callback(commands);
@@ -208,34 +208,34 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   };
 
   // Get Mining Statistics from Daemon
-  this.handleMiningInfo = function(daemon, blockType, callback, handler) {
+  this.handleMiningInfo = function (daemon, blockType, callback, handler) {
     const commands = [];
     daemon.cmd('getmininginfo', [], true, (result) => {
       if (result.error) {
-        logger.error('Statistics', _this.pool, `Error with statistics daemon: ${ JSON.stringify(result.error) }`);
+        logger.error('Statistics', _this.pool, `Error with statistics daemon: ${JSON.stringify(result.error)}`);
         handler(result.error);
       } else {
         console.log('s: ');
         console.log(result.response);
         const data = result.response;
-        commands.push(['hset', `${ _this.pool }:statistics:${ blockType }:network`, 'difficulty', data.difficulty]);
-        commands.push(['hset', `${ _this.pool }:statistics:${ blockType }:network`, 'hashrate', data.networkhashps]);
-        commands.push(['hset', `${ _this.pool }:statistics:${ blockType }:network`, 'height', data.blocks]);
+        commands.push(['hset', `${_this.pool}:statistics:${blockType}:network`, 'difficulty', data.difficulty]);
+        commands.push(['hset', `${_this.pool}:statistics:${blockType}:network`, 'hashrate', data.networkhashps]);
+        commands.push(['hset', `${_this.pool}:statistics:${blockType}:network`, 'height', data.blocks]);
         callback(commands);
       }
     });
   };
 
   // Handle Payments Information in Redis
-  this.handlePaymentsInfo = function(blockType, callback, handler) {
+  this.handlePaymentsInfo = function (blockType, callback, handler) {
     const commands = [];
     const paymentsLookups = [
-      ['zrangebyscore', `${ _this.pool }:payments:${ blockType }:records`, '-inf', '+inf']];
+      ['zrangebyscore', `${_this.pool}:payments:${blockType}:records`, '-inf', '+inf']];
     _this.executeCommands(paymentsLookups, (results) => {
       const records = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time);
       if (records.length > 100) {
         records.slice(0, records.length - 100).forEach((record) => {
-          commands.push(['zrem', `${ _this.pool }:payments:${ blockType }:records`, record]);
+          commands.push(['zrem', `${_this.pool}:payments:${blockType}:records`, record]);
         });
       }
       callback(commands);
@@ -243,14 +243,14 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   };
 
   // Handle Worker Minute-snapshots in Redis 
-  this.handleWorkerInfo = function(blockType, callback, handler) {
+  this.handleWorkerInfo = function (blockType, callback, handler) {
     const dateNow = Date.now();
     const oneMinute = 1 * 60 * 1000;
     const minuteEnd = Math.floor(dateNow / oneMinute) * oneMinute;
     const minuteStart = minuteEnd - oneMinute;
     const workerLookups = [
-      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:hashrate`, `(${ minuteStart / 1000 }`, minuteEnd / 1000],
-      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, minuteEnd / 1000, minuteEnd / 1000]
+      ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:hashrate`, `(${minuteStart / 1000}`, minuteEnd / 1000],
+      ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:snapshots`, minuteEnd / 1000, minuteEnd / 1000]
     ];
     _this.executeCommands(workerLookups, (results) => {
       const commands = [];
@@ -289,13 +289,13 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
               snapshotWorkers[workerIndex].invalid += 1;
             }
           }
-        });  
+        });
       };
-      
+
       snapshotWorkers.forEach((worker) => {
         if (!snapshots.find((snapshot) => snapshot.worker === worker.worker)) {
           // console.log(worker);
-          commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, minuteEnd / 1000, JSON.stringify(worker)]);  
+          commands.push(['zadd', `${_this.pool}:rounds:${blockType}:current:shared:snapshots`, minuteEnd / 1000, JSON.stringify(worker)]);
         }
       });
       callback(commands);
@@ -303,7 +303,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   };
 
   // Handle Worker Ten-minute-snapshots in Redis 
-  this.handleWorkerInfo2 = function(blockType, callback, handler) {
+  this.handleWorkerInfo2 = function (blockType, callback, handler) {
     const dateNow = Date.now();
     const tenMinutes = 10 * 60 * 1000;
     const tenMinutesEnd = Math.floor(dateNow / tenMinutes) * tenMinutes;
@@ -311,8 +311,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const oneDay = 24 * 60 * 60 * 1000;
     const oneDayAgo = tenMinutesEnd - oneDay;
     const workerLookups = [
-      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, `(${ tenMinutesStart / 1000 }`, tenMinutesEnd / 1000],
-      ['zrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:historicals`, tenMinutesEnd / 1000, tenMinutesEnd / 1000]];
+      ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:snapshots`, `(${tenMinutesStart / 1000}`, tenMinutesEnd / 1000],
+      ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:historicals`, tenMinutesEnd / 1000, tenMinutesEnd / 1000]];
     _this.executeCommands(workerLookups, (results) => {
       const commands = [];
       const historicals = [];
@@ -340,9 +340,9 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             historicalWorkers.push(objectTemplate);
           } else {
             historicalWorkers[workerIndex].valid += snapshot.valid,
-            historicalWorkers[workerIndex].stale += snapshot.stale,
-            historicalWorkers[workerIndex].invalid += snapshot.invalid,
-            historicalWorkers[workerIndex].work += snapshot.work
+              historicalWorkers[workerIndex].stale += snapshot.stale,
+              historicalWorkers[workerIndex].invalid += snapshot.invalid,
+              historicalWorkers[workerIndex].work += snapshot.work
           };
         });
       };
@@ -350,9 +350,9 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       historicalWorkers.forEach((worker) => {
         if (!historicals.find((historical) => historical.worker === worker.worker)) {
           // console.log(worker);
-          commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:shared:historicals`, tenMinutesEnd / 1000, JSON.stringify(worker)]);  
-          commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:snapshots`, 0, tenMinutesStart / 1000]);
-          commands.push(['zremrangebyscore', `${ _this.pool }:rounds:${ blockType }:current:shared:historicals`, 0, `(${ oneDayAgo / 1000 }`]);
+          commands.push(['zadd', `${_this.pool}:rounds:${blockType}:current:shared:historicals`, tenMinutesEnd / 1000, JSON.stringify(worker)]);
+          commands.push(['zremrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:snapshots`, 0, tenMinutesStart / 1000]);
+          commands.push(['zremrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:historicals`, 0, `(${oneDayAgo / 1000}`]);
         }
       });
       callback(commands);
@@ -361,10 +361,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 
   // Execute Redis Commands
   /* istanbul ignore next */
-  this.executeCommands = function(commands, callback, handler) {
+  this.executeCommands = function (commands, callback, handler) {
     _this.client.multi(commands).exec((error, results) => {
       if (error) {
-        logger.error(logSystem, logComponent, logSubCat, `Error with redis statistics processing ${ JSON.stringify(error) }`);
+        logger.error(logSystem, logComponent, logSubCat, `Error with redis statistics processing ${JSON.stringify(error)}`);
         handler(error);
       } else {
         callback(results);
@@ -374,7 +374,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 
   // Start Interval Initialization
   /* istanbul ignore next */
-  this.handleIntervals = function(daemon, blockType) {
+  this.handleIntervals = function (daemon, blockType) {
 
     // Handle Coingecko Data
     setInterval(() => {
@@ -383,8 +383,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           if (_this.poolConfig.debug) {
             logger.debug('Statistics', _this.pool, `Finished updating Raptoreum data from Coingecko.`);
           }
-        }, () => {});
-      }, () => {});
+        }, () => { });
+      }, () => { });
     }, 1 * 60 * 1000);
 
     // Handle User Info Interval
@@ -392,10 +392,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       _this.handleUsersInfo(blockType, (results) => {
         _this.executeCommands(results, () => {
           if (_this.poolConfig.debug) {
-            logger.debug('Statistics', _this.pool, `Finished updating user statistics for ${ blockType } configuration.`);
+            logger.debug('Statistics', _this.pool, `Finished updating user statistics for ${blockType} configuration.`);
           }
-        }, () => {});
-      }, () => {});
+        }, () => { });
+      }, () => { });
     }, _this.usersInterval * 1000);
 
     // Handle Worker Mining History
@@ -403,21 +403,21 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       _this.handleWorkerInfo(blockType, (results) => {
         _this.executeCommands(results, () => {
           if (_this.poolConfig.debug) {
-            logger.debug('Statistics', _this.pool, `Finished updating worker snapshots for ${ blockType } configuration.`);
+            logger.debug('Statistics', _this.pool, `Finished updating worker snapshots for ${blockType} configuration.`);
           }
-        }, () => {});
-      }, () => {});
+        }, () => { });
+      }, () => { });
     }, 10 * 1000); // every 20 seconds
 
     setInterval(() => {
       _this.handleWorkerInfo2(blockType, (results) => {
         _this.executeCommands(results, () => {
           if (_this.poolConfig.debug) {
-            logger.debug('Statistics', _this.pool, `Finished updating historical worker snapshots for ${ blockType } configuration.`);
+            logger.debug('Statistics', _this.pool, `Finished updating historical worker snapshots for ${blockType} configuration.`);
           }
-        }, () => {});
-      }, () => {});
-    },  1 * 60 * 1000); // every 3 minutes
+        }, () => { });
+      }, () => { });
+    }, 1 * 60 * 1000); // every 3 minutes
 
     // Handle Blocks Info Interval
     // This merely deletes blocks if there's more than 100 confirmed ... no need for this until I reach 10% share
@@ -436,9 +436,9 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       _this.handleHashrateInfo(blockType, (results) => {
         _this.executeCommands(results, () => {
           if (_this.poolConfig.debug) {
-            logger.debug('Statistics', _this.pool, `Finished updating hashrate statistics for ${ blockType } configuration.`);
+            logger.debug('Statistics', _this.pool, `Finished updating hashrate statistics for ${blockType} configuration.`);
           }
-        }, () => {});
+        }, () => { });
       });
     }, _this.hashrateInterval * 1000);
 
@@ -447,10 +447,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       _this.handleHistoricalInfo(blockType, (results) => {
         _this.executeCommands(results, () => {
           if (_this.poolConfig.debug) {
-            logger.debug('Statistics', _this.pool, `Finished updating historical statistics for ${ blockType } configuration.`);
+            logger.debug('Statistics', _this.pool, `Finished updating historical statistics for ${blockType} configuration.`);
           }
-        }, () => {});
-      }, () => {});
+        }, () => { });
+      }, () => { });
     }, _this.historicalInterval * 1000);
 
     // Handle Mining Info Interval
@@ -458,27 +458,27 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       _this.handleMiningInfo(daemon, blockType, (results) => {
         _this.executeCommands(results, () => {
           if (_this.poolConfig.debug) {
-            logger.debug('Statistics', _this.pool, `Finished updating network statistics for ${ blockType } configuration.`);
+            logger.debug('Statistics', _this.pool, `Finished updating network statistics for ${blockType} configuration.`);
           }
-        }, () => {});
-      }, () => {});
+        }, () => { });
+      }, () => { });
     }, _this.refreshInterval * 1000);
 
     // Handle Payment Info Interval
-    setInterval(() => {
-      _this.handlePaymentsInfo(blockType, (results) => {
-        _this.executeCommands(results, () => {
-          if (_this.poolConfig.debug) {
-            logger.debug('Statistics', _this.pool, `Finished updating payments statistics for ${ blockType } configuration.`);
-          }
-        }, () => {});
-      }, () => {});
-    }, _this.paymentsInterval * 1000);
+    // setInterval(() => {
+    //   _this.handlePaymentsInfo(blockType, (results) => {
+    //     _this.executeCommands(results, () => {
+    //       if (_this.poolConfig.debug) {
+    //         logger.debug('Statistics', _this.pool, `Finished updating payments statistics for ${ blockType } configuration.`);
+    //       }
+    //     }, () => {});
+    //   }, () => {});
+    // }, _this.paymentsInterval * 1000);
   };
 
   // Start Interval Initialization
   /* istanbul ignore next */
-  this.setupStatistics = function(poolStratum) {
+  this.setupStatistics = function (poolStratum) {
     if (poolStratum.primary.daemon) {
       _this.handleIntervals(poolStratum.primary.daemon, 'primary');
       if (_this.poolConfig.auxiliary && _this.poolConfig.auxiliary.enabled && poolStratum.auxiliary.daemon) {
