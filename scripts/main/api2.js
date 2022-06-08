@@ -411,7 +411,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     
     const commands = [
       ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:historicals`, 0, '+inf'],
-      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:hashrate`, hashrateWindowTime, '+inf']];
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:hashrate`, hashrateWindowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:snapshots`, 0, '+inf']];
     _this.executeCommands(commands, (results) => {
       let hashrateData = 0;
       let hashrate12Data = 0;
@@ -419,10 +420,14 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       let valid = 0;
       let invalid = 0;
       let stale = 0;
+      let maxHistoricalTime = 0;
 
       if (results[0]) {
         results[0].forEach((entry) => {
           const historical = JSON.parse(entry);
+          if (historical.time > maxHistoricalTime) {
+            maxHistoricalTime = historical.time;
+          }
 
           if (worker == null || worker == '') {
             if (historical.worker.split('.')[0] == address) {
@@ -447,6 +452,35 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           }
         });
       }
+
+      if (results[2]) {
+        results[2].forEach((entry) => {
+          const snapshot = JSON.parse(entry);
+          if (snapshot.time > maxHistoricalTime) {
+            if (worker == null || worker == '') {
+              if (snapshot.worker.split('.')[0] == address) {
+                valid += snapshot.valid;
+                stale += snapshot.stale;
+                invalid += snapshot.invalid;
+                hashrate24Data += /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
+                if (snapshot.time > hashrate12WindowTime) {
+                  hashrate12Data += /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
+                }
+              }
+            } else {
+              if (snapshot.worker.split('.')[0] == address && snapshot.worker.split('.')[1] == worker) {
+                valid += snapshot.valid;
+                stale += snapshot.stale;
+                invalid += snapshot.invalid;
+                hashrate24Data += /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
+                if (snapshot.time > hashrate12WindowTime) {
+                  hashrate12Data += /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
+                }
+              }
+            }
+          }
+        });
+      };
 
       if (results[1]) {
         results[1].forEach((entry) => {
