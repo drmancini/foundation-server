@@ -254,7 +254,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       for (const [key, value] of Object.entries(miners)) {
         const miner = JSON.parse(value);
         const validRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
-        const emailValid = true; //miners.email.value.match(validRegex);
+        const emailValid = validRegex.test(miners.email);
         if (miner.alertsEnabled === 'true' && miner.alertLimit > 0 && emailValid) {
           minersToNotify.push({
             miner: key,
