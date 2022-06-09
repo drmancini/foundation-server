@@ -224,6 +224,64 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     });
   };
 
+  // Handle Offline Workers in Redis
+  this.handleOfflineWorkers = function (blockType, callback, handler) {
+    const workerLookups = [
+      ['hgetall', `${_this.pool}:workers:${blockType}:shared`],
+      ['hgetall', `${_this.pool}:miners:${blockType}`]
+    ];
+    _this.executeCommands(workerLookups, (results) => {
+      const commands = [];
+      const workers = results[0] || {};
+      const miners = results[1] || {};
+      const workersOffline = [];
+      const workersOnline = [];
+      const minersToNotify = [];
+      const dateNow = date.now() / 1000 | 0;
+
+      for (const [key, value] of Object.entries(workers)) {
+        const worker = JSON.parse(value);
+        if (worker.offline === 'true') {
+          workersOffline.push(key)
+        } else if (!worker.offline) {
+          workersOnline.push({
+            worker: worker.worker,
+            time: worker.time
+          })
+        }
+      };
+      
+      for (const [key, value] of Object.entries(miners)) {
+        const miner = JSON.parse(value);
+        const validRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+        const emailValid = miners.email.match(validRegex);
+        if (miner.alertsEnabled === 'true' && miner.alertLimit > 0 && emailValid) {
+          minersToNotify.push({
+            miner: key,
+            limit: miner.alertLimit,
+            email: miner.email
+          });
+        }
+      };
+        
+      minersToNotify.forEach((miner) => {
+        const minerWorkers = workersOnline.filter((worker) => worker.worker.split('.')[0] === miner);
+        minerWorkers.forEach((worker) => {
+          if (worker.time < dateNow - miner.cutoff) {
+            console.log('Worker ' + worker.worker + ' is offline');
+          }
+        });
+      });
+      
+      
+      // const output = JSON.stringify(minerObject);
+      // commands.push(['hset', `${_this.pool}:miners:${blockType}`, miner, output]);
+    
+
+      callback(commands);
+    }, handler);
+  };
+
   // Handle Payments Information in Redis
   this.handlePaymentsInfo = function (blockType, callback, handler) {
     const commands = [];
@@ -406,6 +464,17 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         }, () => { });
       }, () => { });
     }, 10 * 1000); // every 20 seconds
+
+    // Handle Offline Worker Tagging 
+    setInterval(() => {
+      _this.handleOfflineWorkers(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating offline worker tagginng for ${blockType} configuration.`);
+          }
+        }, () => { });
+      }, () => { });
+    }, 60 * 1000); // every minute
 
     setInterval(() => {
       _this.handleWorkerInfo2(blockType, (results) => {
