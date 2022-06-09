@@ -237,7 +237,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       const workersOffline = [];
       const workersOnline = [];
       const minersToNotify = [];
-      const dateNow = date.now() / 1000 | 0;
+      const dateNow = Date.now() / 1000 | 0;
 
       for (const [key, value] of Object.entries(workers)) {
         const worker = JSON.parse(value);
