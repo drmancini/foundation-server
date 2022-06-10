@@ -238,7 +238,6 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       const workersOnline = [];
       const minersToNotify = [];
       const dateNow = Date.now() / 1000 | 0;
-      console.log('asd');
 
       for (const [key, value] of Object.entries(workers)) {
         const worker = JSON.parse(value);
@@ -251,7 +250,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           })
         }
       };
-      
+
       for (const [key, value] of Object.entries(miners)) {
         const miner = JSON.parse(value);
         const validRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
@@ -268,11 +267,6 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       minersToNotify.forEach((miner) => {
         const minerWorkers = workersOnline.filter((worker) => worker.worker.split('.')[0] === miner);
         minerWorkers.forEach((worker) => {
-          if (worker.worker.split('.')[1] == 'Andyxps') {
-            console.log('1: ' + worker.time);
-            console.timeLog('2: ' + miner.cutoff);
-            console.log('3: ' + dateNow - miner.cutoff);
-          }
           if (worker.time < dateNow - miner.cutoff) {
             console.log('Worker ' + worker.worker + ' is offline ... I should send an email');
             const workerObject = {
