@@ -19,14 +19,14 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   this.poolConfig = poolConfig;
   this.portalConfig = portalConfig;
   this.forkId = process.env.forkId;
-    
+
+  // Handle Round Values
+  this.curHeight = 0;
+  this.minHeight = 0;
+
   const logSystem = 'Pool';
   const logComponent = poolConfig.name;
   const logSubCat = `Thread ${ parseInt(_this.forkId) + 1 }`;
-
-  // Handle Round Values
-  this.prevRoundValue = process.env.prevRoundValue;
-  this.roundValue = process.env.roundValue;
 
   // Handle Client Messages
   _this.client.on('ready', () => {});
@@ -35,18 +35,6 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   });
   _this.client.on('end', () => {
     logger.error(logSystem, logComponent, logSubCat, 'Connection to redis database has been ended');
-  });
-
-  // Handle Worker Messages
-  /* istanbul ignore next */
-  process.on('message', (msg) => {
-    if (_this.pool === msg.pool) {
-      if (msg.type && msg.type === 'roundUpdate') {
-        logger.debug(logSystem, logComponent, logSubCat, `Block found by shared worker, resetting round data: ${ msg.value }.`);
-        _this.prevRoundValue = _this.roundValue;
-        _this.roundValue = msg.value;
-      }
-    }
   });
 
   // Handle Times Updates
@@ -120,6 +108,10 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Establish Last Share Data for Miner
     const lastShare = JSON.parse(shares[worker] || '{}');
 
+    // Handle Round Height Updates
+    if (shareData.height > _this.curHeight) _this.curHeight = shareData.height;
+    if (!isSoloMining && shareData.height < _this.curHeight) shareType = "stale";
+
     // Calculate Updated Share Data
     const times = _this.handleTimes(lastShare, shareType);
     const effort = _this.handleEffort(shares, worker, shareData, shareType, blockDifficulty, isSoloMining);
@@ -131,7 +123,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       time: dateNow,
       effort: effort,
       identifier: identifier,
-      round: _this.roundValue,
+      round: shareData.height,
       solo: isSoloMining,
       times: times,
       types: types,
@@ -142,13 +134,11 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Update Last Share if Orphaned
     if (lastShare.round === 'orphan') {
-      lastShare.round = _this.roundValue;
+      lastShare.round = shareData.height;
     }
 
     // Reset Share Data (If Necessary)
-    if ((!isSoloMining) &&
-        (lastShare.round === _this.prevRoundValue) &&
-        (lastShare.round !== _this.roundValue)) {
+    if (!isSoloMining && shareData.height < _this.minHeight) {
       logger.warning(logSystem, logComponent, logSubCat, `Resetting share data for ${ worker } due to rounds overlapping.`);
       outputShare.effort = shareData.difficulty / blockDifficulty * 100;
       outputShare.times = 0;
@@ -240,7 +230,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       luck: luck,
       worker: worker,
       solo: isSoloMining,
-      round: _this.roundValue,
+      round: shareData.height,
     };
 
     // Build Primary Output (Solo)
@@ -248,7 +238,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       time: dateNow,
       effort: 0,
       identifier: identifier,
-      round: _this.roundValue,
+      round: shareData.height,
       solo: isSoloMining,
       times: 0,
       types: { valid: 0, invalid: 0, stale: 0 },
@@ -275,6 +265,11 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       const address = worker ? worker.split('.')[0] : '';
       return result.split('.')[0] === address;
     });
+
+    // Update Round Value (If Necessary)
+    if (!isSoloMining && blockValid && shareData.height > _this.minHeight) {
+      _this.minHeight = shareData.height;
+    }
 
     // Don't Restart Round if Solo Block, Just Reset Workers
     if (blockValid && isSoloMining) {
