@@ -267,6 +267,11 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       minersToNotify.forEach((miner) => {
         const minerWorkers = workersOnline.filter((worker) => worker.worker.split('.')[0] === miner);
         minerWorkers.forEach((worker) => {
+          if (worker.worker.split('.')[1] == 'Andyxps') {
+            console.log('1: ' + worker.time);
+            console.timeLog('2: ' + miner.cutoff);
+            console.log('3: ' + dateNow - miner.cutoff);
+          }
           if (worker.time < dateNow - miner.cutoff) {
             console.log('Worker ' + worker.worker + ' is offline ... I should send an email');
             const workerObject = {
@@ -483,7 +488,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         }, () => { });
       }, () => { });
-    }, 60 * 1000); // every minute
+    }, 10 * 1000); // every minute
 
     setInterval(() => {
       _this.handleWorkerInfo2(blockType, (results) => {
