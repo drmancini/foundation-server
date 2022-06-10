@@ -238,6 +238,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       const workersOnline = [];
       const minersToNotify = [];
       const dateNow = Date.now() / 1000 | 0;
+      console.log('asd');
 
       for (const [key, value] of Object.entries(workers)) {
         const worker = JSON.parse(value);
