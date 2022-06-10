@@ -37,6 +37,74 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // Main Endpoints
   //////////////////////////////////////////////////////////////////////////////
 
+  // API Endpoint for /miner/payoutSettings for miner [address]
+  this.minerAlertSettings = function(pool, body, blockType, callback) {
+    // const minPayment = _this.poolConfigs[pool].primary.payments.minPayment;
+    // const payoutLimit = body.payoutLimit;
+
+    // if (minPayment > payoutLimit) {
+    //   callback(400, {
+    //     result: 'error'
+    //   });
+    // }
+
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+    // const address = body.address;
+    const ipAddress = body.ipAddress;
+    // const dateNow = Date.now();
+    // const twentyFourHours = 24 * 60 * 60 * 1000;
+    // let validated = false;
+    
+    const commands = [
+    //   ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`],
+      ['hget', `${ pool }:miners:${ blockType }`, address],
+    ];
+    
+    _this.executeCommands(commands, (results) => {
+      let minerObject = JSON.parse(results[0]);
+
+    //   for (const [key, value] of Object.entries(results[0])) {
+    //     const worker = JSON.parse(value);
+    //     const miner = worker.worker.split('.')[0] || '';
+        
+    //     if (miner === address && (worker.time * 1000) >= (dateNow - twentyFourHours)) {
+    //       if (ipAddress == worker.ip) {
+    //         validated = true;
+    //         minerObject.payoutLimit
+    //       } 
+    //     }
+    //   }
+
+    //   if (validated == true) {
+    //     minerObject.payoutLimit = payoutLimit;
+    //     const commands2 = [
+    //       ['hset', `${ pool }:miners:${ blockType }`, address, JSON.stringify(minerObject)],
+    //     ];
+        
+    //     _this.executeCommands(commands2, (results) => {
+    //       if (results[0] == 0) {
+    //         callback(200, {
+    //           result: 'ok'
+    //         });
+    //       } else {
+    //         callback(400, {
+    //           result: 'error'
+    //         });
+    //       }
+    //     }, callback);
+    //   } else {
+    //     callback(200, {
+    //       result: 'no change'
+    //     });
+    //   }
+      callback(200, {
+          result: 'test'
+        });
+    }, callback);
+  };
+
   // API Endpoint for /miner/blocks for miner [address]
   this.minerBlocks = function(pool, address, blockType, callback, ) {
 
@@ -1061,6 +1129,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     switch (true) {
       case (type === 'miner'):
         switch (true) {
+          case (endpoint === 'alertSettings'):
+              _this.minerAlertSettings(pool, body, blockType, (code, message) => callback(code, message));
+              break;
           case (endpoint === 'blocks' && address.length > 0):
             _this.minerBlocks(pool, address, blockType, (code, message) => callback(code, message));
             break;

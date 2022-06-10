@@ -75,7 +75,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     return commands;
   };
 
-  // Handle Users Information in Redis
+  // Handle Coin Gecko Information in Redis
   this.handleCoingeckoData = function (blockType, callback, handler) {
     const coinName = _this.poolConfig[blockType].coin.name.toLowerCase() || '';
     let commands = [];
@@ -268,7 +268,16 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         const minerWorkers = workersOnline.filter((worker) => worker.worker.split('.')[0] === miner);
         minerWorkers.forEach((worker) => {
           if (worker.time < dateNow - miner.cutoff) {
-            console.log('Worker ' + worker.worker + ' is offline');
+            console.log('Worker ' + worker.worker + ' is offline ... I should send an email');
+            const workerObject = {
+              time: worker.time,
+              worker: worker.worker,
+              ip: worker.ip,
+              offline: true
+            };
+            commands.push = [
+              ['hset', `${ pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)],
+            ]
           }
         });
       });
