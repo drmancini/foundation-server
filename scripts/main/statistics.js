@@ -263,7 +263,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           });
         }
       };
-        
+
+      console.log('a:');
+      console.log(minersToNotify);
+      
       minersToNotify.forEach((miner) => {
         const minerWorkers = workersOnline.filter((worker) => worker.worker.split('.')[0] === miner);
         minerWorkers.forEach((worker) => {
@@ -281,7 +284,6 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         });
       });
-      
       
       // const output = JSON.stringify(minerObject);
       // commands.push(['hset', `${_this.pool}:miners:${blockType}`, miner, output]);
