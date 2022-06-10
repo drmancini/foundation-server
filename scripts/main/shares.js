@@ -98,8 +98,9 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
   // Manage Shares Calculations
   this.calculateShares = function(results, shareData, shareType, blockType, isSoloMining) {
-    console.log('new share');
-    console.log('a: ' + shareData)
+    
+    console.log('SM: ' + shareData.smartnodeReward)
+    console.log('FO: ' + shareData.founderReward)
     
     let shares;
     const commands = [];
