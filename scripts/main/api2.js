@@ -735,13 +735,17 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     _this.executeCommands(commands, (results) => {
       let output;
       let luckSum = 0;
+      let blockCount = 0;
       
       const confirmedBlocks = results[0].map(block => JSON.parse(block)) || [];
       const pendingBlocks = results[1].map(block => JSON.parse(block)) || [];
       const blocks = confirmedBlocks.concat(pendingBlocks);
 
-      blocks.filter((block) => block.time > dateNow - historyDays).forEach((block) => luckSum += block.luck);
-      const blockCount = blocks.length;
+      blocks.filter((block) => block.time > dateNow - historyDays).forEach((block) => {
+        luckSum += block.luck;
+        blockCount ++;
+      });
+      
       if (blockCount == 0) {
         output = null;
       } else if (blockCount > 0) {
