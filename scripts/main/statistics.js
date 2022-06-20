@@ -102,10 +102,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           for (const [key, value] of Object.entries(data)) {
             commands.push(['hset', `${_this.pool}:coin:${blockType}`, key, value]);
           }
-          commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price_change_24h', change24h]);
-          commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price_change_7d', change7d]);
-          commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price_change_30d', change30d]);
-          commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price_change_60d', change60d]);
+          commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price24h', change24h]);
+          commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price7d', change7d]);
+          commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price30d', change30d]);
+          commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price60d', change60d]);
 
           callback(commands);
         }
