@@ -99,6 +99,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           const change30d = apiData.data.price_change_percentage_30d || null;
           const change60d = apiData.data.price_change_percentage_60d || null;
 
+          console.log('a:' + change60d);
+
           for (const [key, value] of Object.entries(data)) {
             commands.push(['hset', `${_this.pool}:coin:${blockType}`, key, value]);
           }
@@ -461,7 +463,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         }, () => { });
       }, () => { });
-    }, 1 * 60 * 1000);
+    }, 1 * 6 * 1000);
 
     // Handle User Info Interval
     setInterval(() => {
