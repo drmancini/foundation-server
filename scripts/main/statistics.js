@@ -94,7 +94,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 
         if (apiData.data) {
           const data = apiData.data.market_data.current_price || {};
-          console.log(apData.data);
+          console.log(apiData.data);
           const change24h = apiData.data.price_change_percentage_24h || null;
           const change7d = apiData.data.price_change_percentage_7d || null;
           const change30d = apiData.data.price_change_percentage_30d || null;
