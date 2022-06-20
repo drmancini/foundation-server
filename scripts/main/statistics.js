@@ -93,26 +93,23 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         const apiData = await getCoin()
 
         if (apiData.data) {
-          const data = apiData.data.market_data.current_price;
-          
-          console.log(apiData.data);
-          const change24h = apiData.data. price_change_percentage_24h;
-          const change7d = apiData.data.price_change_percentage_7d;
-          const change30d = apiData.data.price_change_percentage_30d;
-          const change60d = apiData.data.price_change_percentage_60d;
+          const data = apiData.data.market_data.current_price || {};
+          const change24h = apiData.data. price_change_percentage_24h || null;
+          const change7d = apiData.data.price_change_percentage_7d || null;
+          const change30d = apiData.data.price_change_percentage_30d || null;
+          const change60d = apiData.data.price_change_percentage_60d || null;
 
           for (const [key, value] of Object.entries(data)) {
             commands.push(['hset', `${_this.pool}:coin:${blockType}`, key, value]);
           }
-          commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price24h', change24h]);
-          commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price7d', change7d]);
-          commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price30d', change30d]);
-          commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price60d', change60d]);
+          if (change24h) commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price24h', change24h]);
+          if (change7d) commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price7d', change7d]);
+          if (change30d) commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price30d', change30d]);
+          if (change60d) commands.push(['hset', `${_this.pool}:coin:${blockType}`, 'price60d', change60d]);
 
           callback(commands);
         }
       }
-
       getData();
     }
 
