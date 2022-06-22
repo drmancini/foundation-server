@@ -499,7 +499,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           totalPaid += payment.paid
         });
 
-        const output = [200, {
+        const output = {
           // countervalue: 'honverze do USD',
           lastPayment: lastPayment,
           stats: {
@@ -507,7 +507,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             totalPaid: totalPaid,
             transactionCount: transactionCount,
           }
-        }];
+        };
 
         const commands = [
           ['hgetall', `${ pool }:coin:${ blockType }`]];
@@ -531,7 +531,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         //   }
         // });
         // callback;
-        callback();
       });
   };
 
