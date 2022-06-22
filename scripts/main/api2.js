@@ -335,16 +335,19 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           })
           .then((data) => {
             const output = [];
-            const totalItems = itemCount;
-            const totalPages = Math.floor(totalItems / 10) + (totalItems % 10 > 0 ? 1 : 0);
+            let totalItems = 0
             
             data.forEach((payment) => {
               const outputPayment = {};
               outputPayment.hash = payment.transaction,
               outputPayment.timestamp = payment.time,
               outputPayment.value = payment.paid,
+              totalItems ++
               output.push(outputPayment);
             });
+
+            const totalPages = Math.floor(totalItems / 10) + (totalItems % 10 > 0 ? 1 : 0);
+            
             callback(200, {
               //countervalue: 'konverze do USD',
               data: output,
