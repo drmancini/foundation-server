@@ -464,75 +464,75 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /miner/paymentStats for miner [address]
-  this.minerPaymentStats2 = function(pool, address, countervalue, blockType, callback) {
-    if (countervalue == '') {
-      countervalue = 'usd';
-    };
-    if (blockType == '') {
-      blockType = 'primary';
-    };
+  // this.minerPaymentStats2 = function(pool, address, countervalue, blockType, callback) {
+  //   if (countervalue == '') {
+  //     countervalue = 'usd';
+  //   };
+  //   if (blockType == '') {
+  //     blockType = 'primary';
+  //   };
 
-    sequelizePayments
-      .findAll({
-        raw: true,
-        attributes: ['transaction', 'paid', 'time'],
-        where: {
-          pool: pool,
-          miner: address,
-        },
-        order: [
-          ['time', 'desc']
-        ],
-      })
-      .then((data) => {
-        const transactionCount = data.length;
-        const lastPayment = {};
-        let totalPaid = 0; 
-        let isLastPayment = true;
-        data.forEach((payment) => {
-          if (isLastPayment) {
-              lastPayment.hash = payment.transaction,
-              lastPayment.timestamp = payment.time,
-              lastPayment.value = payment.paid,
-            isLastPayment = false;
-          }
-          totalPaid += payment.paid
-        });
+  //   sequelizePayments
+  //     .findAll({
+  //       raw: true,
+  //       attributes: ['transaction', 'paid', 'time'],
+  //       where: {
+  //         pool: pool,
+  //         miner: address,
+  //       },
+  //       order: [
+  //         ['time', 'desc']
+  //       ],
+  //     })
+  //     .then((data) => {
+  //       const transactionCount = data.length;
+  //       const lastPayment = {};
+  //       let totalPaid = 0; 
+  //       let isLastPayment = true;
+  //       data.forEach((payment) => {
+  //         if (isLastPayment) {
+  //             lastPayment.hash = payment.transaction,
+  //             lastPayment.timestamp = payment.time,
+  //             lastPayment.value = payment.paid,
+  //           isLastPayment = false;
+  //         }
+  //         totalPaid += payment.paid
+  //       });
 
-        const output = {
-          // countervalue: 'honverze do USD',
-          lastPayment: lastPayment,
-          stats: {
-            averageValue: totalPaid / transactionCount,
-            totalPaid: totalPaid,
-            transactionCount: transactionCount,
-          }
-        };
+  //       const output = {
+  //         // countervalue: 'honverze do USD',
+  //         lastPayment: lastPayment,
+  //         stats: {
+  //           averageValue: totalPaid / transactionCount,
+  //           totalPaid: totalPaid,
+  //           transactionCount: transactionCount,
+  //         }
+  //       };
 
-        const commands = [
-          ['hgetall', `${ pool }:coin:${ blockType }`]];
-        _this.executeCommands(commands, (results) => {
-          if (results[0]) {
-            console.log('a:');
-            console.log(results[0].usd);
-            output.countervalue = results[0].usd;
-          };
-          callback(200, output);
-        }, callback);
+  //       const commands = [
+  //         ['hgetall', `${ pool }:coin:${ blockType }`]];
+  //       _this.executeCommands(commands, (results) => {
+  //         if (results[0]) {
+  //           console.log('a:');
+  //           console.log(results[0].usd);
+  //           output.countervalue = results[0].usd;
+  //         };
+  //         callback(200, output);
+  //       }, callback);
         
 
-        // callback(200, {
-        //   //countervalue: 'honverze do USD',
-        //   lastPayment: lastPayment,
-        //   stats: {
-        //     averageValue: totalPaid / transactionCount,
-        //     totalPaid: totalPaid,
-        //     transactionCount: transactionCount,
-        //   }
-        // });
-        // callback;
-      });
-  };
+  //       // callback(200, {
+  //       //   //countervalue: 'honverze do USD',
+  //       //   lastPayment: lastPayment,
+  //       //   stats: {
+  //       //     averageValue: totalPaid / transactionCount,
+  //       //     totalPaid: totalPaid,
+  //       //     transactionCount: transactionCount,
+  //       //   }
+  //       // });
+  //       // callback;
+  //     });
+  // };
 
   // API Endpoint for /miner/stats for miner [address]
   this.minerStats = function(pool, address, blockType, isSolo, worker, callback) {
