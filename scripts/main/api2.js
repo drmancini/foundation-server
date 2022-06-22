@@ -310,8 +310,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   }
 
   //  API Endpoint dor /miner/payments for miner [address]
-  this.minerPayments = function(pool, address, page, callback) {
-    let totalItems;
+  this.minerPayments = function(pool, address, countervalue, page, callback) {
     sequelizePayments
       .count({
         where: {
@@ -342,12 +341,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
               outputPayment.hash = payment.transaction,
               outputPayment.timestamp = payment.time,
               outputPayment.value = payment.paid,
-              totalItems ++
+              totalItems ++;
               output.push(outputPayment);
             });
 
             const totalPages = Math.floor(totalItems / 10) + (totalItems % 10 > 0 ? 1 : 0);
-            
+
             callback(200, {
               //countervalue: 'konverze do USD',
               data: output,
@@ -461,6 +460,71 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             transactionCount: transactionCount,
           }
         });
+      });
+  };
+
+  // API Endpoint for /miner/paymentStats for miner [address]
+  this.minerPaymentStats2 = function(pool, address, countervalue, callback) {
+    if (countervalue == '') {
+      countervalue = 'usd';
+    }
+
+    sequelizePayments
+      .findAll({
+        raw: true,
+        attributes: ['transaction', 'paid', 'time'],
+        where: {
+          pool: pool,
+          miner: address,
+        },
+        order: [
+          ['time', 'desc']
+        ],
+      })
+      .then((data) => {
+        const transactionCount = data.length;
+        const lastPayment = {};
+        let totalPaid = 0; 
+        let isLastPayment = true;
+        data.forEach((payment) => {
+          if (isLastPayment) {
+              lastPayment.hash = payment.transaction,
+              lastPayment.timestamp = payment.time,
+              lastPayment.value = payment.paid,
+            isLastPayment = false;
+          }
+          totalPaid += payment.paid
+        });
+
+        const output = [200, {
+          // countervalue: 'honverze do USD',
+          lastPayment: lastPayment,
+          stats: {
+            averageValue: totalPaid / transactionCount,
+            totalPaid: totalPaid,
+            transactionCount: transactionCount,
+          }
+        }];
+
+        const commands = [
+          ['hgetall', `${ pool }:coin:${ blockType }`]];
+        _this.executeCommands(commands, (results) => {
+          if (results[0]) {
+            console.log('a:');
+            console.log(results[0].usd);
+          };
+        }, callback(output));
+        
+
+        // callback(200, {
+        //   //countervalue: 'honverze do USD',
+        //   lastPayment: lastPayment,
+        //   stats: {
+        //     averageValue: totalPaid / transactionCount,
+        //     totalPaid: totalPaid,
+        //     transactionCount: transactionCount,
+        //   }
+        // });
       });
   };
 
@@ -1098,7 +1162,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // Determine API Endpoint Called
   this.handleApiV2 = function(req, callback) {
 
-    let type, endpoint, body, blockType, isSolo, address, worker, page, remoteAddress;
+    let type, endpoint, body, blockType, isSolo, address, worker, page, countervalue, remoteAddress;
     const miscellaneous = ['pools'];
 
     // If Socket Params Exist
@@ -1116,6 +1180,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     // If Query Params Exist
     if (req.query) {
       blockType = utils.validateInput(req.query.blockType || '');
+      countervalue = utils.validateInput(req.query.blockType || '');
       isSolo = utils.validateInput(req.query.isSolo || '');
       address = utils.validateInput(req.query.address || '');
       worker = utils.validateInput(req.query.worker || '');
@@ -1152,10 +1217,13 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.minerDetails(pool, address, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'payments' && address.length > 0):
-            _this.minerPayments(pool, address, page, (code, message) => callback(code, message));
+            _this.minerPayments(pool, address, countervalue, page, (code, message) => callback(code, message));
             break;
           case (endpoint === 'paymentStats' && address.length > 0):
             _this.minerPaymentStats(pool, address, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'paymentStats2' && address.length > 0):
+            _this.minerPaymentStats2(pool, address, countervalue, (code, message) => callback(code, message));
             break;
           case (endpoint === 'payoutSettings'):
             _this.minerPayoutSettings(pool, body, blockType, isSolo, (code, message) => callback(code, message));
