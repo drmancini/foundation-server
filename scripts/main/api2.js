@@ -530,7 +530,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         //     transactionCount: transactionCount,
         //   }
         // });
-        callback;
+        // callback;
       });
   };
 
