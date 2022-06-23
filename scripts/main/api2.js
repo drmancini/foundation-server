@@ -512,7 +512,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           ['hgetall', `${ pool }:coin:${ blockType }`]];
           console.log(commands);
         _this.executeCommands(commands, (results) => {
-          console.log(results[0]);
+          console.log(results[0][countervalue]);
         //     // output.countervalue = results[0].usd;
   
           callback(200, output); // code, message
