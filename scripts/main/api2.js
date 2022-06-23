@@ -1171,7 +1171,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     // If Query Params Exist
     if (req.query) {
       blockType = utils.validateInput(req.query.blockType || '');
-      countervalue = utils.validateInput(req.query.blockType || '');
+      countervalue = utils.validateInput(req.query.countervalue || '');
       isSolo = utils.validateInput(req.query.isSolo || '');
       address = utils.validateInput(req.query.address || '');
       worker = utils.validateInput(req.query.worker || '');
