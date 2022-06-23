@@ -1215,7 +1215,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.minerPaymentStats(pool, address, (code, message) => callback(code, message));
             break;
           case (endpoint === 'paymentStats2' && address.length > 0):
-            _this.minerPaymentStats2(pool, address, countervalue, (code, message) => callback(code, message));
+            _this.minerPaymentStats2(pool, address, countervalue, blockType, (code, message) => callback(code, message));
             break;
           case (endpoint === 'payoutSettings'):
             _this.minerPayoutSettings(pool, body, blockType, isSolo, (code, message) => callback(code, message));
