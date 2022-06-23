@@ -465,10 +465,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /miner/paymentStats for miner [address]
   this.minerPaymentStats2 = function(pool, address, countervalue, blockType, callback) {
-    console.log(countervalue);
-    if (countervalue == '') {
-      countervalue = 'usd';
-    };
+    console.log('s: ' + countervalue);
+    // if (countervalue == '') {
+    //   countervalue = 'usd';
+    // };
     
     if (blockType == '') {
       blockType = 'primary';
