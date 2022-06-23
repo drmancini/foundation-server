@@ -465,9 +465,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /miner/paymentStats for miner [address]
   this.minerPaymentStats2 = function(pool, address, countervalue, blockType, callback) {
+    console.log(countervalue);
     if (countervalue == '') {
       countervalue = 'usd';
     };
+    
     if (blockType == '') {
       blockType = 'primary';
     };
@@ -510,7 +512,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       .finally(() => {
         const commands = [
           ['hgetall', `${ pool }:coin:${ blockType }`]];
-          console.log(commands);
         _this.executeCommands(commands, (results) => {
           output.countervalue = results[0][countervalue];
           callback(200, output);
