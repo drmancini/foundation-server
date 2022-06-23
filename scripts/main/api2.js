@@ -517,8 +517,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         _this.executeCommands(commands, (results) => {
 
   
-            console.log(results[0].usd);
-            output.countervalue = results[0].usd;
+            console.log(results[0]);
+            // output.countervalue = results[0].usd;
   
           callback(200, output); // code, message
         }, callback);
