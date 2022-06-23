@@ -508,20 +508,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         };
       })
       .finally(() => {
-        console.log('test: ');
-        console.log(output);
-      });
-
         const commands = [
           ['hgetall', `${ pool }:coin:${ blockType }`]];
-        // _this.executeCommands(commands, (results) => {
-
-  
-        //     console.log(results[0]);
+        _this.executeCommands(commands, (results) => {
+          console.log(results[0]);
         //     // output.countervalue = results[0].usd;
   
-        //   callback(200, output); // code, message
-        // }, callback);
+          callback(200, output); // code, message
+        }, callback);
+      });
   };
 
   // API Endpoint for /miner/stats for miner [address]
