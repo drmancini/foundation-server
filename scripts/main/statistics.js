@@ -99,8 +99,6 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           const change30d = apiData.data.market_data.price_change_percentage_30d;
           const change60d = apiData.data.market_data.price_change_percentage_60d;
 
-          console.log('a:' + change60d);
-
           for (const [key, value] of Object.entries(data)) {
             commands.push(['hset', `${_this.pool}:coin:${blockType}`, key, value]);
           }
@@ -114,38 +112,6 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       }
       getData();
     }
-
-
-
-    // const request = https.get('https://api.coingecko.com/api/v3/coins/' + coinName, response => {
-    //   let chunks = [];
-
-    //   response.on('data', data => {
-    //     console.log('so far so good');
-    //     chunks.push(data);
-    //     console.log('chunks pushed');
-    //   }).on('end', () => {
-    //     const data = Buffer.concat(chunks);
-    //     console.log('got data');
-    //     const schema = JSON.parse(data);
-    //     console.log('data parsed');
-    //     console.log(schema.market_data.current_price);
-    //     // if (typeof schema.market_data.current_price == 'object') {
-    //       // const outputObject = schema.market_data.current_price;
-    //       // console.log(outputObject);
-    //       // for (const [key, value] of Object.entries(outputObject)) {
-    //       //   commands.push(['hset', `${ _this.pool }:coin:${ blockType }`, key, value]);
-    //       // }
-    //     //}
-    //     callback(commands);
-    //   });
-    // });
-
-    // request.on('error', error => {
-    //   console.error(error);
-    // });
-
-    // request.end(); 
   };
 
   // Handle Users Information in Redis
@@ -264,8 +230,6 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 
       for (const [key, value] of Object.entries(miners)) {
         const miner = JSON.parse(value);
-        // const validRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
-        // const emailValid = validRegex.test(miners.email);
         if (miner.alertsEnabled === 'true' && miner.alertLimit > 0) {
           minersToNotify.push({
             miner: key,
@@ -275,7 +239,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         }
       };
 
-      console.log('a:');
+      console.log('miners that want to be notified:');
       console.log(minersToNotify);
       
       minersToNotify.forEach((miner) => {
@@ -283,7 +247,6 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         console.log(minerWorkers);
         minerWorkers.forEach((worker) => {
           if (worker.time < dateNow - miner.limit * 2) {
-            console.log('Worker ' + worker.worker + ' is offline ... I should send an email');
             const workerObject = {
               time: worker.time,
               worker: worker.worker,
@@ -291,14 +254,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
               offline: true
             };            
             commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)]);
+            console.log('Worker ' + worker.worker + ' is offline ... sending an email alert');
           }
         });
-      });
-      
-      // const output = JSON.stringify(minerObject);
-      // commands.push(['hset', `${_this.pool}:miners:${blockType}`, miner, output]);
-    
-
+      }); 
       callback(commands);
     }, handler);
   };
