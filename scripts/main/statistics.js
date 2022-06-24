@@ -292,8 +292,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
               offline: true
             };
             console.log('mark as offline with data: ');
-            console.log(workerObject);
-            commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)]);
+            
+            // commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)]);
           }
         });
       });
