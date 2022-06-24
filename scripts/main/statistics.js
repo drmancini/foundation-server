@@ -212,10 +212,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       host: "localhost",
       port: 587,
       secure: false, // true for 465, false for other ports
-      // auth: {
-      //   user: testAccount.user, // generated ethereal user
-      //   pass: testAccount.pass, // generated ethereal password
-      // },
+      auth: {
+        user: "foundation", // generated ethereal user
+        pass: "eKFb_4Tx3zB2QZ*jQfz", // generated ethereal password
+      },
     });
   
     // send mail with defined transport object
