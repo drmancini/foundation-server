@@ -114,7 +114,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     }
   };
 
-  // Handle Users Information in Redis
+  // Add new Users to Redis
   this.handleUsersInfo = function (blockType, callback, handler) {
     const minPayment = _this.poolConfig.primary.payments.minPayment || 1;
     const commands = [];
