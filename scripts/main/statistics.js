@@ -282,7 +282,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         const minerWorkers = workersOnline.filter((worker) => worker.worker.split('.')[0] === miner.miner);
         console.log(minerWorkers);
         minerWorkers.forEach((worker) => {
-          if (worker.time < dateNow - miner.limit) {
+          if (worker.time < dateNow - miner.limit * 2) {
             console.log('Worker ' + worker.worker + ' is offline ... I should send an email');
             const workerObject = {
               time: worker.time,
@@ -290,10 +290,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
               ip: worker.ip,
               offline: true
             };
-            console.log('offline: ');
+            console.log('mark as offline with data: ');
             console.log(workerObject);
             // commands.push = [
-            //   ['hset', `${ pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)],
+            //   ['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)],
             // ]
           }
         });
