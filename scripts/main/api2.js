@@ -300,6 +300,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const output = {
         firstJoined: miner.firstJoined,
         payoutLimit: miner.payoutLimit || 0,
+        notification: miner.alertsEnabled == true ? miner.alertLimit : 0,
         // ipHint: worker.ipHint
       }
       
