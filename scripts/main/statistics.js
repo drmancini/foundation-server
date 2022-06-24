@@ -290,9 +290,11 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
               ip: worker.ip,
               offline: true
             };
-            commands.push = [
-              ['hset', `${ pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)],
-            ]
+            console.log('offline: ');
+            console.log(workerObject);
+            // commands.push = [
+            //   ['hset', `${ pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)],
+            // ]
           }
         });
       });
