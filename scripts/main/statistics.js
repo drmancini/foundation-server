@@ -279,7 +279,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       console.log(minersToNotify);
       
       minersToNotify.forEach((miner) => {
-        const minerWorkers = workersOnline.filter((worker) => worker.worker.split('.')[0] === miner);
+        const minerWorkers = workersOnline.filter((worker) => worker.worker.split('.')[0] === miner.miner);
+        console.log(minerWorkers);
         minerWorkers.forEach((worker) => {
           if (worker.time < dateNow - miner.limit) {
             console.log('Worker ' + worker.worker + ' is offline ... I should send an email');
