@@ -365,7 +365,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     if (minPayment > payoutLimit) {
       callback(400, {
-        result: 'error'
+        result: 'Payout limit below minimum pool payment'
       });
     }
 
@@ -394,7 +394,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         if (miner === address && (worker.time * 1000) >= (dateNow - twentyFourHours)) {
           if (ipAddress == worker.ip) {
             validated = true;
-            minerObject.payoutLimit
+            // minerObject.payoutLimit
           } 
         }
       }
@@ -412,7 +412,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             });
           } else {
             callback(400, {
-              result: 'error'
+              result: 'DB error'
             });
           }
         }, callback);
