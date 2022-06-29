@@ -635,6 +635,70 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
+  // API Endpoint for /miner/work for miner [address]
+  this.minerWork = function(pool, address, blockType, isSolo, callback) {
+    const solo = isSolo ? 'solo' : 'shared';
+    /* istanbul ignore next */
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+    const dateNow = Date.now();
+    const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
+    const hashrateWindowTime = (dateNow / 1000 - hashrateWindow | 0).toString();
+    
+    const commands = [
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:historicals`, 0, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:hashrate`, hashrateWindowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:snapshots`, 0, '+inf']];
+    _this.executeCommands(commands, (results) => {
+      let minerWork = 0;
+      let totalWork = 0;
+      let maxHistoricalTime = 0;
+
+      if (results[0]) {
+        results[0].forEach((entry) => {
+          const historical = JSON.parse(entry);
+          if (historical.time > maxHistoricalTime) {
+            maxHistoricalTime = historical.time;
+            totalWork += historical.work;
+          }
+          if (historical.worker.split('.')[0] == address) {
+            minerWork += historical.work;
+          }
+        });
+      }
+
+      if (results[2]) {
+        results[2].forEach((entry) => {
+          const snapshot = JSON.parse(entry);
+          if (snapshot.time > maxHistoricalTime) {
+            totalWork += historical.work;
+            if (snapshot.worker.split('.')[0] == address) {
+              minerWork += snapshot.work;
+            }
+          }
+        });
+      };
+
+      if (results[1]) {
+        results[1].forEach((entry) => {
+          const share = JSON.parse(entry);
+          totalWork += share.work;
+          if (share.worker.split('.')[0] === address) {
+            minerWork += share.work;
+          }
+        });
+      }
+
+      let output = {
+        minerWork: minerWork,
+        totalWork: totalWork,
+      }
+
+      callback(200, output);
+    }, callback);
+  };
+
   // API Endpoint for /miner/workers for miner [address]
   this.minerWorkers = function(pool, address, blockType, isSolo, callback) {
     /* istanbul ignore next */
@@ -1223,6 +1287,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'stats2' && address.length > 0):
             _this.minerStats(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'work' && address.length > 0):
+            _this.minerWork(pool, address, blockType, isSolo, (code, message) => callback(code, message));
             break;
           case (endpoint === 'workerCount' && address.length > 0):
             _this.minerWorkerCount(pool, address, blockType, isSolo, (code, message) => callback(code, message));
