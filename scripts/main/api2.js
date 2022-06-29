@@ -645,7 +645,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const dateNow = Date.now();
     const hashrateWindow = _this.poolConfigs[pool].statistics.hashrateWindow;
     const hashrateWindowTime = (dateNow / 1000 - hashrateWindow | 0).toString();
-    
+
     const commands = [
       ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:historicals`, 0, '+inf'],
       ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:hashrate`, hashrateWindowTime, '+inf'],
@@ -672,7 +672,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         results[2].forEach((entry) => {
           const snapshot = JSON.parse(entry);
           if (snapshot.time > maxHistoricalTime) {
-            totalWork += historical.work;
+            totalWork += snapshot.work;
             if (snapshot.worker.split('.')[0] == address) {
               minerWork += snapshot.work;
             }
