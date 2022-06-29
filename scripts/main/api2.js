@@ -660,8 +660,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           const historical = JSON.parse(entry);
           if (historical.time > maxHistoricalTime) {
             maxHistoricalTime = historical.time;
-            totalWork += historical.work;
           }
+          totalWork += historical.work;
           if (historical.worker.split('.')[0] == address) {
             minerWork += historical.work;
           }
