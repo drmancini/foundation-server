@@ -1039,7 +1039,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         outputObject.total = total;
         // moving average
         movingAverageArray.push(total);
-        if (movingAverageArray.length > 10) {
+        if (movingAverageArray.length > 15) {
           movingAverageArray.shift();
         }
         const movingAverageSum = movingAverageArray.reduce((partialSum, a) => partialSum + a, 0);
