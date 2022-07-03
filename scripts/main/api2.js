@@ -850,28 +850,42 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }
     const dateNow = Date.now();
     const historyDays = 100 * 24 * 60 * 60 * 1000; // 100 days
+    const hundredDays = 100 * 24 * 60 * 60 * 1000; 
+    const thirtyDays = 300 * 24 * 60 * 60 * 1000; 
+    const sevenDays = 70 * 24 * 60 * 60 * 1000;
     const commands = [
       ['smembers', `${ pool }:blocks:${blockType}:confirmed`],
       ['smembers', `${ pool }:blocks:${blockType}:pending`]];
     _this.executeCommands(commands, (results) => {
-      let output;
-      let luckSum = 0;
-      let blockCount = 0;
-      
+      const output = {};
       const confirmedBlocks = results[0].map(block => JSON.parse(block)) || [];
       const pendingBlocks = results[1].map(block => JSON.parse(block)) || [];
       const blocks = confirmedBlocks.concat(pendingBlocks);
+      
+      let luckSum = 0;
+      let blockCount = 0;
 
-      blocks.filter((block) => block.time > dateNow - historyDays).forEach((block) => {
+      blocks.filter((block) => block.time > dateNow - hundredDays).forEach((block) => {
         luckSum += block.luck;
         blockCount ++;
       });
-      
-      if (blockCount == 0) {
-        output = null;
-      } else if (blockCount > 0) {
-        output = luckSum / blockCount;
-      }
+      output.hundredDays = blockCount > 0 ? luckSum / blockCount : null;
+      luckSum = 0;
+      blockCount = 0;
+
+      blocks.filter((block) => block.time > dateNow - thirtyDays).forEach((block) => {
+        luckSum += block.luck;
+        blockCount ++;
+      });
+      output.thirtyDays = blockCount > 0 ? luckSum / blockCount : null;
+      luckSum = 0;
+      blockCount = 0;
+
+      blocks.filter((block) => block.time > dateNow - sevenDays).forEach((block) => {
+        luckSum += block.luck;
+        blockCount ++;
+      });
+      output.sevenDays = blockCount > 0 ? luckSum / blockCount : null;
       
       callback(200, {
         result: output,
