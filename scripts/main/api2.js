@@ -1025,6 +1025,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     ];
     _this.executeCommands(commands, (results) => { 
       const output = [];
+      const movingAverageArray = [];
       results[0].forEach((entry) => {
         const data = JSON.parse(entry);
         const outputObject = {};
@@ -1036,6 +1037,14 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           total += identifier.hashrate;
         });
         outputObject.total = total;
+        // moving average
+        movingAverageArray.push(total);
+        if (movingAverageArray.length > 10) {
+          movingAverageArray.shift();
+        }
+        const movingAverageSum = movingAverageArray.reduce((partialSum, a) => partialSum + a, 0);
+        outputObject.averageHashrate = movingAverageSum / movingAverageArray.length;
+
         output.push(outputObject);
       });
 
