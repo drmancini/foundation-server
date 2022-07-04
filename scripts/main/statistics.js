@@ -211,9 +211,12 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   
     // create reusable transporter object using the default SMTP transport
     let transporter = nodemailer.createTransport({
-      host: "localhost",
-      port: 465,
-      secure: false, // true for 465, false for other ports
+      sendmail: true,
+	    newline: 'unix',
+	    path: '/usr/sbin/sendmail',
+      //host: "localhost",
+      //port: 465,
+      //secure: false, // true for 465, false for other ports
       // auth: {
       //   user: "foundation", // generated ethereal user
       //   pass: "eKFb_4Tx3zB2QZ*jQfz", // generated ethereal password
