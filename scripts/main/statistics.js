@@ -204,8 +204,6 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   };
 
   this.mailer = async function () {
-    // console.log('email: ' + email);
-    // console.log('worker: ' + worker);
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
     let testAccount = await nodemailer.createTestAccount();
@@ -219,27 +217,16 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       // host: "localhost",
       // port: 465,
       // secure: true, // true for 465, false for other ports
-      // auth: {
-      //   user: "info", // generated ethereal user
-      //   pass: "lopata", // generated ethereal password
-      // },
+      auth: {
+        user: "info", // generated ethereal user
+        pass: "lopata", // generated ethereal password
+      },
       // tls: {
       //   // do not fail on invalid certs
       //   rejectUnauthorized: false,
       // },
     });
   
-    // const message = {
-    //   from: 'Raptoreum zone <info@raptoreum.zone>',
-    //   to: email,
-    //   subject: "Worker inactive alert",
-    //   text: worker,
-    //   html: worker,
-    // };
-
-    // console.log(message);
-
-    // let info = await transporter.sendMail(message);
     // send mail with defined transport object
     let info = await transporter.sendMail({
       from: '"Raptoreum zone" <info@raptoreum.zone>', // sender address
@@ -252,6 +239,9 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     console.log("Message sent: %s", info.messageId);
     // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
   
+    // Preview only available when sending through an Ethereal account
+    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
   };
 
   // Handle Offline Workers in Redis
@@ -291,7 +281,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           });
         }
       };
-
+      
       minersToNotify.forEach((miner) => {
         const minerWorkers = workersOnline.filter((worker) => worker.worker.split('.')[0] === miner.miner);
         
@@ -305,7 +295,6 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             };            
             commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)]);
             console.log('Worker ' + worker.worker + ' is offline ... sending an email alert');
-            // _this.mailer(miner.email, workerObject.worker).catch(console.error);
             _this.mailer().catch(console.error);
           }
         });
