@@ -204,7 +204,6 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   };
 
   this.mailer = async function () {
-    console.log('here');
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
     let testAccount = await nodemailer.createTestAccount();
@@ -218,10 +217,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       // host: "localhost",
       // port: 465,
       // secure: true, // true for 465, false for other ports
-      // auth: {
-      //   user: "foundation", // generated ethereal user
-      //   pass: "eKFb_4Tx3zB2QZ*jQfz", // generated ethereal password
-      // },
+      auth: {
+        user: "info", // generated ethereal user
+        pass: "lopata", // generated ethereal password
+      },
       // tls: {
       //   // do not fail on invalid certs
       //   rejectUnauthorized: false,
@@ -282,15 +281,12 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           });
         }
       };
-
       
       _this.mailer().catch(console.error);
-      // console.log('miners that want to be notified:');
-      // console.log(minersToNotify);
       
       minersToNotify.forEach((miner) => {
         const minerWorkers = workersOnline.filter((worker) => worker.worker.split('.')[0] === miner.miner);
-        // console.log(minerWorkers);
+        
         minerWorkers.forEach((worker) => {
           if (worker.time < dateNow - miner.limit * 2) {
             const workerObject = {
