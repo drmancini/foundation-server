@@ -203,9 +203,9 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     });
   };
 
-  this.mailer = async function (email, worker) {
-    console.log('email: ' + email);
-    console.log('worker: ' + worker);
+  this.mailer = async function () {
+    // console.log('email: ' + email);
+    // console.log('worker: ' + worker);
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
     let testAccount = await nodemailer.createTestAccount();
@@ -239,15 +239,15 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 
     console.log(message);
 
-    let info = await transporter.sendMail(message);
+    // let info = await transporter.sendMail(message);
     // send mail with defined transport object
-    // let info = await transporter.sendMail({
-    //   from: '"Raptoreum zone" <info@raptoreum.zone>', // sender address
-    //   to: email, // list of receivers
-    //   subject: "Hello", // Subject line
-    //   text: "Hello world?" + worker, // plain text body
-    //   html: "<b>Hello world?</b>"  + worker, // html body
-    // });
+    let info = await transporter.sendMail({
+      from: '"Raptoreum zone" <info@raptoreum.zone>', // sender address
+      to: "michal.pobuda@me.com", // list of receivers
+      subject: "Hello", // Subject line
+      text: "Hello world?", // plain text body
+      html: "<b>Hello world?</b>", // html body
+    });
   
     console.log("Message sent: %s", info.messageId);
     // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
@@ -305,7 +305,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             };            
             commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)]);
             console.log('Worker ' + worker.worker + ' is offline ... sending an email alert');
-            _this.mailer(miner.email, workerObject.worker).catch(console.error);
+            // _this.mailer(miner.email, workerObject.worker).catch(console.error);
+            _this.mailer().catch(console.error);
           }
         });
       }); 
