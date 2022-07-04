@@ -8,6 +8,7 @@ const https = require('https');
 const utils = require('./utils');
 const nodemailer = require("nodemailer");
 const axios = require('axios');
+const { Console } = require('console');
 const Algorithms = require('foundation-stratum').algorithms;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,6 +204,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   };
 
   this.mailer = async function () {
+    console.log('here');
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
     let testAccount = await nodemailer.createTestAccount();
@@ -277,12 +279,12 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         }
       };
 
-      console.log('miners that want to be notified:');
-      console.log(minersToNotify);
+      // console.log('miners that want to be notified:');
+      // console.log(minersToNotify);
       
       minersToNotify.forEach((miner) => {
         const minerWorkers = workersOnline.filter((worker) => worker.worker.split('.')[0] === miner.miner);
-        console.log(minerWorkers);
+        // console.log(minerWorkers);
         minerWorkers.forEach((worker) => {
           if (worker.time < dateNow - miner.limit * 2) {
             const workerObject = {
