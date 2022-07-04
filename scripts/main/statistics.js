@@ -217,10 +217,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       // host: "localhost",
       // port: 465,
       // secure: true, // true for 465, false for other ports
-      auth: {
-        user: "info", // generated ethereal user
-        pass: "lopata", // generated ethereal password
-      },
+      // auth: {
+      //   user: "info", // generated ethereal user
+      //   pass: "lopata", // generated ethereal password
+      // },
       // tls: {
       //   // do not fail on invalid certs
       //   rejectUnauthorized: false,
