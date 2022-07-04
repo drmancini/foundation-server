@@ -6,6 +6,7 @@
 
 const utils = require('./utils');
 const Algorithms = require('foundation-stratum').algorithms;
+const requestIp = require('request-ip');
 const { Sequelize } = require('sequelize');
 const PaymentsModel = require('../../models/payments.model');
 
@@ -978,6 +979,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /pool/clientIP
   this.poolClientIP = function(remoteAddress, callback) {
+    
+
     callback(200, {
         result: remoteAddress,
       });

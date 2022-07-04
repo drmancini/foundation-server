@@ -211,15 +211,15 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     let transporter = nodemailer.createTransport({
       host: "localhost",
       port: 465,
-      secure: true, // true for 465, false for other ports
-      auth: {
-        user: "foundation", // generated ethereal user
-        pass: "eKFb_4Tx3zB2QZ*jQfz", // generated ethereal password
-      },
-      tls: {
-        // do not fail on invalid certs
-        rejectUnauthorized: false,
-      },
+      secure: false, // true for 465, false for other ports
+      // auth: {
+      //   user: "foundation", // generated ethereal user
+      //   pass: "eKFb_4Tx3zB2QZ*jQfz", // generated ethereal password
+      // },
+      // tls: {
+      //   // do not fail on invalid certs
+      //   rejectUnauthorized: false,
+      // },
     });
   
     // send mail with defined transport object
