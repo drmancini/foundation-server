@@ -229,15 +229,15 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       // },
     });
   
-    const message = {
-      from: 'Raptoreum zone <info@raptoreum.zone>',
-      to: email,
-      subject: "Worker inactive alert",
-      text: worker,
-      html: worker,
-    };
+    // const message = {
+    //   from: 'Raptoreum zone <info@raptoreum.zone>',
+    //   to: email,
+    //   subject: "Worker inactive alert",
+    //   text: worker,
+    //   html: worker,
+    // };
 
-    console.log(message);
+    // console.log(message);
 
     // let info = await transporter.sendMail(message);
     // send mail with defined transport object
