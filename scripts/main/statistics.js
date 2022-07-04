@@ -216,7 +216,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 	    // path: '/usr/sbin/sendmail',
       // secure: true,
       host: "localhost",
-      port: 465,
+      port: 25,
       secure: true, // true for 465, false for other ports
       auth: {
         user: "foundation", // generated ethereal user
