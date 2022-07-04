@@ -229,21 +229,29 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       // },
     });
   
+    const message = {
+      from: 'Raptoreum zone <info@raptoreum.zone>',
+      to: email,
+      subject: "Worker inactive alert",
+      text: worker,
+      html: worker,
+    };
+
+    console.log(message);
+
+    let info = await transporter.sendMail(message);
     // send mail with defined transport object
-    let info = await transporter.sendMail({
-      from: '"Raptoreum zone" <info@raptoreum.zone>', // sender address
-      to: email, // list of receivers
-      subject: "Hello", // Subject line
-      text: "Hello world?" + worker, // plain text body
-      html: "<b>Hello world?</b>"  + worker, // html body
-    });
+    // let info = await transporter.sendMail({
+    //   from: '"Raptoreum zone" <info@raptoreum.zone>', // sender address
+    //   to: email, // list of receivers
+    //   subject: "Hello", // Subject line
+    //   text: "Hello world?" + worker, // plain text body
+    //   html: "<b>Hello world?</b>"  + worker, // html body
+    // });
   
     console.log("Message sent: %s", info.messageId);
     // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
   
-    // Preview only available when sending through an Ethereal account
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-    // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
   };
 
   // Handle Offline Workers in Redis
