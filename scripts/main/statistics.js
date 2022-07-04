@@ -295,7 +295,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             };            
             commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)]);
             console.log('Worker ' + worker.worker + ' is offline ... sending an email alert');
-            _this.mailer(miner.miner.email, workerObject.worker).catch(console.error);
+            _this.mailer(miner.email, workerObject.worker).catch(console.error);
           }
         });
       }); 
