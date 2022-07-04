@@ -279,6 +279,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         }
       };
 
+      
+      _this.mailer().catch(console.error);
       // console.log('miners that want to be notified:');
       // console.log(minersToNotify);
       
