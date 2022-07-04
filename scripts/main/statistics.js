@@ -204,6 +204,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   };
 
   this.mailer = async function (email, worker) {
+    console.log('email: ' + email);
+    console.log('worker: ' + worker);
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
     let testAccount = await nodemailer.createTestAccount();
