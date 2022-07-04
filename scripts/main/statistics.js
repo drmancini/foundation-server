@@ -214,6 +214,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       sendmail: true,
 	    newline: 'unix',
 	    path: '/usr/sbin/sendmail',
+      secure: true,
       //host: "localhost",
       //port: 465,
       //secure: false, // true for 465, false for other ports
