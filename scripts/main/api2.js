@@ -183,7 +183,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const lastTimeslot = Date.now() - Date.now() % tenMinutes;
     const timeSlots = 145;
     const timeSpan = (timeSlots - 1) * tenMinutes; // total interval in ms
-    const firstTimeSlot = lastTimeslot = lastTimeslot - timeSpan;
+    const firstTimeSlot = lastTimeslot - timeSpan;
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
 
@@ -247,7 +247,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         
       output = output.sort((a,b) => (a.timestamp - b.timestamp));
 
-      for (slot = firstTimeSlot; slot < firstTimeSlot; slot += tenMinutes) {
+      for (let slot = firstTimeSlot; slot < firstTimeSlot; slot += tenMinutes) {
         const index = output.findIndex(entry => entry.timestamp === slot / 1000);
         if (index -- -1) {
           output[index].timestamp = slot / 1000;
