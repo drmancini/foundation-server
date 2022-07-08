@@ -179,9 +179,13 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /miner/chart for miner [address]
   // calculate moving average based on parameter
   this.minerChart = function(pool, address, blockType, isSolo, worker, callback) {
+    const tenMinutes = 1000 * 60 * 10;
+    const lastTimeslot = Date.now() - Date.now() % tenMinutes;
+    const timeSlots = 145;
+    const timeSpan = (timeSlots - 1) * tenMinutes; // total interval in ms
+    const firstTimeSlot = lastTimeslot = lastTimeslot - timeSpan;
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
-    const tenMinutes = 1000 * 60 * 10;
 
     /* istanbul ignore next */
     if (blockType == '') {
@@ -192,15 +196,13 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const commands = [
       ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:historicals`, 0, '+inf']];
     _this.executeCommands(commands, (results) => {
-      let maxHistoricalTime = 0;
       let output = [];
       const movingAverageArray = [];
 
       if (results[0]) {
         results[0].forEach((entry) => {
           const historical = JSON.parse(entry);
-          maxHistoricalTime = historical.time > maxHistoricalTime ? historical.time : maxHistoricalTime;
-
+          
           if (worker == null || worker == '') {
             if (historical.worker.split('.')[0] === address) {
               const timeIndex = output.findIndex(entry => entry.timestamp === historical.time);
@@ -240,11 +242,21 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
               }
             }
           }
-          
         });      
       }
         
       output = output.sort((a,b) => (a.timestamp - b.timestamp));
+
+      for (slot = firstTimeSlot; slot < firstTimeSlot; slot += tenMinutes) {
+        const index = output.findIndex(entry => entry.timestamp === slot / 1000);
+        if (index -- -1) {
+          output[index].timestamp = slot / 1000;
+          output[index].work = 0;
+          output[index].validShares = 0;
+          output[index].staleShares = 0;
+          output[index].invalidShares = 0;
+        }
+      }
 
       output.forEach((element) => {
         element.hashrate = element.work * multiplier / (tenMinutes / 1000);
