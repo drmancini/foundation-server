@@ -249,13 +249,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
       for (let slot = firstTimeSlot; slot < firstTimeSlot; slot += tenMinutes) {
         const index = output.findIndex(entry => entry.timestamp === slot / 1000);
-        if (index -- -1) {
-          console.log(index);
-          output[index].timestamp = slot / 1000;
-          output[index].work = 0;
-          output[index].validShares = 0;
-          output[index].staleShares = 0;
-          output[index].invalidShares = 0;
+        if (index == -1) {
+          const tempObject = {
+            timestamp: slot / 1000,
+            work: 0,
+            validShares: 0,
+            staleShares: 0,
+            invalidShares: 0,
+          }
+          output.push(tempObject);
         }
       }
 
