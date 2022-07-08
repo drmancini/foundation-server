@@ -267,7 +267,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         element.hashrate = element.work * multiplier / (tenMinutes / 1000);
         delete element.work;
         movingAverageArray.push(element.hashrate);
-        if (movingAverageArray.length > 10) {
+        if (movingAverageArray.length > 12) {
           movingAverageArray.shift();
         }
         const movingAverageSum = movingAverageArray.reduce((partialSum, a) => partialSum + a, 0);
