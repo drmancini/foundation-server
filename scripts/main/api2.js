@@ -180,7 +180,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // calculate moving average based on parameter
   this.minerChart = function(pool, address, blockType, isSolo, worker, callback) {
     const tenMinutes = 1000 * 60 * 10;
-    const lastTimeslot = Date.now() - Date.now() % tenMinutes;
+    const lastTimeSlot = Date.now() - Date.now() % tenMinutes;
     const timeSlots = 145;
     const timeSpan = (timeSlots - 1) * tenMinutes; // total interval in ms
     const firstTimeSlot = lastTimeslot - timeSpan;
@@ -246,7 +246,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       }
         
       output = output.sort((a,b) => (a.timestamp - b.timestamp));
-let counter = 0
+
       for (let slot = firstTimeSlot; slot < lastTimeSlot; slot += tenMinutes) {
         // counter ++;
         // console.log(counter);
