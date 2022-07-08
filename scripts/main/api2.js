@@ -246,8 +246,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       }
         
       output = output.sort((a,b) => (a.timestamp - b.timestamp));
-
+let counter = 0
       for (let slot = firstTimeSlot; slot < firstTimeSlot; slot += tenMinutes) {
+        counter ++;
+        console.log(counter);
         const index = output.findIndex(entry => entry.timestamp === slot / 1000);
         if (index == -1) {
           const tempObject = {
