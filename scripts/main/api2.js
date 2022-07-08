@@ -244,8 +244,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           }
         });      
       }
-        
-      output = output.sort((a,b) => (a.timestamp - b.timestamp));
 
       for (let slot = firstTimeSlot; slot < lastTimeSlot; slot += tenMinutes) {
         // counter ++;
@@ -263,6 +261,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         }
       }
 
+      output = output.sort((a,b) => (a.timestamp - b.timestamp));
+      
       output.forEach((element) => {
         element.hashrate = element.work * multiplier / (tenMinutes / 1000);
         delete element.work;
