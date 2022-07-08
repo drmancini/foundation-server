@@ -247,21 +247,21 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         
       output = output.sort((a,b) => (a.timestamp - b.timestamp));
 
-      for (let slot = firstTimeSlot; slot < lastTimeSlot; slot += tenMinutes) {
-        // counter ++;
-        // console.log(counter);
-        const index = output.findIndex(entry => entry.timestamp === slot / 1000);
-        if (index == -1) {
-          const tempObject = {
-            timestamp: slot / 1000,
-            work: 0,
-            validShares: 0,
-            staleShares: 0,
-            invalidShares: 0,
-          }
-          output.push(tempObject);
-        }
-      }
+      // for (let slot = firstTimeSlot; slot < lastTimeSlot; slot += tenMinutes) {
+      //   // counter ++;
+      //   // console.log(counter);
+      //   const index = output.findIndex(entry => entry.timestamp === slot / 1000);
+      //   if (index == -1) {
+      //     const tempObject = {
+      //       timestamp: slot / 1000,
+      //       work: 0,
+      //       validShares: 0,
+      //       staleShares: 0,
+      //       invalidShares: 0,
+      //     }
+      //     output.push(tempObject);
+      //   }
+      // }
 
       output.forEach((element) => {
         element.hashrate = element.work * multiplier / (tenMinutes / 1000);
