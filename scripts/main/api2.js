@@ -1127,6 +1127,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
     const dateNow = Date.now();
     const hashrateWindow = config.statistics.hashrateWindow;
+    const hashrate24Window = 60 * 60 * 24;
     const hashrateWindowTime = (dateNow / 1000 - hashrateWindow | 0).toString();
     const onlineWindow = config.statistics.onlineWindow;
     const onlineWindowTime = dateNow / 1000 - onlineWindow | 0;
@@ -1139,11 +1140,18 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     const commands = [
       ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`],
-      ['zrangebyscore', `${ pool }:rounds:${ blockType}:current:${ solo }:hashrate`, hashrateWindowTime, '+inf'],
       ['hgetall', `${ pool }:miners:${ blockType }`],
+      ['zrangebyscore', `${ pool }:rounds:${ blockType}:current:${ solo }:hashrate`, hashrateWindowTime, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:historicals`, 0, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:snapshots`, 0, '+inf']];
     ];
     _this.executeCommands(commands, (results) => {
       const workers = {};
+      const miners = [];
+      const joined = {};
+      let minerIndex;
+      let maxHistoricalTime = 0;
+
       if (results[0]) {
         for (const [key, value] of Object.entries(results[0])) {
           const worker = JSON.parse(value);
@@ -1158,17 +1166,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         };
       }
 
-      const joined = {};
-      if (results[2]) {
+      if (results[1]) {
         for (const [key, value] of Object.entries(results[2])) {
           const miner = JSON.parse(value);
           joined[key] = miner.firstJoined;
         };
       }
 
-      const miners = [];
-      if (results[1]) {
-        results[1].forEach((entry) => {
+      if (results[2]) {
+        results[2].forEach((entry) => {
         const share = JSON.parse(entry);
         const work = /^-?\d*(\.\d+)?$/.test(share.work) ? parseFloat(share.work) : 0;
         const miner = share.worker.split('.')[0];
@@ -1177,21 +1183,69 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           minerObject = {
             miner: miner,
             work: work,
+            work24: 0,
             workerCount: workers[miner]
           };
           miners.push(minerObject);
-          } else {
+        } else {
             miners[minerIndex].work += work;
           }
         });
       }
 
-      const output = miners.sort((a,b) => b.work - a.work).slice(0, 10);
+      if (results[3]) {
+        results[3].forEach((entry) => {
+        const historical = JSON.parse(entry);
+        if (historical.time > maxHistoricalTime) {
+          maxHistoricalTime = historical.time;
+        }
+        const work24 = /^-?\d*(\.\d+)?$/.test(historical.work) ? parseFloat(historical.work) : 0;
+        const miner = historical.worker.split('.')[0];
+        minerIndex = miners.findIndex((obj => obj.miner == miner));
+        if (minerIndex == -1) {
+          minerObject = {
+            miner: miner,
+            work: 0,
+            work24: work24,
+            workerCount: workers[miner] || 0,
+          };
+          miners.push(minerObject);
+        } else {
+            miners[minerIndex].work24 += work24;
+          }
+        });
+      }
+
+      if (results[4]) {
+        results[4].forEach((entry) => {
+          const snapshot = JSON.parse(entry);
+          if (snapshot.time > maxHistoricalTime) {
+            const miner = snapshot.worker.split('.')[0];
+            const work24 = /^-?\d*(\.\d+)?$/.test(snapshot.work) ? parseFloat(snapshot.work) : 0;
+            minerIndex = miners.findIndex((obj => obj.miner == miner));
+            if (minerIndex == -1) {
+              minerObject = {
+                miner: miner,
+                work: 0,
+                work24: work24,
+                workerCount: workers[miner] || 0,
+              };
+              miners.push(minerObject);
+            } else {
+              miners[minerIndex].work24 += work24;
+            }
+          }
+        });
+      };
+
+      const output = miners.sort((a,b) => b.work24 - a.work24).slice(0, 10);
 
       output.forEach((entry) => {
         entry.firstJoined = joined[entry.miner];
         entry.hashrate = entry.work * multiplier / hashrateWindow;
+        entry.hashrate24 = entry.work24 * multiplier / hashrate24Window;
         delete entry.work;
+        delete entry.work24;
       });
 
       callback(200, {
