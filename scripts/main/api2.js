@@ -1236,7 +1236,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           }
         });
       };
-
+      console.log(joined);
       const output = miners.sort((a,b) => b.work24 - a.work24).slice(0, 10);
 
       output.forEach((entry) => {
