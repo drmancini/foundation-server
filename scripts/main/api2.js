@@ -1144,7 +1144,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       ['zrangebyscore', `${ pool }:rounds:${ blockType}:current:${ solo }:hashrate`, hashrateWindowTime, '+inf'],
       ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:historicals`, 0, '+inf'],
       ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:snapshots`, 0, '+inf']];
-    ];
     _this.executeCommands(commands, (results) => {
       const workers = {};
       const miners = [];
