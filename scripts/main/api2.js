@@ -288,7 +288,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     _this.executeCommands(commands, (results) => {
       const miner = JSON.parse(results[0]) || {};
       let hiddenEmail;
-      console.log('asd' + miner.email);
       if (miner.email != undefined) {
         hiddenEmail = miner.email.replace(/(\w{3})[\w.-]+@([\w.]+\w)/, "$1***@$2");
       } else {
