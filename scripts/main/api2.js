@@ -279,47 +279,19 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   //  API Endpoint dor /miner/details for miner [address]
-  this.minerDetails = function(pool, address, blockType, isSolo, callback) {
+  this.minerDetails = function(pool, address, blockType, callback) {
     /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
     }
-    const solo = isSolo ? 'solo' : 'shared';
-    const workers = [];
-    const commands = [
-      ['hget', `${ pool }:miners:${ blockType }`, address],
-      ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`],
-      ['hgetall', `${ pool }:rounds:${ blockType }:current:${ solo }:shares`],
-    ];
+    const commands = [['hget', `${ pool }:miners:${ blockType }`, address]];
     _this.executeCommands(commands, (results) => {
       const miner = JSON.parse(results[0]) || {};
-
-      const shares = results[2] || {};
-      for (const [key, value] of Object.entries(shares)) {
-        if (key.split('.')[0] === address) {
-          const workerObject = {
-            worker: key,
-            work: JSON.parse(value).work
-          }
-          workers.push(workerObject);
-        }
-      }
-
-      workers.sort((a, b) => b.work - a.work);
-      const worker = workers[0] || {};
-
-      // for (const [key, value] of Object.entries(results[1])) {
-      //   if (key.split('.')[0] === address) {
-      //     const workerData = JSON.parse(value);
-      //     //worker.ipHint = '*.*.*.' + workerData.ip.split('.')[3];
-      //   }
-      // }
-
       const output = {
         firstJoined: miner.firstJoined,
         payoutLimit: miner.payoutLimit || 0,
         notification: miner.alertsEnabled == 'true' ? miner.alertLimit : 0,
-        // ipHint: worker.ipHint
+        email: miner.email.replace(/(\w{3})[\w.-]+@([\w.]+\w)/, "$1***@$2") || '',
       }
       
       callback(200, {
@@ -1364,7 +1336,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.minerChart(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
             break;
           case (endpoint === 'details' && address.length > 0):
-            _this.minerDetails(pool, address, blockType, isSolo, (code, message) => callback(code, message));
+            _this.minerDetails(pool, address, blockType, (code, message) => callback(code, message));
             break;
           case (endpoint === 'payments' && address.length > 0):
             _this.minerPayments(pool, address, countervalue, page, (code, message) => callback(code, message));
