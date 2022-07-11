@@ -287,11 +287,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const commands = [['hget', `${ pool }:miners:${ blockType }`, address]];
     _this.executeCommands(commands, (results) => {
       const miner = JSON.parse(results[0]) || {};
+      const hiddenEmail = miner.email.replace(/(\w{3})[\w.-]+@([\w.]+\w)/, "$1***@$2") || '';
       const output = {
         firstJoined: miner.firstJoined,
         payoutLimit: miner.payoutLimit || 0,
         notification: miner.alertsEnabled == 'true' ? miner.alertLimit : 0,
-        email: miner.email.replace(/(\w{3})[\w.-]+@([\w.]+\w)/, "$1***@$2") || '',
+        email: hiddenEmail
       }
       
       callback(200, {
