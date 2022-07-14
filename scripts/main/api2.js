@@ -357,6 +357,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /miner/payoutSettings for miner [address]
   this.minerPayoutSettings = function(pool, body, blockType, isSolo, callback) {
     const minPayment = _this.poolConfigs[pool].primary.payments.minPayment;
+    console.log(body);
     const payoutLimit = body.payoutLimit;
 
     if (minPayment > payoutLimit) {
