@@ -43,20 +43,23 @@ const PoolServer = function (logger, client, sequelize) {
     const app = express();
     const api = new PoolApi(_this.client, _this.poolConfigs, _this.portalConfig);
     const api2 = new PoolApi2(_this.client, _this.sequelize, _this.poolConfigs, _this.portalConfig);
-    const limiter = rateLimit({ windowMs: 1 * 60 * 1000, max: 100 });
+    const limiter = rateLimit({ 
+      windowMs: 1 * 60 * 1000, 
+      max: 100 
+    });
     const cache = apicache.options({}).middleware;
 
     // Establish Middleware
     app.set('trust proxy', 1);
     app.use(bodyParser.json());
     app.use(limiter);
-    app.use(cache('1 minute'));
+    // app.use(cache('1 minute'));
     app.use(compress());
     app.use(cors());
 
     // Handle API Requests
     /* istanbul ignore next */
-    app.get('/api/v1/:pool/:endpoint?', (req, res) => {
+    app.get('/api/v1/:pool/:endpoint?', cache('1 minute'), (req, res) => {
       api.handleApiV1(req, (code, message) => {
         api.buildResponse(code, message, res);
       });
@@ -64,7 +67,7 @@ const PoolServer = function (logger, client, sequelize) {
 
     // Handle v2 API Requests
     /* istanbul ignore next */
-    app.get('/api/v2/:pool/:type/:endpoint?', (req, res) => {
+    app.get('/api/v2/:pool/:type/:endpoint?', cache('1 minute'), (req, res) => {
       api2.handleApiV2(req, (code, message) => {
         api2.buildResponse(code, message, res);
       });
@@ -72,7 +75,7 @@ const PoolServer = function (logger, client, sequelize) {
 
     // Handle v2 API PUT Requests
     /* istanbul ignore next */
-    app.put('/api/v2/:pool/:type/:endpoint?', (req, res) => {
+    app.put('/api/v2/:pool/:type/:endpoint?', cache('10 seconds'), (req, res) => {
       api2.handleApiV2(req, (code, message) => {
         api2.buildResponse(code, message, res);
       });
@@ -80,7 +83,7 @@ const PoolServer = function (logger, client, sequelize) {
 
     // Handle v3 API PUT Requests
     /* istanbul ignore next */
-    app.put('/api/v3/:pool/:type/:endpoint?', (req, res) => {
+    app.put('/api/v3/:pool/:type/:endpoint?', cache('1 minute'), (req, res) => {
       api2.handleApiV3(req, (code, message) => {
         api2.buildResponse(code, message, res);
       });
