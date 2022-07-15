@@ -848,7 +848,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
         if (miner === address) {
           if (!workers.includes(miner)) {
-            workers.push(worker);
+            workers.push(miner);
           }
 
           if (worker.time > onlineWindowTime) {
@@ -858,7 +858,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       }
       
       console.log(workers);
-      
+
       callback(200, {
         result: {
           workersOnline: workerOnlineCount,
