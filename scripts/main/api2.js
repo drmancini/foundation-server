@@ -819,17 +819,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       let workerCount = 0;
       const workers = [];
 
-      // if (results[1]) {
-      //   results[1].forEach((entry) => {
-      //     const historical = JSON.parse(entry);
-      //     const worker = historical.worker;
-      //     if (worker.split('.')[0] === address && !workers.includes(worker)) {
-      //         workers.push(worker);
-      //     }
-      //   });
-      // };
-
-      
+      if (results[1]) {
+        results[1].forEach((entry) => {
+          const historical = JSON.parse(entry);
+          const worker = historical.worker;
+          if (worker.split('.')[0] === address && !workers.includes(worker)) {
+              workers.push(worker);
+          }
+        });
+      };
 
       if (results[2]) {
         results[2].forEach((entry) => {
@@ -841,16 +839,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         });
       };
 
-
       for (const [key, value] of Object.entries(results[0])) {
         const worker = JSON.parse(value);
         const miner = worker.worker.split('.')[0] || '';
 
         if (miner === address) {
-          if (!workers.includes(worker.worker)) {
-            workers.push(worker.worker);
-          }
-
           if (worker.time > onlineWindowTime) {
             workerOnlineCount ++;
           }
