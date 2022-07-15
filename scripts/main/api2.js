@@ -829,6 +829,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         });
       };
 
+      
+
       if (results[2]) {
         results[2].forEach((entry) => {
           const snapshot = JSON.parse(entry);
@@ -838,6 +840,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           }
         });
       };
+
 
       for (const [key, value] of Object.entries(results[0])) {
         const worker = JSON.parse(value);
@@ -853,6 +856,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           }
         }
       }
+      
+      console.log(workers);
       
       callback(200, {
         result: {
