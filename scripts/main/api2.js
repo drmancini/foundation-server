@@ -816,7 +816,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     ];
     _this.executeCommands(commands, (results) => {
       let workerOnlineCount = 0;
-      let workerCount = 0;
       const workers = [];
 
       if (results[1]) {
@@ -849,8 +848,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           }
         }
       }
-      
-      console.log(workers);
 
       callback(200, {
         result: {
