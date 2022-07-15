@@ -819,15 +819,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       let workerCount = 0;
       const workers = [];
 
-      if (results[1]) {
-        results[1].forEach((entry) => {
-          const historical = JSON.parse(entry);
-          const worker = historical.worker;
-          if (worker.split('.')[0] === address && !workers.includes(worker)) {
-              workers.push(worker);
-          }
-        });
-      };
+      // if (results[1]) {
+      //   results[1].forEach((entry) => {
+      //     const historical = JSON.parse(entry);
+      //     const worker = historical.worker;
+      //     if (worker.split('.')[0] === address && !workers.includes(worker)) {
+      //         workers.push(worker);
+      //     }
+      //   });
+      // };
 
       
 
