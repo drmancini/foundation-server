@@ -53,7 +53,6 @@ const PoolServer = function (logger, client, sequelize) {
     app.set('trust proxy', 1);
     app.use(bodyParser.json());
     app.use(limiter);
-    // app.use(cache('1 minute'));
     app.use(compress());
     app.use(cors());
 

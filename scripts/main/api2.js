@@ -6,7 +6,6 @@
 
 const utils = require('./utils');
 const Algorithms = require('foundation-stratum').algorithms;
-const requestIp = require('request-ip');
 const { Sequelize } = require('sequelize');
 const PaymentsModel = require('../../models/payments.model');
 
@@ -38,7 +37,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // Main Endpoints
   //////////////////////////////////////////////////////////////////////////////
 
-  // API Endpoint for /miner/payoutSettings for miner [address]
+  // API Endpoint for /miner/alertSettings for miner [address]
   this.minerAlertSettings = function(pool, body, blockType, callback) {
     // const minPayment = _this.poolConfigs[pool].primary.payments.minPayment;
     // const payoutLimit = body.payoutLimit;
@@ -357,7 +356,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /miner/payoutSettings for miner [address]
   this.minerPayoutSettings = function(pool, body, blockType, isSolo, callback) {
     const minPayment = _this.poolConfigs[pool].primary.payments.minPayment;
-    console.log(body);
     const payoutLimit = body.payoutLimit;
 
     if (minPayment > payoutLimit) {
@@ -813,18 +811,44 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     const commands = [
       ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`],
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:historicals`, 0, '+inf'],
+      ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:snapshots`, 0, '+inf']
     ];
     _this.executeCommands(commands, (results) => {
       let workerOnlineCount = 0;
-      let workerOfflineCount = 0;
+      let workerCount = 0;
+      const workers = [];
+
+      if (results[1]) {
+        results[1].forEach((entry) => {
+          const historical = JSON.parse(entry);
+          const worker = historical.worker;
+          if (worker.split('.')[0] === address && !workers.includes(worker)) {
+              workers.push(worker);
+          }
+        });
+      };
+
+      if (results[2]) {
+        results[2].forEach((entry) => {
+          const snapshot = JSON.parse(entry);
+          const worker = snapshot.worker;
+          if (worker.split('.')[0] === address && !workers.includes(worker)) {
+              workers.push(worker);
+          }
+        });
+      };
+
       for (const [key, value] of Object.entries(results[0])) {
         const worker = JSON.parse(value);
         const miner = worker.worker.split('.')[0] || '';
+
         if (miner === address) {
-          if (worker.time >= offlineWindowTime && worker.time < onlineWindowTime) {
-            workerOfflineCount ++;
+          if (!workers.includes(miner)) {
+            workers.push(worker);
           }
-          else if (worker.time > onlineWindowTime) {
+
+          if (worker.time > onlineWindowTime) {
             workerOnlineCount ++;
           }
         }
@@ -833,7 +857,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       callback(200, {
         result: {
           workersOnline: workerOnlineCount,
-          workersOffline: workerOfflineCount
+          workersOffline: workers.length - workerOnlineCount
         }
       });
     }, callback);
