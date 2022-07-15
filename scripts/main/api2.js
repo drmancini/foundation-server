@@ -847,8 +847,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         const miner = worker.worker.split('.')[0] || '';
 
         if (miner === address) {
-          if (!workers.includes(miner)) {
-            workers.push(miner);
+          if (!workers.includes(worker.worker)) {
+            workers.push(worker.worker);
           }
 
           if (worker.time > onlineWindowTime) {
