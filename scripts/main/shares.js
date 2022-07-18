@@ -87,7 +87,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   // Manage Shares Calculations
   this.calculateShares = function(results, shareData, shareType, blockType, isSoloMining) {
     let shares;
-    const lastBlockTime = results[4];
+    const lastBlockTime = results[4].blockTime || 0;
     console.log(lastBlockTime);
     const commands = [];
     const dateNow = Date.now();
@@ -113,6 +113,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Handle Round Height Updates
     if (shareData.height > _this.curHeight) _this.curHeight = shareData.height;
     if (!isSoloMining && shareData.height < _this.curHeight) shareType = "stale";
+    if (!isSoloMining && dateNow < lastBlockTime) shareType = "stale";
 
     // Calculate Updated Share Data
     const times = _this.handleTimes(lastShare, shareType);
