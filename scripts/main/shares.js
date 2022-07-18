@@ -285,6 +285,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Handle Round Updates if Shared Block
     } else if (blockValid) {
       commands.push(['sadd', `${ _this.pool }:blocks:${ blockType }:pending`, JSON.stringify(outputBlock)]);
+      commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:previous`, 'blockTime', outputBlock.time]);
       commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'valid', 1]);
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:counts`]);
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:shares`]);
