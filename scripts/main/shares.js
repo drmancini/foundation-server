@@ -87,6 +87,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   // Manage Shares Calculations
   this.calculateShares = function(results, shareData, shareType, blockType, isSoloMining) {
     let shares;
+    const lastBlockTime = results[4].blockTime || 0;
     const commands = [];
     const dateNow = Date.now();
     const difficulty = (shareType === 'valid' ? shareData.difficulty : -shareData.difficulty);
@@ -111,6 +112,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Handle Round Height Updates
     if (shareData.height > _this.curHeight) _this.curHeight = shareData.height;
     if (!isSoloMining && shareData.height < _this.curHeight) shareType = "stale";
+    if (!isSoloMining && dateNow < lastBlockTime) shareType = "stale";
 
     // Calculate Updated Share Data
     const times = _this.handleTimes(lastShare, shareType);
@@ -285,6 +287,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Handle Round Updates if Shared Block
     } else if (blockValid) {
       commands.push(['sadd', `${ _this.pool }:blocks:${ blockType }:pending`, JSON.stringify(outputBlock)]);
+      commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:previous`, 'blockTime', outputBlock.time]);
+      commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:previous`, 'height', shareData.height]);
       commands.push(['hincrby', `${ _this.pool }:blocks:${ blockType }:counts`, 'valid', 1]);
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:counts`]);
       commands.push(['rename', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, `${ _this.pool }:rounds:${ blockType }:round-${ shareData.height }:shares`]);
@@ -338,7 +342,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       ['hgetall', `${ _this.pool }:rounds:primary:current:shared:shares`],
       ['hgetall', `${ _this.pool }:rounds:auxiliary:current:shared:shares`],
       ['hgetall', `${ _this.pool }:rounds:primary:current:solo:shares`],
-      ['hgetall', `${ _this.pool }:rounds:auxiliary:current:solo:shares`]];
+      ['hgetall', `${ _this.pool }:rounds:auxiliary:current:solo:shares`],
+      ['hgetall', `${ _this.pool }:rounds:primary:current:shared:previous`]]; // only primary / shared
     this.executeCommands(shareLookups, (results) => {
       _this.buildCommands(results, shareData, shareType, blockValid, callback, handler);
     }, handler);
