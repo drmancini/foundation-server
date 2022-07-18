@@ -114,6 +114,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     if (shareData.height > _this.curHeight) _this.curHeight = shareData.height;
     if (!isSoloMining && shareData.height < _this.curHeight) shareType = "stale";
     // if (!isSoloMining && dateNow < lastBlockTime) shareType = "stale";
+    if (!isSoloMining && dateNow < lastBlockTime) console.log('got one');
 
     // Calculate Updated Share Data
     const times = _this.handleTimes(lastShare, shareType);
