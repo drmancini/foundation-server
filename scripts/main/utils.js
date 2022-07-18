@@ -438,7 +438,7 @@ exports.processWork = function(shares, address, type, identifier) {
         const worker = share.worker.split('.')[0];
         const workValue = /^-?\d*(\.\d+)?$/.test(share.work) ? parseFloat(share.work) : 0;
         if (!address || address === share.worker || (type === 'miner' && address === worker)) {
-          output += workValue;
+          output += workValue > 0 ? workValue : 0;
         }
       }
     });
