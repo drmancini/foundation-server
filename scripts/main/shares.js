@@ -115,7 +115,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Handle Round Height Updates
     if (shareData.height > _this.curHeight) _this.curHeight = shareData.height;
     if (!isSoloMining && shareData.height < _this.curHeight) shareType = "stale";
-    if (!isSoloMining && shareData.submitTime < lastBlockTime) shareType = "stale";
+    if (!isSoloMining && lastBlockTime > 0 && shareData.submitTime < lastBlockTime) shareType = "stale";
 
     // Calculate Updated Share Data
     const times = _this.handleTimes(lastShare, shareType);
