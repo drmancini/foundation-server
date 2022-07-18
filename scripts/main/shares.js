@@ -87,6 +87,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   // Manage Shares Calculations
   this.calculateShares = function(results, shareData, shareType, blockType, isSoloMining) {
     let shares;
+    const lastBlockTime = results[4];
+    console.log(lastBlockTime);
     const commands = [];
     const dateNow = Date.now();
     const difficulty = (shareType === 'valid' ? shareData.difficulty : -shareData.difficulty);
@@ -339,7 +341,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       ['hgetall', `${ _this.pool }:rounds:primary:current:shared:shares`],
       ['hgetall', `${ _this.pool }:rounds:auxiliary:current:shared:shares`],
       ['hgetall', `${ _this.pool }:rounds:primary:current:solo:shares`],
-      ['hgetall', `${ _this.pool }:rounds:auxiliary:current:solo:shares`]];
+      ['hgetall', `${ _this.pool }:rounds:auxiliary:current:solo:shares`],
+      ['hgetall', `${ _this.pool }:rounds:primary:current:shared:previous`]]; // only primary / shared
     this.executeCommands(shareLookups, (results) => {
       _this.buildCommands(results, shareData, shareType, blockValid, callback, handler);
     }, handler);
