@@ -87,7 +87,10 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   // Manage Shares Calculations
   this.calculateShares = function(results, shareData, shareType, blockType, isSoloMining) {
     let shares;
-    const lastBlockTime = results[4].blockTime || 0;
+    let lastBlockTime;
+    if (results[4]) {
+      lastBlockTime = results[4].blockTime || 0;
+    }
     const commands = [];
     const dateNow = Date.now();
     const difficulty = (shareType === 'valid' ? shareData.difficulty : -shareData.difficulty);
