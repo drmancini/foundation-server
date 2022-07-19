@@ -9,6 +9,7 @@ const utils = require('./utils');
 const nodemailer = require("nodemailer");
 const axios = require('axios');
 const { Console } = require('console');
+const { id } = require('apicache');
 const Algorithms = require('foundation-stratum').algorithms;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -176,7 +177,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         ];
 
         daemon.cmd('getblock', rpcParams, true, (result) => {
-          console.log(result);
+          console.log(result.tx.filter((id) => id.txid == block.transaction));
         });
       });
 
