@@ -56,7 +56,7 @@
     "dateformat": "4.6.3",
     "express": "4.17.3",
     "express-rate-limit": "^5.5.1",
-    "foundation-stratum": "https://github.com/drmancini/foundation-stratum.git#shareType-fix",
+    "foundation-stratum": "https://github.com/drmancini/foundation-v1-stratum.git",
     "nodemailer": "^6.7.5",
     "nodemon": "2.0.15",
     "pg": "^8.7.3",
