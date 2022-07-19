@@ -880,13 +880,14 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       
       let luckSum = 0;
       let blockCount = 0;
+      let oldAverage = 0;
 
       blocks.filter((block) => block.time > dateNow - hundredDays).forEach((block) => {
         luckSum += block.luck;
         blockCount ++;
       });
       output.hundredDays = blockCount > 0 ? luckSum / blockCount : null;
-      output.result = blockCount > 0 ? luckSum / blockCount : null;
+      oldAverage = blockCount > 0 ? luckSum / blockCount : null;
       luckSum = 0;
       blockCount = 0;
 
@@ -903,10 +904,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         blockCount ++;
       });
       output.sevenDays = blockCount > 0 ? luckSum / blockCount : null;
-      output.result = 
       
       callback(200, {
-        result: output,
+        result: oldAverage,
+        newResult: output,
       });
     }, callback);
   };
