@@ -179,19 +179,19 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           const transactions = result.response.tx.filter(id => id.txid == block.transaction);
           let totalReward = 0;
 
-          console.log(transactions[0].vout);
+          // console.log(transactions[0].vout);
 
-          // transactions.forEach(transaction => {
-          //   if (transaction.n == 0) {
-          //     console.log('miners: ' + transaction.value);
-          //     totalReward += transaction.value;
-          //   }
+          transactions[0].vout.forEach(transaction => {
+            if (transaction.n == 0) {
+              console.log('miners: ' + transaction.value);
+              totalReward += transaction.value;
+            }
 
-          //   if (transaction.n == 3) {
-          //     console.log('pool: ' + transaction.value);
-          //     totalReward += transaction.value;
-          //   }
-          // });
+            if (transaction.n == 3) {
+              console.log('pool: ' + transaction.value);
+              totalReward += transaction.value;
+            }
+          });
           console.log('total reward: ' + totalReward);
           
         });
