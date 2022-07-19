@@ -177,9 +177,21 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         ];
 
         daemon.cmd('getblock', rpcParams, true, (result) => {
-          console.log(result.response.tx.filter(id => id.txid == block.transaction));
-          // const blockData = JSON.parse(result);
-          // console.log(blockData);
+          const transactions = result.response.tx.filter(id => id.txid == block.transaction).vout;
+          let totalReward = 0;
+          transactions.forEach(transaction => {
+            if (transaction.n == 0) {
+              console.log('miners: ' + transaction.value);
+              totalReward += transaction.value;
+            }
+
+            if (transaction.n == 3) {
+              console.log('pool: ' + transaction.value);
+              totalReward += transaction.value;
+            }
+          });
+          console.log('total reward: ' + totalReward += transaction.value);
+          
         });
       });
 
