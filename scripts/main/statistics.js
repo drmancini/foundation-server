@@ -167,40 +167,36 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const blocksLookups = [
       ['smembers', `${_this.pool}:blocks:${blockType}:confirmed`]];
     _this.executeCommands(blocksLookups, (results) => {
-      const blocks = results[0].slice(0, 20);
+      // const blocks = results[0].slice(0, 20);
+      const blocks = results[0]
       blocks.forEach((element) => {
         const block = JSON.parse(element);
+        const newBlock = block;
         const rpcParams = [
           block.hash,
           2
         ];
 
-        daemon.cmd('getblock', rpcParams, true, (result) => {
-          const transactions = result.response.tx.filter(id => id.txid == block.transaction);
-          let totalReward = 0;
+        commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmedbak`, block]);
 
-          transactions[0].vout.forEach(transaction => {
-            if (transaction.n == 1) {
-              console.log('node: ' + transaction.value);
-              totalReward -= transaction.valueSat;
-            }
+        // daemon.cmd('getblock', rpcParams, true, (result) => {
+        //   const transactions = result.response.tx.filter(id => id.txid == block.transaction);
 
-            if (transaction.n == 2) {
-              console.log('dev: ' + transaction.value);
-              totalReward -= transaction.valueSat;
-            }
-          });
-          const reward = totalReward + block.reward
-          console.log('total reward: ' + reward );
+        //   transactions[0].vout.forEach(transaction => {
+        //     if (transaction.n == 1) {
+        //       newBlock.nodeReward = transaction.valueSat;
+        //     }
+
+        //     if (transaction.n == 2) {
+        //       newBlock.founderReward = transaction.valueSat;
+        //     }
+        //   });
           
-        });
+        //   commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed`, block]);
+        //   commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmed`, newBlock]);
+        // });
       });
 
-      // if (blocks.length > 100) {
-      //   blocks.slice(0, blocks.length - 100).forEach((block) => {
-      //     commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed`, block]);
-      //   });
-      // }
       callback(commands);
     }, handler);
 
