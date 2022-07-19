@@ -206,12 +206,11 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           // console.log(originalBlock);
           // console.log(newBlock);
           // console.log(JSON.stringify(newBlock));
-
           commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed`, originalBlock]);
           commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmed`, JSON.stringify(newBlock)]);
         });
       });
-      console.log('asd');
+      console.log(commands);
       callback(commands);
     }, handler);
 
