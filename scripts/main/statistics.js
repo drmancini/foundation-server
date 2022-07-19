@@ -196,7 +196,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         //   commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmed`, newBlock]);
         // });
       });
-
+      console.log('asd');
       callback(commands);
     }, handler);
 
