@@ -208,6 +208,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           });
           commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmed`, JSON.stringify(newBlock)]);
           callback(commands);
+          console.log('asdasd');
         });
       });
     }, handler);
