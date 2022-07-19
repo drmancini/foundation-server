@@ -172,7 +172,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         // block.transaction
         const rpcParams = [
           block.hash,
-          0
+          2
         ];
 
         daemon.cmd('getblock', rpcParams, true, (result) => {
