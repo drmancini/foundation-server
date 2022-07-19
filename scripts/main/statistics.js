@@ -6,7 +6,6 @@
 
 const https = require('https');
 const utils = require('./utils');
-const fs = require('fs')
 const nodemailer = require("nodemailer");
 const axios = require('axios');
 const { Console } = require('console');
@@ -163,57 +162,57 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   };
 
   // Handle Old Blocks rewards
-  this.handleBlockRewards = function (daemon, blockType, callback, handler) {
-    const commands = [];
-    const blocksLookups = [
-      ['smembers', `${_this.pool}:blocks:${blockType}:confirmed`]];
-    _this.executeCommands(blocksLookups, (results) => {
-      const blocks = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time).slice(119, 135);
-      // const blocks = results[0]
-      blocks.forEach((element) => {
-        const originalBlock = element;
-        const block = JSON.parse(element);
-        const newBlock = {
-          time: block.time,
-          height: block.height,
-          hash: block.hash,
-          identifier: block.identifier, 
-          reward: block.reward,
-          transaction: block.transaction, 
-          difficulty: block.difficulty,
-          luck: block.luck,
-          worker: block.worker,
-          solo: block.solo,
-          round: block.round
-        };
-        const rpcParams = [
-          block.hash,
-          2
-        ];
+  // this.handleBlockRewards = function (daemon, blockType, callback, handler) {
+  //   const commands = [];
+  //   const blocksLookups = [
+  //     ['smembers', `${_this.pool}:blocks:${blockType}:confirmed`]];
+  //   _this.executeCommands(blocksLookups, (results) => {
+  //     const blocks = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time).slice(119, 135);
+  //     // const blocks = results[0]
+  //     blocks.forEach((element) => {
+  //       const originalBlock = element;
+  //       const block = JSON.parse(element);
+  //       const newBlock = {
+  //         time: block.time,
+  //         height: block.height,
+  //         hash: block.hash,
+  //         identifier: block.identifier, 
+  //         reward: block.reward,
+  //         transaction: block.transaction, 
+  //         difficulty: block.difficulty,
+  //         luck: block.luck,
+  //         worker: block.worker,
+  //         solo: block.solo,
+  //         round: block.round
+  //       };
+  //       const rpcParams = [
+  //         block.hash,
+  //         2
+  //       ];
 
-        // commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed `, originalBlock]);
+  //       // commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed `, originalBlock]);
 
-        daemon.cmd('getblock', rpcParams, true, (result) => {
-          const testCommands = [];
-          const transactions = result.response.tx.filter(id => id.txid == block.transaction);
+  //       daemon.cmd('getblock', rpcParams, true, (result) => {
+  //         const testCommands = [];
+  //         const transactions = result.response.tx.filter(id => id.txid == block.transaction);
 
-          transactions[0].vout.forEach(transaction => {
-            if (transaction.n == 1) {
-              newBlock.nodeReward = transaction.valueSat;
-            }
+  //         transactions[0].vout.forEach(transaction => {
+  //           if (transaction.n == 1) {
+  //             newBlock.nodeReward = transaction.valueSat;
+  //           }
 
-            if (transaction.n == 2) {
-              newBlock.founderReward = transaction.valueSat;
-            }
-          });
-          commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmednew`, JSON.stringify(newBlock)]);
-          callback(commands);
-          console.log('asdasd');
-        });
-      });
-    }, handler);
+  //           if (transaction.n == 2) {
+  //             newBlock.founderReward = transaction.valueSat;
+  //           }
+  //         });
+  //         commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmednew`, JSON.stringify(newBlock)]);
+  //         callback(commands);
+  //         console.log('asdasd');
+  //       });
+  //     });
+  //   }, handler);
 
-  };
+  // };
 
 
   // Handle Hashrate Information in Redis
@@ -427,7 +426,6 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 
       snapshotWorkers.forEach((worker) => {
         if (!snapshots.find((snapshot) => snapshot.worker === worker.worker)) {
-          // console.log(worker);
           commands.push(['zadd', `${_this.pool}:rounds:${blockType}:current:shared:snapshots`, minuteEnd / 1000, JSON.stringify(worker)]);
         }
       });
@@ -510,69 +508,69 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   this.handleIntervals = function (daemon, blockType) {
 
     // Handle Coingecko Data
-    // setInterval(() => {
-    //   _this.handleCoingeckoData(blockType, (results) => {
-    //     _this.executeCommands(results, () => {
-    //       if (_this.poolConfig.debug) {
-    //         logger.debug('Statistics', _this.pool, `Finished updating Raptoreum data from Coingecko.`);
-    //       }
-    //     }, () => { });
-    //   }, () => { });
-    // }, 1 * 60 * 1000);
-
-    // Handle User Info Interval
-    // setInterval(() => {
-    //   _this.handleUsersInfo(blockType, (results) => {
-    //     _this.executeCommands(results, () => {
-    //       if (_this.poolConfig.debug) {
-    //         logger.debug('Statistics', _this.pool, `Finished updating user statistics for ${blockType} configuration.`);
-    //       }
-    //     }, () => { });
-    //   }, () => { });
-    // }, _this.usersInterval * 1000);
-
-    // Solve old blocks
     setInterval(() => {
-      _this.handleBlockRewards(daemon, blockType, (results) => {
+      _this.handleCoingeckoData(blockType, (results) => {
         _this.executeCommands(results, () => {
           if (_this.poolConfig.debug) {
-            logger.debug('Statistics', _this.pool, `Finished updating network statistics for ${blockType} configuration.`);
+            logger.debug('Statistics', _this.pool, `Finished updating Raptoreum data from Coingecko.`);
           }
         }, () => { });
       }, () => { });
-    }, 5 * 1000);
+    }, 1 * 60 * 1000);
+
+    // Handle User Info Interval
+    setInterval(() => {
+      _this.handleUsersInfo(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating user statistics for ${blockType} configuration.`);
+          }
+        }, () => { });
+      }, () => { });
+    }, _this.usersInterval * 1000);
+
+    // Solve old blocks
+    // setInterval(() => {
+    //   _this.handleBlockRewards(daemon, blockType, (results) => {
+    //     _this.executeCommands(results, () => {
+    //       if (_this.poolConfig.debug) {
+    //         logger.debug('Statistics', _this.pool, `Finished updating network statistics for ${blockType} configuration.`);
+    //       }
+    //     }, () => { });
+    //   }, () => { });
+    // }, 5 * 1000);
 
     // Handle Worker Mining History
-    // setInterval(() => {
-    //   _this.handleWorkerInfo(blockType, (results) => {
-    //     _this.executeCommands(results, () => {
-    //       if (_this.poolConfig.debug) {
-    //         logger.debug('Statistics', _this.pool, `Finished updating worker snapshots for ${blockType} configuration.`);
-    //       }
-    //     }, () => { });
-    //   }, () => { });
-    // }, 10 * 1000); // every 20 seconds
+    setInterval(() => {
+      _this.handleWorkerInfo(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating worker snapshots for ${blockType} configuration.`);
+          }
+        }, () => { });
+      }, () => { });
+    }, 10 * 1000); // every 20 seconds
 
     // Handle Offline Worker Tagging 
-    // setInterval(() => {
-    //   _this.handleOfflineWorkers(blockType, (results) => {
-    //     _this.executeCommands(results, () => {
-    //       if (_this.poolConfig.debug) {
-    //         logger.debug('Statistics', _this.pool, `Finished updating offline worker tagginng for ${blockType} configuration.`);
-    //       }
-    //     }, () => { });
-    //   }, () => { });
-    // }, 10 * 1000); // every minute
+    setInterval(() => {
+      _this.handleOfflineWorkers(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating offline worker tagginng for ${blockType} configuration.`);
+          }
+        }, () => { });
+      }, () => { });
+    }, 10 * 1000); // every minute
 
-    // setInterval(() => {
-    //   _this.handleWorkerInfo2(blockType, (results) => {
-    //     _this.executeCommands(results, () => {
-    //       if (_this.poolConfig.debug) {
-    //         logger.debug('Statistics', _this.pool, `Finished updating historical worker snapshots for ${blockType} configuration.`);
-    //       }
-    //     }, () => { });
-    //   }, () => { });
-    // }, 1 * 60 * 1000); // every 3 minutes
+    setInterval(() => {
+      _this.handleWorkerInfo2(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating historical worker snapshots for ${blockType} configuration.`);
+          }
+        }, () => { });
+      }, () => { });
+    }, 1 * 60 * 1000); // every 3 minutes
 
     // KEEP DISABLED
     // Handle Blocks Info Interval
@@ -588,37 +586,37 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     // }, _this.blocksInterval * 1000);
 
     // Handle Hashrate Data Interval
-    // setInterval(() => {
-    //   _this.handleHashrateInfo(blockType, (results) => {
-    //     _this.executeCommands(results, () => {
-    //       if (_this.poolConfig.debug) {
-    //         logger.debug('Statistics', _this.pool, `Finished updating hashrate statistics for ${blockType} configuration.`);
-    //       }
-    //     }, () => { });
-    //   });
-    // }, _this.hashrateInterval * 1000);
+    setInterval(() => {
+      _this.handleHashrateInfo(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating hashrate statistics for ${blockType} configuration.`);
+          }
+        }, () => { });
+      });
+    }, _this.hashrateInterval * 1000);
 
     // Handle Historical Data Interval
-    // setInterval(() => {
-    //   _this.handleHistoricalInfo(blockType, (results) => {
-    //     _this.executeCommands(results, () => {
-    //       if (_this.poolConfig.debug) {
-    //         logger.debug('Statistics', _this.pool, `Finished updating historical statistics for ${blockType} configuration.`);
-    //       }
-    //     }, () => { });
-    //   }, () => { });
-    // }, _this.historicalInterval * 1000);
+    setInterval(() => {
+      _this.handleHistoricalInfo(blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating historical statistics for ${blockType} configuration.`);
+          }
+        }, () => { });
+      }, () => { });
+    }, _this.historicalInterval * 1000);
 
     // Handle Mining Info Interval
-    // setInterval(() => {
-    //   _this.handleMiningInfo(daemon, blockType, (results) => {
-    //     _this.executeCommands(results, () => {
-    //       if (_this.poolConfig.debug) {
-    //         logger.debug('Statistics', _this.pool, `Finished updating network statistics for ${blockType} configuration.`);
-    //       }
-    //     }, () => { });
-    //   }, () => { });
-    // }, _this.refreshInterval * 1000);
+    setInterval(() => {
+      _this.handleMiningInfo(daemon, blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating network statistics for ${blockType} configuration.`);
+          }
+        }, () => { });
+      }, () => { });
+    }, _this.refreshInterval * 1000);
 
     // KEEP DISABLED
     // Handle Payment Info Interval
