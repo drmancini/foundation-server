@@ -165,7 +165,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   this.handleBlockRewards = function (daemon, blockType, callback, handler) {
     const commands = [];
     const blocksLookups = [
-      ['smembers', `${_this.pool}:blocks:${blockType}:kicked`]];
+      ['smembers', `${_this.pool}:blocks:${blockType}:confirmed`]];
     _this.executeCommands(blocksLookups, (results) => {
       const blocks = results[0];
       blocks.forEach((element) => {
