@@ -168,7 +168,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const blocksLookups = [
       ['smembers', `${_this.pool}:blocks:${blockType}:confirmed`]];
     _this.executeCommands(blocksLookups, (results) => {
-      const blocks = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time).slice(0, 2);
+      const blocks = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time).slice(0, 15);
       // const blocks = results[0]
       blocks.forEach((element) => {
         const originalBlock = element;
@@ -191,7 +191,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           2
         ];
 
-        commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed `, originalBlock]);
+        // commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed `, originalBlock]);
 
         daemon.cmd('getblock', rpcParams, true, (result) => {
           const testCommands = [];
@@ -206,7 +206,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
               newBlock.founderReward = transaction.valueSat;
             }
           });
-          commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmed`, JSON.stringify(newBlock)]);
+          commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmednew`, JSON.stringify(newBlock)]);
           callback(commands);
           console.log('asdasd');
         });
