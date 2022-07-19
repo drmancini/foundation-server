@@ -167,7 +167,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const blocksLookups = [
       ['smembers', `${_this.pool}:blocks:${blockType}:confirmed`]];
     _this.executeCommands(blocksLookups, (results) => {
-      const blocks = results[0][0];
+      const blocks = results[0].slice(0, 3);
       blocks.forEach((element) => {
         const block = JSON.parse(element);
         const rpcParams = [
