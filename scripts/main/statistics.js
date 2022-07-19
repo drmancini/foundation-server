@@ -169,7 +169,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const blocksLookups = [
       ['smembers', `${_this.pool}:blocks:${blockType}:confirmed`]];
     _this.executeCommands(blocksLookups, (results) => {
-      const blocks = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time).slice(0, 2);
+      const blocks = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time).slice(0, 1);
       // const blocks = results[0]
       blocks.forEach((element) => {
         const originalBlock = element;
@@ -193,6 +193,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         ];
 
         daemon.cmd('getblock', rpcParams, true, (result) => {
+          const testCommands = [];
           const transactions = result.response.tx.filter(id => id.txid == block.transaction);
 
           transactions[0].vout.forEach(transaction => {
@@ -205,14 +206,13 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             }
           });
         
-          const deleteBlock = 'srem ' + `${_this.pool}:blocks:${blockType}:confirmed ` + originalBlock;
-          const addBlock = 'sadd ' + `${_this.pool}:blocks:${blockType}:confirmed` + JSON.stringify(newBlock);
+          testCommands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed `, originalBlock]);
+          testCommands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmed`, JSON.stringify(newBlock)]);
 
-          fs.appendFileSync('./commands.txt', deleteBlock + '\n');
-          fs.appendFileSync('./commands.txt', addBlock) + '\n';
-          console.log('done')
+          _this.executeCommands(testCommands, (results) => {
+            callback(commands);
+          }, handler);
         });
-        callback(commands);
       });
     }, handler);
 
