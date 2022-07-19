@@ -170,7 +170,12 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       blocks.forEach((element) => {
         const block = JSON.parse(element);
         // block.transaction
-        daemon.cmd('getblock', block.hash, true, (result) => {
+        const rpcParams = [
+          block.hash,
+          0
+        ];
+
+        daemon.cmd('getblock', rpcParams, true, (result) => {
           console.log(result);
         });
       });
