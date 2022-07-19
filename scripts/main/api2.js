@@ -886,6 +886,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         blockCount ++;
       });
       output.hundredDays = blockCount > 0 ? luckSum / blockCount : null;
+      output.result = blockCount > 0 ? luckSum / blockCount : null;
       luckSum = 0;
       blockCount = 0;
 
@@ -902,6 +903,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         blockCount ++;
       });
       output.sevenDays = blockCount > 0 ? luckSum / blockCount : null;
+      output.result = 
       
       callback(200, {
         result: output,
