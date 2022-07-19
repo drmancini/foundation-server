@@ -167,7 +167,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const blocksLookups = [
       ['smembers', `${_this.pool}:blocks:${blockType}:confirmed`]];
     _this.executeCommands(blocksLookups, (results) => {
-      const blocks = results[0].slice(0, 20);
+      const blocks = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time).slice(0, 2);
       // const blocks = results[0]
       blocks.forEach((element) => {
         const block = JSON.parse(element);
@@ -190,27 +190,16 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             }
           });
         
-          commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed`, JSON.stringify(block)]);
-          commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmed`, JSON.stringify(newBlock)]);
+          console.log(block);
+          console.log(newBlock);
+          //commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed`, JSON.stringify(block)]);
+          //commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmed`, JSON.stringify(newBlock)]);
         });
       });
       console.log('asd');
       callback(commands);
     }, handler);
 
-    // daemon.cmd('getblockcount', [], true, (result) => {
-    //   if (result.error) {
-    //     logger.error('Statistics', _this.pool, `Error with statistics daemon: ${JSON.stringify(result.error)}`);
-    //     handler(result.error);
-    //   } else {
-    //     const data = result.response;
-    //     console.log('height: ' + data);
-    //     // commands.push(['hset', `${_this.pool}:statistics:${blockType}:network`, 'difficulty', data.difficulty]);
-    //     // commands.push(['hset', `${_this.pool}:statistics:${blockType}:network`, 'hashrate', data.networkhashps]);
-    //     // commands.push(['hset', `${_this.pool}:statistics:${blockType}:network`, 'height', data.blocks]);
-    //     callback(commands);
-    //   }
-    // });
   };
 
 
