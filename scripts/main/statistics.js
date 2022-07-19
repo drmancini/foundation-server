@@ -167,7 +167,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const blocksLookups = [
       ['smembers', `${_this.pool}:blocks:${blockType}:confirmed`]];
     _this.executeCommands(blocksLookups, (results) => {
-      const blocks = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time).slice(0, 1);
+      const blocks = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time).slice(0, 15);
       // const blocks = results[0]
       blocks.forEach((element) => {
         const originalBlock = element;
@@ -203,12 +203,12 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             }
           });
         
-          console.log(originalBlock);
-          console.log(newBlock);
-          console.log(JSON.stringify(newBlock));
+          // console.log(originalBlock);
+          // console.log(newBlock);
+          // console.log(JSON.stringify(newBlock));
 
-          // commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed`, JSON.stringify(block)]);
-          // commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmed`, JSON.stringify(newBlock)]);
+          commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed`, originalBlock]);
+          commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmed`, JSON.stringify(newBlock)]);
         });
       });
       console.log('asd');
