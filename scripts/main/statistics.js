@@ -177,7 +177,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           2
         ];
 
-        commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmedbak`, block]);
+
+        commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmedbak`, JSON.stringify(block)]);
 
         // daemon.cmd('getblock', rpcParams, true, (result) => {
         //   const transactions = result.response.tx.filter(id => id.txid == block.transaction);
