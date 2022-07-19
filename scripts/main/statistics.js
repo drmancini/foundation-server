@@ -176,12 +176,11 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         ];
 
         daemon.cmd('getblock', rpcParams, true, (result) => {
-          console.log(block.transaction);
-          console.log(result.response.tx);
-          // const transactions = result.response.tx.filter(id => id.txid == block.transaction);
+          const transactions = result.response.tx.filter(id => id.txid == block.transaction);
           let totalReward = 0;
 
-          // console.log(transactions);
+          console.log(transactions);
+
           // transactions.forEach(transaction => {
           //   if (transaction.n == 0) {
           //     console.log('miners: ' + transaction.value);
