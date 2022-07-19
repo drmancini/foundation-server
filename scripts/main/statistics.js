@@ -190,7 +190,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
               totalReward -= transaction.value;
             }
           });
-          console.log('total reward: ' + totalReward + block.reward );
+          const reward = totalReward + block.reward
+          console.log('total reward: ' + reward );
           
         });
       });
