@@ -179,7 +179,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           const transactions = result.response.tx.filter(id => id.txid == block.transaction);
           let totalReward = 0;
 
-          console.log(transactions);
+          console.log(transactions.vout);
 
           // transactions.forEach(transaction => {
           //   if (transaction.n == 0) {
