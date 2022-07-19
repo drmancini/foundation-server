@@ -163,19 +163,39 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   // Handle Old Blocks rewards
   this.handleBlockRewards = function (daemon, blockType, callback, handler) {
     const commands = [];
-    daemon.cmd('getblockcount', [], true, (result) => {
-      if (result.error) {
-        logger.error('Statistics', _this.pool, `Error with statistics daemon: ${JSON.stringify(result.error)}`);
-        handler(result.error);
-      } else {
-        const data = result.response;
-        console.log('height: ' + data);
-        // commands.push(['hset', `${_this.pool}:statistics:${blockType}:network`, 'difficulty', data.difficulty]);
-        // commands.push(['hset', `${_this.pool}:statistics:${blockType}:network`, 'hashrate', data.networkhashps]);
-        // commands.push(['hset', `${_this.pool}:statistics:${blockType}:network`, 'height', data.blocks]);
-        callback(commands);
-      }
-    });
+    const blocksLookups = [
+      ['smembers', `${_this.pool}:blocks:${blockType}:kicked`]];
+    _this.executeCommands(blocksLookups, (results) => {
+      const blocks = results[0];
+      blocks.forEach((element) => {
+        const block = JSON.parse(element);
+        // block.transaction
+        daemon.cmd('getblock', block.hash, true, (result) => {
+          console.log(result);
+        });
+      });
+
+      // if (blocks.length > 100) {
+      //   blocks.slice(0, blocks.length - 100).forEach((block) => {
+      //     commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed`, block]);
+      //   });
+      // }
+      callback(commands);
+    }, handler);
+
+    // daemon.cmd('getblockcount', [], true, (result) => {
+    //   if (result.error) {
+    //     logger.error('Statistics', _this.pool, `Error with statistics daemon: ${JSON.stringify(result.error)}`);
+    //     handler(result.error);
+    //   } else {
+    //     const data = result.response;
+    //     console.log('height: ' + data);
+    //     // commands.push(['hset', `${_this.pool}:statistics:${blockType}:network`, 'difficulty', data.difficulty]);
+    //     // commands.push(['hset', `${_this.pool}:statistics:${blockType}:network`, 'hashrate', data.networkhashps]);
+    //     // commands.push(['hset', `${_this.pool}:statistics:${blockType}:network`, 'height', data.blocks]);
+    //     callback(commands);
+    //   }
+    // });
   };
 
 
