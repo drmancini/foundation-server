@@ -167,8 +167,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const blocksLookups = [
       ['smembers', `${_this.pool}:blocks:${blockType}:confirmed`]];
     _this.executeCommands(blocksLookups, (results) => {
-      // const blocks = results[0].slice(0, 20);
-      const blocks = results[0]
+      const blocks = results[0].slice(0, 20);
+      // const blocks = results[0]
       blocks.forEach((element) => {
         const block = JSON.parse(element);
         const newBlock = block;
@@ -177,25 +177,22 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           2
         ];
 
+        daemon.cmd('getblock', rpcParams, true, (result) => {
+          const transactions = result.response.tx.filter(id => id.txid == block.transaction);
 
-        commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmedbak`, JSON.stringify(block)]);
+          transactions[0].vout.forEach(transaction => {
+            if (transaction.n == 1) {
+              newBlock.nodeReward = transaction.valueSat;
+            }
 
-        // daemon.cmd('getblock', rpcParams, true, (result) => {
-        //   const transactions = result.response.tx.filter(id => id.txid == block.transaction);
-
-        //   transactions[0].vout.forEach(transaction => {
-        //     if (transaction.n == 1) {
-        //       newBlock.nodeReward = transaction.valueSat;
-        //     }
-
-        //     if (transaction.n == 2) {
-        //       newBlock.founderReward = transaction.valueSat;
-        //     }
-        //   });
-          
-        //   commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed`, block]);
-        //   commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmed`, newBlock]);
-        // });
+            if (transaction.n == 2) {
+              newBlock.founderReward = transaction.valueSat;
+            }
+          });
+        
+          commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed`, JSON.stringify(block)]);
+          commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmed`, JSON.stringify(newBlock)]);
+        });
       });
       console.log('asd');
       callback(commands);
