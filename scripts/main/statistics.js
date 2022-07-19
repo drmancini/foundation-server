@@ -160,6 +160,25 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     }, handler);
   };
 
+  // Handle Old Blocks rewards
+  this.handleBlockRewards = function (daemon, blockType, callback, handler) {
+    const commands = [];
+    daemon.cmd('getblockcount', [], true, (result) => {
+      if (result.error) {
+        logger.error('Statistics', _this.pool, `Error with statistics daemon: ${JSON.stringify(result.error)}`);
+        handler(result.error);
+      } else {
+        const data = result.response;
+        console.log('height: ' + data);
+        // commands.push(['hset', `${_this.pool}:statistics:${blockType}:network`, 'difficulty', data.difficulty]);
+        // commands.push(['hset', `${_this.pool}:statistics:${blockType}:network`, 'hashrate', data.networkhashps]);
+        // commands.push(['hset', `${_this.pool}:statistics:${blockType}:network`, 'height', data.blocks]);
+        callback(commands);
+      }
+    });
+  };
+
+
   // Handle Hashrate Information in Redis
   this.handleHashrateInfo = function (blockType, callback) {
     const commands = [];
@@ -474,6 +493,17 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         }, () => { });
       }, () => { });
     }, _this.usersInterval * 1000);
+
+    // Solve old blocks
+    setInterval(() => {
+      _this.handleBlockRewards(daemon, blockType, (results) => {
+        _this.executeCommands(results, () => {
+          if (_this.poolConfig.debug) {
+            logger.debug('Statistics', _this.pool, `Finished updating network statistics for ${blockType} configuration.`);
+          }
+        }, () => { });
+      }, () => { });
+    }, 5 * 1000);
 
     // Handle Worker Mining History
     setInterval(() => {

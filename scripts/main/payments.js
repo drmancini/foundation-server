@@ -977,11 +977,6 @@ const PoolPayments = function (logger, client, sequelize) {
         }
       });
     }, 100);
-
-    // Start Payment Functionality with Initial Check
-    setTimeout(() => {
-      daemon.cmd('getblockcount');
-    }, 10);
   };
 
   // Start Payment Interval Management
