@@ -177,7 +177,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         ];
 
         daemon.cmd('getblock', rpcParams, true, (result) => {
-          console.log(result.response);
+          console.log(result.response.tx.filter(id => id.txid == block.transaction));
           // const blockData = JSON.parse(result);
           // console.log(blockData);
         });
