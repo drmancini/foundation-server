@@ -205,11 +205,12 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             }
           });
         
-          const deleteBlock = 'srem ' + `${_this.pool}:blocks:${blockType}:confirmed ` + originalBlock + '\n';
-          const addBlock = 'sadd ' + `${_this.pool}:blocks:${blockType}:confirmed` + JSON.stringify(newBlock)  + '\n';
+          const deleteBlock = 'srem ' + `${_this.pool}:blocks:${blockType}:confirmed ` + originalBlock;
+          const addBlock = 'sadd ' + `${_this.pool}:blocks:${blockType}:confirmed` + JSON.stringify(newBlock);
 
-          fs.appendFileSync('./commands.txt', deleteBlock);
-          fs.appendFileSync('./commands.txt', addBlock);
+          fs.appendFileSync('./commands.txt', deleteBlock + '\n');
+          fs.appendFileSync('./commands.txt', addBlock) + '\n';
+          console.log('done')
         });
         callback(commands);
       });
