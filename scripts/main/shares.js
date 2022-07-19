@@ -229,8 +229,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       height: shareData.height,
       hash: shareData.hash,
       reward: shareData.reward,
-      // nodeReward: shareData.smartnodeReward, // added
-      // founderReward: shareData.founderReward, // added
+      nodeReward: shareData.smartnodeReward, // added
+      founderReward: shareData.founderReward, // added
       identifier: identifier,
       transaction: shareData.transaction,
       difficulty: blockDifficulty,
