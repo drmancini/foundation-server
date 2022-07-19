@@ -6,6 +6,7 @@
 
 const https = require('https');
 const utils = require('./utils');
+const fs = require('fs')
 const nodemailer = require("nodemailer");
 const axios = require('axios');
 const { Console } = require('console');
@@ -164,10 +165,11 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
   // Handle Old Blocks rewards
   this.handleBlockRewards = function (daemon, blockType, callback, handler) {
     const commands = [];
+    const moreCommands = [];
     const blocksLookups = [
       ['smembers', `${_this.pool}:blocks:${blockType}:confirmed`]];
     _this.executeCommands(blocksLookups, (results) => {
-      const blocks = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time)[0];
+      const blocks = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time).slice(0, 15);
       // const blocks = results[0]
       blocks.forEach((element) => {
         const originalBlock = element;
@@ -203,11 +205,13 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             }
           });
         
-          commands.push(['srem', `${_this.pool}:blocks:${blockType}:confirmed`, originalBlock]);
-          console.log(commands);
-          commands.push(['sadd', `${_this.pool}:blocks:${blockType}:confirmed`, JSON.stringify(newBlock)]);
-          callback(commands);
+          const deleteBlock = 'srem ' + `${_this.pool}:blocks:${blockType}:confirmed ` + originalBlock;
+          const addBlock = 'sadd ' + `${_this.pool}:blocks:${blockType}:confirmed` + JSON.stringify(newBlock);
+
+          fs.appendFileSync('./commands.txt', deleteBlock);
+          fs.appendFileSync('./commands.txt', addBlock);
         });
+        callback(commands);
       });
     }, handler);
 
