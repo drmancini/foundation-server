@@ -171,7 +171,19 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       // const blocks = results[0]
       blocks.forEach((element) => {
         const block = JSON.parse(element);
-        const newBlock = block;
+        const newBlock = {
+          time: block.time,
+          height: block.height,
+          hash: block.hash,
+          identifier: block.identifier, 
+          reward: block.reward,
+          transaction: block.transaction, 
+          difficulty: block.difficulty,
+          luck: block.luck,
+          worker: block.worker,
+          solo: block.solo,
+          round: block.round
+        };
         const rpcParams = [
           block.hash,
           2
