@@ -182,12 +182,12 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           transactions[0].vout.forEach(transaction => {
             if (transaction.n == 1) {
               console.log('node: ' + transaction.value);
-              totalReward -= transaction.valuesat;
+              totalReward -= transaction.valueSat;
             }
 
             if (transaction.n == 2) {
               console.log('dev: ' + transaction.value);
-              totalReward -= transaction.valuesat;
+              totalReward -= transaction.valueSat;
             }
           });
           const reward = totalReward + block.reward
