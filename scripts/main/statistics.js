@@ -168,7 +168,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const blocksLookups = [
       ['smembers', `${_this.pool}:blocks:${blockType}:confirmed`]];
     _this.executeCommands(blocksLookups, (results) => {
-      const blocks = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time).slice(59, 75);
+      const blocks = results[0].sort((a, b) => JSON.parse(a).time - JSON.parse(b).time).slice(74, 90);
       // const blocks = results[0]
       blocks.forEach((element) => {
         const originalBlock = element;
