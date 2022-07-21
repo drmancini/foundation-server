@@ -168,6 +168,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Handle Shared Effort, Share Updates
     } else if (shareType === 'valid') {
+      console.log('work + ' + work);
+      console.log('times + ' + times);
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateShare)]);
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'valid', 1]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
