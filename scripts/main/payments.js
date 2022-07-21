@@ -479,16 +479,111 @@ const PoolPayments = function (logger, client, sequelize) {
     });
   };
 
+  // Calculate Times from Round Data
+  /* istanbul ignore next */
+  this.handleTimes = function(config, blockType, data, callback) {
+    const times = [];
+    const pool = config.name;
+
+    const commands = data[0].map((round) => {
+      return ['hgetall', `${ pool }:rounds:${ blockType }:round-${ round.height }:times`];
+    });
+
+    _this.client.multi(commands).exec((error, results) => {
+      if (error) {
+        logger.error('Payments', pool, `Could not load times data from database: ${ JSON.stringify(error) }`);
+        callback(true, []);
+        return;
+      }
+
+      // Build Worker Times Data
+      results.forEach((round) => {
+        const timesRound = {};
+
+        // Iterate Through Each Round
+        Object.keys(round || {}).forEach((entry) => {
+
+          // Get Round Values
+          const address = entry.split('.')[0];
+          const timesValue = /^-?\d*(\.\d+)?$/.test(round[entry]) ? parseFloat(round[entry]) : 0;
+
+          // Process Round Times Data
+          if (address in timesRound) {
+            if (timesValue >= timesRound[address]) {
+              timesRound[address] = timesValue;
+            }
+          } else {
+            timesRound[address] = timesValue;
+          }
+        });
+
+        // Push Round Data to Main
+        times.push(timesRound);
+      });
+
+      // Return Times Data as Callback
+      callback(null, [data[0], data[1], times]);
+    });
+  };
+
+  // Calculate Times from Round Data
+  /* istanbul ignore next */
+  this.handleWork = function(config, blockType, data, callback) {
+    const times = data[2];
+    // const solo = [];
+    const shared = [];
+    const pool = config.name;
+
+    const commands = data[0].map((round) => {
+      return ['hgetall', `${ pool }:rounds:${ blockType }:round-${ round.height }:work`];
+    });
+
+    _this.client.multi(commands).exec((error, results) => {
+      if (error) {
+        logger.error('Payments', pool, `Could not load work data from database: ${ JSON.stringify(error) }`);
+        callback(true, []);
+        return;
+      }
+
+      // Build Worker Times Data
+      results.forEach((round) => {
+        // const timesRound = {};
+        // const soloRound = {};
+        const sharedRound = {};
+
+        // Iterate Through Each Round
+        Object.keys(round || {}).forEach((entry) => {
+
+          // Get Round Values
+          const address = entry.split('.')[0];
+          const workValue = /^-?\d*(\.\d+)?$/.test(round[entry]) ? parseFloat(round[entry]) : 0;
+          
+          // Process Round Share Data
+          if (address in sharedRound) {
+            sharedRound[address] += workValue;
+          } else {
+            sharedRound[address] = workValue;
+          }
+        });    
+
+        // Push Round Data to Main
+        shared.push(sharedRound);
+      });
+
+      // Return Times Data as Callback
+      callback(null, [data[0], data[1], times, shared]);
+    });
+  };
+
   // Calculate Shares from Round Data
   /* istanbul ignore next */
   this.handleShares = function(config, blockType, data, callback) {
 
-    const times = [];
+    const times = data[2];
+    const shared = data[3];
     const solo = [];
-    const shared = [];
     const pool = config.name;
 
-    // Map Commands from Individual Rounds
     const commands = data[0].map((round) => {
       return ['hgetall', `${ pool }:rounds:${ blockType }:round-${ round.height }:shares`];
     });
@@ -503,9 +598,9 @@ const PoolPayments = function (logger, client, sequelize) {
 
       // Build Worker Shares Data w/ Results
       results.forEach((round) => {
-        const timesRound = {};
+        // const timesRound = {};
         const soloRound = {};
-        const sharedRound = {};
+        // const sharedRound = {};
 
         // Iterate Through Each Round
         Object.keys(round || {}).forEach((entry) => {
@@ -513,17 +608,7 @@ const PoolPayments = function (logger, client, sequelize) {
           // Calculate Round Values
           const details = JSON.parse(round[entry]);
           const address = entry.split('.')[0];
-          const timesValue = /^-?\d*(\.\d+)?$/.test(details.times) ? parseFloat(details.times) : 0;
           const workValue = /^-?\d*(\.\d+)?$/.test(details.work) ? parseFloat(details.work) : 0;
-
-          // Process Round Times Data
-          if (address in timesRound) {
-            if (timesValue >= timesRound[address]) {
-              timesRound[address] = timesValue;
-            }
-          } else {
-            timesRound[address] = timesValue;
-          }
 
           // Process Round Share Data
           if (details.solo) {
@@ -532,19 +617,11 @@ const PoolPayments = function (logger, client, sequelize) {
             } else {
               soloRound[address] = parseFloat(workValue);
             }
-          } else {
-            if (address in sharedRound) {
-              sharedRound[address] += parseFloat(workValue);
-            } else {
-              sharedRound[address] = parseFloat(workValue);
-            }
-          }
+          } 
         });
 
         // Push Round Data to Main
-        times.push(timesRound);
         solo.push(soloRound);
-        shared.push(sharedRound);
       });
 
       // Return Share Data as Callback
@@ -903,6 +980,8 @@ const PoolPayments = function (logger, client, sequelize) {
       (callback) => _this.handleBlocks(daemon, config, blockType, callback),
       (data, callback) => _this.handleWorkers(config, blockType, data, callback),
       (data, callback) => _this.handleTransactions(daemon, config, blockType, data, callback),
+      (data, callback) => _this.handleTimes(config, blockType, data, callback),
+      (data, callback) => _this.handleWork(config, blockType, data, callback),
       (data, callback) => _this.handleShares(config, blockType, data, callback),
       (data, callback) => _this.handleRewards(config, category, blockType, data, callback),
       (data, callback) => _this.handleUpdates(config, category, blockType, interval, data, callback),
@@ -924,6 +1003,8 @@ const PoolPayments = function (logger, client, sequelize) {
       (callback) => _this.handleBlocks(daemon, config, blockType, callback),
       (data, callback) => _this.handleWorkers(config, blockType, data, callback),
       (data, callback) => _this.handleTransactions(daemon, config, blockType, data, callback),
+      (data, callback) => _this.handleTimes(config, blockType, data, callback),
+      (data, callback) => _this.handleWork(config, blockType, data, callback),
       (data, callback) => _this.handleShares(config, blockType, data, callback),
       (data, callback) => _this.handleOwed(daemon, config, category, blockType, data, callback),
       (data, callback) => _this.handleRewards(config, category, blockType, data, callback),
