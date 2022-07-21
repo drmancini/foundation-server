@@ -521,6 +521,7 @@ const PoolPayments = function (logger, client, sequelize) {
         times.push(timesRound);
       });
 
+      console.log(times);
       // Return Times Data as Callback
       callback(null, [data[0], data[1], times]);
     });
@@ -570,6 +571,8 @@ const PoolPayments = function (logger, client, sequelize) {
         shared.push(sharedRound);
       });
 
+      console.log(shared);
+      console.log(times);
       // Return Times Data as Callback
       callback(null, [data[0], data[1], times, shared]);
     });
