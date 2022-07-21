@@ -53,6 +53,19 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     return times;
   };
 
+  this.handleTimes2 = function(lastShare, shareType) {
+    const dateNow = Date.now();
+    const lastTime = lastShare.time || dateNow;
+
+    // Check for Continous Primary Mining
+    const timeChange = utils.roundTo(Math.max(dateNow - lastTime, 0) / 1000, 4);
+    if ((timeChange < 900) && (shareType === "valid")) {
+      return timeChange;
+    } else {
+      return 0;
+    }
+  };
+
   // Handle Effort Updates
   this.handleEffort = function(shares, worker, shareData, shareType, blockDifficulty, isSoloMining) {
 
@@ -115,9 +128,11 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Calculate Updated Share Data
     const times = _this.handleTimes(lastShare, shareType);
+    const timesIncrement = _this.handleTimes2(lastShare, shareType);
     const effort = _this.handleEffort(shares, worker, shareData, shareType, blockDifficulty, isSoloMining);
     const types = _this.handleTypes(lastShare, shareType);
     const work = shareType === "valid" ? difficulty + (lastShare.work || 0) : (lastShare.work || 0);
+    const workIncrement = shareType === "valid" ? difficulty : 0;
 
     // Build Output Share
     const outputShare = {
@@ -171,8 +186,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateShare)]);
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'valid', 1]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
-      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:work`, worker, work]);
-      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, worker, times]);
+      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:work`, worker, workIncrement]);
+      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, worker, timesIncrement]);
       commands.push(['hset', `${ _this.pool }:workers:${ blockType }:${ minerType }`, worker, JSON.stringify(workerShare)]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'effort', effort]);
 
