@@ -484,7 +484,6 @@ const PoolPayments = function (logger, client, sequelize) {
   this.handleTimes = function(config, blockType, data, callback) {
     const times = [];
     const pool = config.name;
-    console.log(data[0]);
 
     const commands = data[0].map((round) => {
       return ['hgetall', `${ pool }:rounds:${ blockType }:round-${ round.height }:times`];
