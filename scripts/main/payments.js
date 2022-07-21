@@ -521,7 +521,6 @@ const PoolPayments = function (logger, client, sequelize) {
         times.push(timesRound);
       });
 
-      console.log(times);
       // Return Times Data as Callback
       callback(null, [data[0], data[1], times]);
     });
@@ -531,7 +530,6 @@ const PoolPayments = function (logger, client, sequelize) {
   /* istanbul ignore next */
   this.handleWork = function(config, blockType, data, callback) {
     const times = data[2];
-    // const solo = [];
     const shared = [];
     const pool = config.name;
 
@@ -548,8 +546,6 @@ const PoolPayments = function (logger, client, sequelize) {
 
       // Build Worker Times Data
       results.forEach((round) => {
-        // const timesRound = {};
-        // const soloRound = {};
         const sharedRound = {};
 
         // Iterate Through Each Round
@@ -571,8 +567,6 @@ const PoolPayments = function (logger, client, sequelize) {
         shared.push(sharedRound);
       });
 
-      console.log(shared);
-      console.log(times);
       // Return Times Data as Callback
       callback(null, [data[0], data[1], times, shared]);
     });
@@ -601,9 +595,7 @@ const PoolPayments = function (logger, client, sequelize) {
 
       // Build Worker Shares Data w/ Results
       results.forEach((round) => {
-        // const timesRound = {};
         const soloRound = {};
-        // const sharedRound = {};
 
         // Iterate Through Each Round
         Object.keys(round || {}).forEach((entry) => {
