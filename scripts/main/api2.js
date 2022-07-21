@@ -8,6 +8,7 @@ const utils = require('./utils');
 const Algorithms = require('foundation-stratum').algorithms;
 const { Sequelize } = require('sequelize');
 const PaymentsModel = require('../../models/payments.model');
+const { CommandCompleteMessage } = require('pg-protocol/dist/messages');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,70 +39,76 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   //////////////////////////////////////////////////////////////////////////////
 
   // API Endpoint for /miner/alertSettings for miner [address]
-  this.minerAlertSettings = function(pool, body, blockType, callback) {
-    // const minPayment = _this.poolConfigs[pool].primary.payments.minPayment;
-    // const payoutLimit = body.payoutLimit;
-
-    // if (minPayment > payoutLimit) {
-    //   callback(400, {
-    //     result: 'error'
-    //   });
-    // }
-
-    if (blockType == '') {
-      blockType = 'primary';
-    }
-    // const address = body.address;
-    const ipAddress = body.ipAddress;
-    // const dateNow = Date.now();
-    // const twentyFourHours = 24 * 60 * 60 * 1000;
-    // let validated = false;
+  this.minerAlertSettings = function(pool, body, callback) {
+    const blockType = body.blocktype.length > 0 ? body.blocktype : 'primary';
     
+
+    // body = { address, ipAddress, activityAlerts, paymentAlerts, alertLimit, email }
+    //  
+    //}
+    
+    const dateNow = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+    const emailPattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    const email = emailPattern.test(body.email) ? body.email : null;
+    const ipPattern = /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/;
+    const ipAddress = ipPattern.test(body.ipAddress) ? body.ipAddress : null;
+    const address = body.address || '';
+    
+    const activityAlerts = body.activityAlerts || false;
+    const paymentAlerts = body.paymentAlerts || false;
+    const alertLimit = body.alertLimit || 10;
+
     const commands = [
-    //   ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`],
       ['hget', `${ pool }:miners:${ blockType }`, address],
+      ['hgetall', `${ pool }:workers:${ blockType }:shared`],
     ];
-    
+
     _this.executeCommands(commands, (results) => {
-      let minerObject = JSON.parse(results[0]);
+      commands.length = 0;
 
-    //   for (const [key, value] of Object.entries(results[0])) {
-    //     const worker = JSON.parse(value);
-    //     const miner = worker.worker.split('.')[0] || '';
-        
-    //     if (miner === address && (worker.time * 1000) >= (dateNow - twentyFourHours)) {
-    //       if (ipAddress == worker.ip) {
-    //         validated = true;
-    //         minerObject.payoutLimit
-    //       } 
-    //     }
-    //   }
+      const miner = JSON.parse(results[0]) || {};
+      const ipAddresses = [];
 
-    //   if (validated == true) {
-    //     minerObject.payoutLimit = payoutLimit;
-    //     const commands2 = [
-    //       ['hset', `${ pool }:miners:${ blockType }`, address, JSON.stringify(minerObject)],
-    //     ];
-        
-    //     _this.executeCommands(commands2, (results) => {
-    //       if (results[0] == 0) {
-    //         callback(200, {
-    //           result: 'ok'
-    //         });
-    //       } else {
-    //         callback(400, {
-    //           result: 'error'
-    //         });
-    //       }
-    //     }, callback);
-    //   } else {
-    //     callback(200, {
-    //       result: 'no change'
-    //     });
-    //   }
-      callback(200, {
-          result: 'test'
+      if (!miner) {
+        callback(400, {
+          message: 'Miner cannot be found'
         });
+      } else if (!miner.email && !email) {
+        callback(400, {
+          message: 'No email address is set'
+        });
+      } else {  
+        for (const [key, value] of Object.entries(results[1])) {
+          const worker = JSON.parse(value);
+          if (worker.time < dateNow - oneDay && worker.offline != true && key === body.address) {
+            ipAddresses.push(worker.ip);
+          }
+        }
+      };
+
+      if (!ipAddresses.includes(ipAddress)) {
+        callback(400, {
+          error: 'IP address invalid',
+          result: null
+        })
+      } else {
+        miner.email = email;
+        miner.activityAlerts = activityAlerts;
+        miner.paymentAlerts = paymentAlerts;
+        miner.alertLimit = alertLimit;
+        miner.token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+
+        commands.push(['hset', `${ pool }:miners:${ blockType }`, address, JSON.stringify(miner)]);
+        _this.executeCommands(commands, (results) => {
+          callback(200, {
+            error: null,
+            result: {
+              email: miner.email,
+            }
+          })
+        }, callback);
+      }
     }, callback);
   };
 
@@ -628,6 +635,56 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
       callback(200, output);
     }, callback);
+  };
+
+  // API Endpoint for /mine/unsubscribeEmail for miner [address]
+  minerUnsubscribeEmail = function(pool, address, token, callback) {
+
+    const commands = [['hget', `${ pool }:miners:${ blockType }`, address]];
+    _this.executeCommands(commands, (results) => {
+      const miner = JSON.parse(results[0] || {});
+      commands.pop();
+
+      if (!results[0]) {
+        callback(400, {
+          message: 'Miner address cannot be found'
+        });
+      }
+
+      if (miner.alertsEnabled === true) {
+        if (miner.token === token && miner.email.length > 0) {
+          miner.alertsEnabled = false;
+          delete miner.email;
+          delete miner.token;
+          commands.push([
+            ['hset', `${ pool }:miners:${ blockType }`, address, JSON.stringify(miner)]
+          ]);
+          _this.executeCommands(commands, (results) => {
+            callback(200, {
+              message: 'Miner unsubscribed from notifications'
+            });
+          }, callback);
+
+          // ideally redirect
+
+        } else if (miner.token != token) {
+          callback(400, {
+            message: 'The token is incorrect'
+          });
+
+          // one day redirect
+
+        } else if (!(miner.email.length > 0)) {
+          callback(400, {
+            message: 'No email address registered'
+          });
+        }
+      } else {
+        callback(400, {
+          message: 'Miner is not subscribed to emails'
+        });
+      }
+    }, callback);  
   };
 
   // API Endpoint for /miner/work for miner [address]
@@ -1313,7 +1370,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // Determine API Endpoint Called
   this.handleApiV2 = function(req, callback) {
 
-    let type, endpoint, body, blockType, isSolo, address, worker, page, countervalue, remoteAddress;
+    let type, endpoint, body, blockType, isSolo, address, worker, page, token, countervalue, remoteAddress;
     const miscellaneous = ['pools'];
 
     // If Socket Params Exist
@@ -1336,6 +1393,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       address = utils.validateInput(req.query.address || '');
       worker = utils.validateInput(req.query.worker || '');
       page = utils.validateInput(req.query.page || '');
+      token = utils.validateInput(req.query.token || '');
     }
 
     if (req.body) {
@@ -1353,7 +1411,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       case (type === 'miner'):
         switch (true) {
           case (endpoint === 'alertSettings'):
-              _this.minerAlertSettings(pool, body, blockType, (code, message) => callback(code, message));
+              _this.minerAlertSettings(pool, body, (code, message) => callback(code, message));
               break;
           case (endpoint === 'blocks' && address.length > 0):
             _this.minerBlocks(pool, address, blockType, (code, message) => callback(code, message));
@@ -1384,6 +1442,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'stats2' && address.length > 0):
             _this.minerStats(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'unsubscribeEmail'):
+            _this.minerUnsubscribeEmail(pool, address, token, (code, message) => callback(code, message));
             break;
           case (endpoint === 'work' && address.length > 0):
             _this.minerWork(pool, address, blockType, isSolo, (code, message) => callback(code, message));
