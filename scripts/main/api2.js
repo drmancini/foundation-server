@@ -71,6 +71,20 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         });
       };
       
+      if (!ipAddress) {
+        callback(400, {
+          error: 'IP address is invalid',
+          result: null
+        });
+      }
+
+      if (!email && !emailPattern.test(minerObject.email.test)) {
+        callback(400, {
+          error: 'Email address not set',
+          result: null
+        });
+      }
+
       let ipValid = false;
 
       for (const [key, value] of Object.entries(results[1])) {
@@ -85,8 +99,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       }
 
       if (ipValid) {
-        // set minerObject
-        // minerObject.payoutLimit = payoutLimit;
+        if (email) {
+          minerObject.email = email;
+        }
+        minerObject.activityAlerts = activityAlerts;
+        minerObject.paymentAlerts = paymentAlerts;
+        minerObject.alertLimit = alertLimit;
+
+        delete alertsEnabled;
+        
         console.log(minerObject);
         const commands = [
           // ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)],
@@ -96,11 +117,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           if (results[0] == 0) {
             callback(200, {
               error: null,
-              result: 'Email notification settings changed'
+              result: 'Notification settings changed'
             });
           } else {
             callback(400, {
-              error: 'Email notification settings unchanged',
+              error: 'Notification settings unchanged',
               result: null
             });
           }
