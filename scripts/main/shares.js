@@ -102,7 +102,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     let shares;
     const commands = [];
     const dateNow = Date.now();
-    const difficulty = (shareType === 'valid' ? shareData.difficulty : -shareData.difficulty);
+    const difficulty = shareType === 'valid' ? shareData.difficulty : -shareData.difficulty;
     const minerType = isSoloMining ? 'solo' : 'shared';
     const identifier = shareData.identifier || '';
     const ipLength = shareData.ip.split(':').length - 1;
@@ -111,7 +111,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const worker = ['share', 'primary'].includes(blockType) ? shareData.addrPrimary : shareData.addrAuxiliary;
     const blockDifficulty = ['share', 'primary'].includes(blockType) ? shareData.blockDiffPrimary : shareData.blockDiffAuxiliary;
 
-    // Establish Previous Share Data
+    // Establish Previous Share Data: 
     if (isSoloMining) {
       shares = (['share', 'primary'].includes(blockType)) ? (results[2] || {}) : (results[3] || {});
     } else {
@@ -131,7 +131,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const times = timesIncrement + lastShare.times || 0;
     const effort = _this.handleEffort(shares, worker, shareData, shareType, blockDifficulty, isSoloMining);
     const types = _this.handleTypes(lastShare, shareType);
-    const workIncrement = shareType === "valid" ? difficulty : 0;
+    const workIncrement = shareType === "valid" ? shareData.difficulty : 0;
     const work = shareType === "valid" ? difficulty + (lastShare.work || 0) : (lastShare.work || 0);
 
     // Build Output Share
@@ -186,8 +186,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateShare)]);
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'valid', 1]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
-      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:work`, worker, workIncrement]);
-      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, worker, timesIncrement]);
+      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:work`, worker, parseFloat(workIncrement)]);
+      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, worker, parseFloat(timesIncrement)]);
       commands.push(['hset', `${ _this.pool }:workers:${ blockType }:${ minerType }`, worker, JSON.stringify(workerShare)]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'effort', effort]);
 
@@ -196,8 +196,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateShare)]);
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'stale', 1]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
-      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:work`, worker, workIncrement]);
-      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, worker, timesIncrement]);
+      // commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:work`, worker, workIncrement]);
+      // commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, worker, timesIncrement]);
       commands.push(['hset', `${ _this.pool }:workers:${ blockType }:${ minerType }`, worker, JSON.stringify(workerShare)]);
 
     // Handle Invalid Shares Submitted
@@ -205,8 +205,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       commands.push(['zadd', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:hashrate`, dateNow / 1000 | 0, JSON.stringify(hashrateShare)]);
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'invalid', 1]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
-      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:work`, worker, workIncrement]);
-      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, worker, timesIncrement]);
+      // commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:work`, worker, workIncrement]);
+      // commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, worker, timesIncrement]);
       commands.push(['hset', `${ _this.pool }:workers:${ blockType }:${ minerType }`, worker, JSON.stringify(workerShare)]);
     }
 
