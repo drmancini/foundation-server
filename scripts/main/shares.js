@@ -117,7 +117,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const times = timesIncrement + lastShare.times || 0;
     const types = _this.handleTypes(lastShare, shareType);
     let workIncrement = difficulty;
-    const work = shareType === workIncrement + (lastShare.work || 0);
+    const work = workIncrement + (lastShare.work || 0);
 
     // Build Output Share
     const outputShare = {
