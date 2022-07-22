@@ -104,7 +104,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         minerObject.paymentAlerts = paymentAlerts;
         minerObject.alertLimit = alertLimit;
 
-        delete minerObject.alertsEnabled;
+        // delete minerObject.alertsEnabled;
         
         console.log(minerObject);
         const commands = [
