@@ -752,6 +752,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       _this.executeCommands(commands, (results) => {
         commands.length = 0;
         const miner = JSON.parse(results[0]);
+
+        console.log(results[0]);
   
         if (!results[0]) {
           callback(400, {
@@ -760,9 +762,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           });
         }
   
-        if (token && miner.token != token) {
-          error ='The token is incorrect';
-        }
+        // if (token && miner.token != token) {
+        //   error ='The token is incorrect';
+        // }
   
         
   
