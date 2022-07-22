@@ -735,7 +735,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     if (!token || !address) {
       callback(400, {
-        error: 'Incorrent API parameters',
+        error: 'Missing API parameters',
         result: null 
       });
     }
