@@ -732,17 +732,16 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /mine/unsubscribeEmail for miner [address]
   this.minerUnsubscribeEmail = function(pool, address, token, callback) {
-
-    if (!token || !address) {
-      callback(400, {
-        error: 'Missing API parameters',
-        result: null 
-      });
-    }
-
     const commands = [['hget', `${ pool }:miners:primary`, address]];
 
     _this.executeCommands(commands, (results) => {
+      if (!token || !address) {
+        callback(400, {
+          error: 'Missing API parameters',
+          result: null 
+        });
+      }
+      
       callback(200, { result: 'ok'});
     }, callback);
 
