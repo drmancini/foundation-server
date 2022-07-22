@@ -731,7 +731,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   }
 
   // API Endpoint for /mine/unsubscribeEmail for miner [address]
-  minerUnsubscribeEmail = function(pool, address, token, callback) {
+  this.minerUnsubscribeEmail = function(pool, address, token, callback) {
     console.log('test');
     const commands = [['hget', `${ pool }:miners:primary`, address]];
     // _this.executeCommands(commands, (results) => {
