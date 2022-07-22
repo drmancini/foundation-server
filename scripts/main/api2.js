@@ -755,12 +755,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
         console.log(results[0]);
   
-        if (!results[0]) {
-          callback(400, {
-            error: 'Miner address cannot be found',
-            result: null
-          });
-        }
+        // if (!results[0]) {
+        //   callback(400, {
+        //     error: 'Miner address cannot be found',
+        //     result: null
+        //   });
+        // }
   
         // if (token && miner.token != token) {
         //   error ='The token is incorrect';
