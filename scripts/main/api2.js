@@ -740,9 +740,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           error: 'Missing API parameters',
           result: null 
         });
-      } else {
+      } 
         callback(200, { result: 'ok'});
-      }
+      
 
       
     }, callback);
