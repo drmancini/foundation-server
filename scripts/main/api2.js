@@ -683,7 +683,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       for (const [key, value] of Object.entries(results[0])) {
         const work = parseFloat(value);
         const miner = key.split('.')[0] || null;
-        output.maxWork += work;
+        output.totalWork += work;
         
         if (miner === address) {
           output.minerWork += work;
