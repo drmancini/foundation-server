@@ -51,8 +51,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const paymentAlerts = body.paymentAlerts || false;
     const alertLimit = body.alertLimit || 10;
 
-    console.log(body);
-
     const commands = [
       ['hget', `${ pool }:miners:primary`, address],
       ['hgetall', `${ pool }:workers:primary:shared`],
@@ -78,12 +76,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         });
       }
 
-      // if (!email && !emailPattern.test(minerObject.email.test)) {
-      //   callback(400, {
-      //     error: 'Email address not set',
-      //     result: null
-      //   });
-      // }
+      if (!email && !emailPattern.test(minerObject.email.test)) {
+        callback(400, {
+          error: 'Email address not set',
+          result: null
+        });
+      }
 
       let ipValid = false;
 
@@ -106,35 +104,27 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         minerObject.paymentAlerts = paymentAlerts;
         minerObject.alertLimit = alertLimit;
 
-        delete alertsEnabled;
+        delete minerObject.alertsEnabled;
         
         console.log(minerObject);
         const commands = [
-          // ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)],
+          ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)],
         ];
-        
-        callback(200, {
-          error: null,
-          result: 'temp'
-        });
 
-// UNUSED
-        // _this.executeCommands(commands, (results) => {
-        //   if (results[0] == 0) {
-        //     callback(200, {
-        //       error: null,
-        //       result: 'Notification settings changed'
-        //     });
-        //   } else {
-        //     callback(400, {
-        //       error: 'Notification settings unchanged',
-        //       result: null
-        //     });
-        //   }
-        // }, callback);
-// UNUSED
+        _this.executeCommands(commands, (results) => {
+          if (results[0] == 0) {
+            callback(200, {
+              error: null,
+              result: 'Notification settings changed'
+            });
+          } else {
+            callback(400, {
+              error: 'Notification settings unchanged',
+              result: null
+            });
+          }
+        }, callback);
 
-      // }
       } else {
         callback(400, {
           error: 'IP address does not belong to active miner',
