@@ -743,34 +743,42 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       error = 'No token supplied';
     }
 
-    _this.executeCommands(commands, (results) => {
-      commands.length = 0;
-      const miner = JSON.parse(results[0]);
-
-      if (!results[0]) {
-        error = 'Miner address cannot be found';
-      }
-
-      if (token && miner.token != token) {
-        error ='The token is incorrect';
-      }
-
-      
-
-      const output = { test: 'ok'};
-      if (error) {
-        callback(400, {
-          error: error,
-          result: null
-        })
-      } else {
-        callback(200, {
-          error: null,
-          result: output
-        });
-      }
-      
-    }, callback);
+    if (error) {
+      callback(400, {
+        error: error,
+        result: null
+      });
+    } else {
+      _this.executeCommands(commands, (results) => {
+        commands.length = 0;
+        const miner = JSON.parse(results[0]);
+  
+        if (!results[0]) {
+          error = 'Miner address cannot be found';
+        }
+  
+        if (token && miner.token != token) {
+          error ='The token is incorrect';
+        }
+  
+        
+  
+        const output = { test: 'ok'};
+        if (error) {
+          callback(400, {
+            error: error,
+            result: null
+          })
+        } else {
+          callback(200, {
+            error: null,
+            result: output
+          });
+        }
+        
+      }, callback);
+    }
+    
 
 
 
