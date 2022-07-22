@@ -759,20 +759,27 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           commands.length = 0;
           const miner = JSON.parse(results[0]);
 
-          console.log(results[0]);
+          if (miner.token != token) {
+            error ='The token is incorrect';
+          }
+
+          
+
 
           const output = { test: 'ok'};
-        if (error) {
-          callback(400, {
-            error: error,
-            result: null
-          })
-        } else {
-          callback(200, {
-            error: null,
-            result: output
-          });
-        }
+
+
+          if (error) {
+            callback(400, {
+              error: error,
+              result: null
+            })
+          } else {
+            callback(200, {
+              error: null,
+              result: output
+            });
+          }
 
         }
         
