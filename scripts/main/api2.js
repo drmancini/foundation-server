@@ -735,14 +735,23 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const commands = [['hget', `${ pool }:miners:primary`, address]];
 
     _this.executeCommands(commands, (results) => {
+
+        if (!results[0]) {
+        callback(400, {
+          error: 'Miner address cannot be found',
+          result: null 
+        });
+      }
+
+
       if (!token || !address) {
         callback(400, {
           error: 'Missing API parameters',
           result: null 
         });
-      } 
+      } else {
         callback(200, { result: 'ok'});
-      
+      }
 
       
     }, callback);
