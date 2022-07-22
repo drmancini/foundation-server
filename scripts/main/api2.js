@@ -375,8 +375,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         result: null
       });
     }
-
-    console.log(body);
+    
     let addressFound = false
     let ipValid = false;
     
@@ -392,6 +391,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       for (const [key, value] of Object.entries(results[1])) {
         const worker = JSON.parse(value);
         const miner = worker.worker.split('.')[0] || '';
+        console.log(miner);
         
         if (miner === address) {
           addressFound = true;
