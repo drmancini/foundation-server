@@ -371,9 +371,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
     }
 
-    if (blockType == '') {
-      blockType = 'primary';
-    }
     const address = body.address;
     const ipAddress = body.ipAddress;
     const dateNow = Date.now();
@@ -381,8 +378,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     let validated = false;
     
     const commands = [
-      ['hgetall', `${ pool }:workers:${ blockType }:shared`],
-      ['hget', `${ pool }:miners:${ blockType }`, address],
+      ['hgetall', `${ pool }:workers:primary:shared`],
+      ['hget', `${ pool }:miners:primary`, address],
     ];
     
     _this.executeCommands(commands, (results) => {
@@ -403,7 +400,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       if (validated == true) {
         minerObject.payoutLimit = payoutLimit;
         const commands2 = [
-          ['hset', `${ pool }:miners:${ blockType }`, address, JSON.stringify(minerObject)],
+          ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)],
         ];
         
         _this.executeCommands(commands2, (results) => {
@@ -1495,7 +1492,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.minerPaymentStats2(pool, address, countervalue, blockType, (code, message) => callback(code, message));
             break;
           case (endpoint === 'payoutSettings'):
-            _this.minerPayoutSettings(pool, body, isSolo, (code, message) => callback(code, message));
+            _this.minerPayoutSettings(pool, body, (code, message) => callback(code, message));
             break;
           case (endpoint === 'stats' && address.length > 0):
             _this.minerStats(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
