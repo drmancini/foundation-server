@@ -157,7 +157,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       //     })
       //   }, callback);
       
-
+      callback(200, {
+        result: result,
+      });
     }, callback);
   };
 
