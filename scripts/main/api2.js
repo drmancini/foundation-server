@@ -686,14 +686,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     _this.executeCommands(commands, (results) => {
       for (const [key, value] of Object.entries(results[0])) {
         const miner = key.split('.')[0] || null;
-        if (value > output.maxTimes) {
-          output.maxTimes = value;
-          console.log('max: ' + value);
+        const work = parseFloat(value);
+        if (work > output.maxTimes) {
+          output.maxTimes = work;
+          // console.log('max: ' + value);
         }
 
-        if (miner === address && value > output.minerTimes) {
-          output.minerTimes = value;
-          console.log('miner: ' + value);
+        if (miner === address && work > output.minerTimes) {
+          output.minerTimes = work;
+          // console.log('miner: ' + value);
         }
       };
 
