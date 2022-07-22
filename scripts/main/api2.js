@@ -71,12 +71,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         });
       };
       
-      // if (!ipAddress) {
-      //   callback(400, {
-      //     error: 'IP address is invalid',
-      //     result: null
-      //   });
-      // }
+      if (!ipAddress) {
+        callback(400, {
+          error: 'IP address is invalid',
+          result: null
+        });
+      }
 
       // if (!email && !emailPattern.test(minerObject.email.test)) {
       //   callback(400, {
