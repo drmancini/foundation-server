@@ -15,6 +15,108 @@ const PaymentsModel = require('../../models/payments.model');
 // Main API Function
 const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
+  const emailTest = `<body>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400&display=swap');
+    body {
+      background-color: #F2F3F3;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 500;
+    }
+  </style>
+
+  <table
+    width="100%"
+    height="100%" 
+  >
+    <tr>
+      <td>
+        <table align="center" width="480">
+          <tr>
+            <td style="font-size: 20px;
+              margin-bottom:10px;
+              line-height: 33px;
+              text-transform: uppercase;
+              display: flex;
+              align-items: center"
+            >
+              <img src="https://dev.raptoreum.zone/raptoreum-zone.svg" width="40">
+              <span style="color: rgb(27, 33, 35);">raptoreum</span>
+              <span style="color: rgb(132, 138, 139);"> .zone</span>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <table 
+                align="center"
+
+                style="padding:32px; border:1px solid #C5D2D2; border-radius:8px; background: rgb(227,123,70); background: linear-gradient(180deg, #F2F3F3 0%, rgba(255, 255, 255, 0.5) 50%);"
+              >
+                <tr>
+                  <td style="text-align:center; color: #838A8B; padding-bottom:16px">
+                    You have subscribed to receive notifications to this email address. We will alert you whenever a worker stops mining to the address
+                  </td>
+                </tr>
+                <tr>
+                  <td 
+                    align="center"
+                    style="
+                      font-size:13px;
+                      vertical-align: middle;
+                      font-family: 'Space Mono', monospace; 
+                      color: #313D40"
+                    >
+                      REQjnAZMuKFTaUgzyrMnckZx11HoZPq9BY
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <div style="width:100%;height:1px;background-color:#C5D2D2;margin:16px 0">
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td 
+                    style="margin-top:10px;width:100%;text-align:center;color:#838A8B;"
+                  >
+                    Confirm your subscription by clicking the button
+                    <a 
+                      href="https://dev.raptoreum.zone/miners/0xE7c94e73F0479dF03A41A2792ad1e64d2f2fCb8A"
+                      style="
+                        text-transform: uppercase;
+                        text-decoration:none;
+                        font-size: 17px;
+                        line-height: 22px;
+                        padding: 8px 16px;
+                        border-radius:8px;
+                        color:#fff;
+                        background-color:rgb(35,173,203);
+                        display:block;
+                        box-shadow: inset 0px 0px 8px rgba(255, 255, 255, 0.45);
+                        width: 30%;
+                        margin:0 auto;
+                        margin-top:26px">
+                      Subscribe
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="font-size:10px; color:#C5CBCC; text-align:center;">
+              We have sent this email because of your subscription to Raptoreum zone alert emails. If you no longer wish to receive them, <a href="https://api.flexpool.io/v2/miner=
+              /unsubscribeEmailRedirect?coin=eth&address=0xE7c94e73F0479dF03A41A2792a=
+              d1e64d2f2fCb8A&token=54a91f1800eb556f0df5a5b6139a3bcf" style="color:#C5CBCC;text-decoration:underline">unsubscribe</a>.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</table>`;
+
   const _this = this;
 
   const sequelizePayments = PaymentsModel(sequelize, Sequelize);
@@ -146,7 +248,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           minerObject.token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
           const mailEmail = 'michal.pobuda@me.com';
           const mailSubject = 'email test';
-          const mailMessage = 'message';
+          const mailMessage = _this.emailTest;
           _this.mailer(mailEmail, mailSubject, mailMessage).catch(console.error);
         }
 
