@@ -65,25 +65,25 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       if (results[0]) {
         minerObject = JSON.parse(results[0]);
       } else {
-        callback(400, {
-          error: 'Miner address not found',
-          result: null
-        });
+        // callback(400, {
+        //   error: 'Miner address not found',
+        //   result: null
+        // });
       };
       
-      if (!ipAddress) {
-        callback(400, {
-          error: 'IP address is invalid',
-          result: null
-        });
-      }
+      // if (!ipAddress) {
+      //   callback(400, {
+      //     error: 'IP address is invalid',
+      //     result: null
+      //   });
+      // }
 
-      if (!email && !emailPattern.test(minerObject.email.test)) {
-        callback(400, {
-          error: 'Email address not set',
-          result: null
-        });
-      }
+      // if (!email && !emailPattern.test(minerObject.email.test)) {
+      //   callback(400, {
+      //     error: 'Email address not set',
+      //     result: null
+      //   });
+      // }
 
       let ipValid = false;
 
@@ -117,7 +117,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           error: null,
           result: 'temp'
         });
-        
+
+// UNUSED
         // _this.executeCommands(commands, (results) => {
         //   if (results[0] == 0) {
         //     callback(200, {
@@ -131,13 +132,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         //     });
         //   }
         // }, callback);
-        
-      } else {
-        callback(400, {
-          error: 'IP address does not belong to active miner',
-          result: null
-        });
+// UNUSED
+
       }
+      // } else {
+      //   callback(400, {
+      //     error: 'IP address does not belong to active miner',
+      //     result: null
+      //   });
+      // }
       
 
 
