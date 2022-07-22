@@ -362,49 +362,71 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /miner/payoutSettings for miner [address]
   this.minerPayoutSettings = function(pool, body, callback) {
+    const dateNow = Date.now();
+    const twentyFourHours = 24 * 60 * 60 * 1000;
     const minPayment = _this.poolConfigs[pool].primary.payments.minPayment;
     const payoutLimit = body.payoutLimit;
+    const address = body.address;
+    const ipAddress = body.ipAddress;
 
     if (minPayment > payoutLimit) {
       callback(400, {
-        result: 'Payout limit below minimum pool payment'
+        error: 'Payout limit below minimum pool payment',
+        result: null
       });
     }
 
     console.log(body);
-    const address = body.address;
-    const ipAddress = body.ipAddress;
-    const dateNow = Date.now();
-    const twentyFourHours = 24 * 60 * 60 * 1000;
-    let validated = false;
+    let addressFound = false
+    let ipValid = false;
     
     const commands = [
-      ['hgetall', `${ pool }:workers:primary:shared`],
       ['hget', `${ pool }:miners:primary`, address],
+      ['hgetall', `${ pool }:workers:primary:shared`],
     ];
     
     _this.executeCommands(commands, (results) => {
-      let minerObject = JSON.parse(results[1]);
+      commands.length = 0;
+      const minerObject = JSON.parse(results[0]);
 
       for (const [key, value] of Object.entries(results[0])) {
         const worker = JSON.parse(value);
         const miner = worker.worker.split('.')[0] || '';
         
-        if (miner === address && (worker.time * 1000) >= (dateNow - twentyFourHours)) {
-          if (ipAddress == worker.ip) {
-            validated = true;
-            // minerObject.payoutLimit
-          } 
+        if (miner === address) {
+          addressFound = true;
+          console.log('worker found');
+
+          if ((worker.time * 1000) >= (dateNow - twentyFourHours) && ipAddress === worker.ip) {
+            ipValid = true;
+            console.log('ip ok');
+          }
         }
       }
 
-      if (validated == true) {
+      if (!addressFound) {
+        callback(400, {
+          error: 'Miner address not found',
+          result: null
+        });
+      }
+
+      if (!ipValid) {
+        callback(400, {
+          error: 'IP address does not belong to active miner',
+          result: null
+        });
+      }
+
+      if (ipValid) {
         minerObject.payoutLimit = payoutLimit;
-        const commands2 = [
+        console.log(minerObject);
+        const commands = [
           ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)],
         ];
         
-        _this.executeCommands(commands2, (results) => {
+        _this.executeCommands(commands, (results) => {
+          console.log(results[0]);
           if (results[0] == 0) {
             callback(200, {
               result: 'ok'
