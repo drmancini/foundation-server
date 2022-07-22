@@ -774,8 +774,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           ]);
 
           _this.executeCommands(commands, (results) => {
-
-
             if (error) {
               callback(400, {
                 error: error,
@@ -784,45 +782,14 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             } else {
               callback(200, {
                 error: null,
-                result: 'ok'
+                result: 'Miner unsubscribed from notifications'
               });
+              // Ideally redirect
             }
           }, callback);
         }
       }, callback);
     }
-    
-
-
-      //   commands.push([
-      //     ['hset', `${ pool }:miners:primary`, address, JSON.stringify(miner)]
-      //   ]);
-      //   _this.executeCommands(commands, (results) => {
-      //     if (results[0] == 0) {
-      //       callback(200, {
-      //         error: null,
-      //         result: 'Miner unsubscribed from notifications'
-      //       });
-
-      //       // ideally redirect
-
-      //     } else {
-      //       callback(400, {
-      //         error: null,
-      //         result: 'Something went wrong and miner not unsubscribed from notifications'
-      //       });
-      //     }
-      //   }, callback);
-
-        
-      // } else {
-      //   callback(400, {
-      //     error: 'Miner is not subscribed to emails',
-      //     result: null
-      //   });
-      // }
-    //   callback(200, { result: 'ok'});
-    // }, callback);  
   };
 
   // API Endpoint for /miner/work for miner [address]
