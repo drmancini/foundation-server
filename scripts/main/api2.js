@@ -750,7 +750,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
     } else {
       _this.executeCommands(commands, (results) => {
-        if (!result[0]) {
+        if (!results[0]) {
             callback(400, {
             error: 'Miner address cannot be found',
             result: null
