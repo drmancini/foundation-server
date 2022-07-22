@@ -112,7 +112,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)],
         ];
 
-        // _this.executeCommands(commands, (results) => {
+        _this.executeCommands(commands, (results) => {
         //   if (results[0] == 0) {
         //     callback(200, {
         //       error: null,
@@ -124,9 +124,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         //       result: null
         //     });
         //   }
-        // }, callback);
+          callback(200, { result: 'ok'});
+        }, callback);
 
-        callback(200, { result: 'ok'});
+        
       } else {
         callback(400, {
           error: 'IP address does not belong to active miner',
