@@ -360,6 +360,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
   };
 
+  // reviewed
   // API Endpoint for /miner/payoutSettings for miner [address]
   this.minerPayoutSettings = function(pool, body, callback) {
     const dateNow = Date.now();
@@ -375,7 +376,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         result: null
       });
     }
-    
+
     let addressFound = false
     let ipValid = false;
     
@@ -391,15 +392,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       for (const [key, value] of Object.entries(results[1])) {
         const worker = JSON.parse(value);
         const miner = worker.worker.split('.')[0] || '';
-        console.log(miner);
         
         if (miner === address) {
           addressFound = true;
-          console.log('worker found');
 
           if ((worker.time * 1000) >= (dateNow - twentyFourHours) && ipAddress === worker.ip) {
             ipValid = true;
-            console.log('ip ok');
           }
         }
       }
@@ -407,13 +405,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       if (!addressFound) {
         callback(400, {
           error: 'Miner address not found',
-          result: null
-        });
-      }
-
-      if (!ipValid) {
-        callback(400, {
-          error: 'IP address does not belong to active miner',
           result: null
         });
       }
@@ -426,20 +417,22 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         ];
         
         _this.executeCommands(commands, (results) => {
-          console.log(results[0]);
           if (results[0] == 0) {
             callback(200, {
-              result: 'ok'
+              error: null,
+              result: 'Payout limit setting changed'
             });
           } else {
             callback(400, {
-              result: 'DB error'
+              error: 'Payout limit setting unchanged',
+              result: null
             });
           }
         }, callback);
       } else {
-        callback(200, {
-          result: 'no change'
+        callback(400, {
+          error: 'IP address does not belong to active miner',
+          result: null
         });
       }
     }, callback);
