@@ -38,27 +38,97 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // Main Endpoints
   //////////////////////////////////////////////////////////////////////////////
 
+  this.minerPayoutSettings = function(pool, body, callback) {
+    const dateNow = Date.now();
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+    const minPayment = _this.poolConfigs[pool].primary.payments.minPayment;
+    const payoutLimit = body.payoutLimit;
+    const address = body.address;
+    const ipAddress = body.ipAddress;
+
+    if (minPayment > payoutLimit) {
+      callback(400, {
+        error: 'Payout limit below minimum pool payment',
+        result: null
+      });
+    }
+
+    let addressFound = false
+    let ipValid = false;
+    
+    const commands = [
+      ['hget', `${ pool }:miners:primary`, address],
+      ['hgetall', `${ pool }:workers:primary:shared`],
+    ];
+    
+    _this.executeCommands(commands, (results) => {
+      const minerObject = JSON.parse(results[0]);
+      commands.length = 0;
+
+      for (const [key, value] of Object.entries(results[1])) {
+        const worker = JSON.parse(value);
+        const miner = worker.worker.split('.')[0] || '';
+        
+        if (miner === address) {
+          addressFound = true;
+
+          if ((worker.time * 1000) >= (dateNow - twentyFourHours) && ipAddress === worker.ip) {
+            ipValid = true;
+          }
+        }
+      }
+
+      if (!addressFound) {
+        callback(400, {
+          error: 'Miner address not found',
+          result: null
+        });
+      }
+
+      if (ipValid) {
+        minerObject.payoutLimit = payoutLimit;
+        console.log(minerObject);
+        const commands = [
+          ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)],
+        ];
+        
+        _this.executeCommands(commands, (results) => {
+          if (results[0] == 0) {
+            callback(200, {
+              error: null,
+              result: 'Payout limit setting changed'
+            });
+          } else {
+            callback(400, {
+              error: 'Payout limit setting unchanged',
+              result: null
+            });
+          }
+        }, callback);
+      } else {
+        callback(400, {
+          error: 'IP address does not belong to active miner',
+          result: null
+        });
+      }
+    }, callback);
+  };
+
   // API Endpoint for /miner/alertSettings for miner [address]
   this.minerAlertSettings = function(pool, body, callback) {
-    const blockType = body.blocktype.length > 0 ? body.blocktype : 'primary';
-    
-
-    // body = { address, ipAddress, activityAlerts, paymentAlerts, alertLimit, email }
-    //  
-    //}
-    
     const dateNow = Date.now();
     const oneDay = 24 * 60 * 60 * 1000;
+    const address = body.address;
     const emailPattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     const email = emailPattern.test(body.email) ? body.email : null;
     const ipPattern = /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/;
     const ipAddress = ipPattern.test(body.ipAddress) ? body.ipAddress : null;
-    const address = body.address || '';
-    
     const activityAlerts = body.activityAlerts || false;
     const paymentAlerts = body.paymentAlerts || false;
     const alertLimit = body.alertLimit || 10;
 
+    console.log(body);
+    
     const commands = [
       ['hget', `${ pool }:miners:${ blockType }`, address],
       ['hgetall', `${ pool }:workers:${ blockType }:shared`],
