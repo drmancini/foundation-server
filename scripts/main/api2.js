@@ -750,25 +750,18 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
     } else {
       _this.executeCommands(commands, (results) => {
-        commands.length = 0;
-        const miner = JSON.parse(results[0]);
+        if (!result[0]) {
+            callback(400, {
+            error: 'Miner address cannot be found',
+            result: null
+          });
+        } else {
+          commands.length = 0;
+          const miner = JSON.parse(results[0]);
 
-        console.log(results[0]);
-  
-        // if (!results[0]) {
-        //   callback(400, {
-        //     error: 'Miner address cannot be found',
-        //     result: null
-        //   });
-        // }
-  
-        // if (token && miner.token != token) {
-        //   error ='The token is incorrect';
-        // }
-  
-        
-  
-        const output = { test: 'ok'};
+          console.log(results[0]);
+
+          const output = { test: 'ok'};
         if (error) {
           callback(400, {
             error: error,
@@ -780,6 +773,21 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             result: output
           });
         }
+
+        }
+        
+  
+        // if (!results[0]) {
+        
+        // }
+  
+        // if (token && miner.token != token) {
+        //   error ='The token is incorrect';
+        // }
+  
+        
+  
+        
         
       }, callback);
     }
