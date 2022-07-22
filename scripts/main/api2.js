@@ -754,7 +754,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         const miner = JSON.parse(results[0]);
   
         if (!results[0]) {
-          error = 'Miner address cannot be found';
+          callback(400, {
+            error: 'Miner address cannot be found',
+            result: null
+          });
         }
   
         if (token && miner.token != token) {
