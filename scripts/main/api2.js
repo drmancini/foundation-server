@@ -38,6 +38,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // Main Endpoints
   //////////////////////////////////////////////////////////////////////////////
 
+  // checked
   // API Endpoint for /miner/alertSettings for miner [address]
   this.minerAlertSettings = function(pool, body, callback) {
     const dateNow = Date.now();
@@ -105,9 +106,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         minerObject.alertLimit = alertLimit;
         minerObject.token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
 
-        delete minerObject.alertsEnabled;
-        
-        // console.log(minerObject);
         const commands = [
           ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)],
         ];
@@ -200,7 +198,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       result.totalItems = blockCount;
       
       callback(200, {
-        result: result,
+        error: null,
+        result: result
       });
     }, callback);
   };
