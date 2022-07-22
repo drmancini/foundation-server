@@ -736,46 +736,61 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     const commands = [['hget', `${ pool }:miners:${ blockType }`, address]];
     _this.executeCommands(commands, (results) => {
-      const miner = JSON.parse(results[0] || {});
-      commands.pop();
+      const miner = JSON.parse(results[0]);
+      commands.length = 0;
 
       if (!results[0]) {
         callback(400, {
-          message: 'Miner address cannot be found'
+          error: 'Miner address cannot be found',
+          result: null 
         });
       }
 
-      if (miner.alertsEnabled === true) {
-        if (miner.token === token && miner.email.length > 0) {
-          miner.alertsEnabled = false;
-          delete miner.email;
-          delete miner.token;
-          commands.push([
-            ['hset', `${ pool }:miners:${ blockType }`, address, JSON.stringify(miner)]
-          ]);
-          _this.executeCommands(commands, (results) => {
+      if (miner.token != token) {
+        callback(400, {
+          error: 'The token is incorrect',
+          result: null
+        });
+      }
+
+      if (!(miner.email)) {
+        callback(400, {
+          error: 'No email address registered',
+          result: null
+        });
+      }
+
+      if (miner.alertsEnabled === true && miner.email.length > 0 && miner.token === token) {
+        miner.activityAlerts = false;
+        miner.paymentAlerts = false;
+        delete miner.alertLimit;
+        delete miner.email;
+        delete miner.token;
+        commands.push([
+          ['hset', `${ pool }:miners:${ blockType }`, address, JSON.stringify(miner)]
+        ]);
+        _this.executeCommands(commands, (results) => {
+          if (results[0] == 0) {
             callback(200, {
-              message: 'Miner unsubscribed from notifications'
+              error: null,
+              result: 'Miner unsubscribed from notifications'
             });
-          }, callback);
 
-          // ideally redirect
+            // ideally redirect
+            
+          } else {
+            callback(400, {
+              error: null,
+              result: 'Something went wrong and miner not unsubscribed from notifications'
+            });
+          }
+        }, callback);
 
-        } else if (miner.token != token) {
-          callback(400, {
-            message: 'The token is incorrect'
-          });
-
-          // one day redirect
-
-        } else if (!(miner.email.length > 0)) {
-          callback(400, {
-            message: 'No email address registered'
-          });
-        }
+        
       } else {
         callback(400, {
-          message: 'Miner is not subscribed to emails'
+          error: 'Miner is not subscribed to emails',
+          result: null
         });
       }
     }, callback);  
