@@ -371,6 +371,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
     }
 
+    console.log(body);
     const address = body.address;
     const ipAddress = body.ipAddress;
     const dateNow = Date.now();
