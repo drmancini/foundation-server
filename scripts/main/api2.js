@@ -126,6 +126,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         //     });
         //   }
         // }, callback);
+        callback(200, {
+          error: null,
+          result: 'temp'
+        });
       } else {
         callback(400, {
           error: 'IP address does not belong to active miner',
