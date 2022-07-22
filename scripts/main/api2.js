@@ -636,8 +636,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
-  // API Endpoint for /miner/times for miner [address]
-  this.minerTimes = function(pool, address, blockType, callback) {
+  // API Endpoint for /miner/roundTimes for miner [address]
+  this.minerRoundTimes = function(pool, address, blockType, callback) {
     /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
@@ -657,6 +657,35 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
         if (miner === address && value > output.minerTimes) {
           output.minerTimes = value;
+        }
+      };
+
+      callback(200, {
+        error: null,
+        result: output
+      });
+    }, callback);
+  }
+
+  // API Endpoint for /miner/roundTimes for miner [address]
+  this.minerRoundWork = function(pool, address, blockType, callback) {
+    /* istanbul ignore next */
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+    const output = {
+      totalWork: 0,
+      minerWork: 0
+    };
+    const commands = [
+      ['hgetall', `${ pool }:rounds:${ blockType }:current:shared:work`]];
+    _this.executeCommands(commands, (results) => {
+      for (const [key, value] of Object.entries(results[0])) {
+        const miner = key.split('.')[0] || null;
+        output.maxWork += value;
+        
+        if (miner === address) {
+          output.minerWork += value;
         }
       };
 
@@ -1473,8 +1502,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           case (endpoint === 'stats2' && address.length > 0):
             _this.minerStats(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
             break;
-          case (endpoint === 'times' && address.length > 0):
-            _this.minerTimes(pool, address, blockType, (code, message) => callback(code, message));
+          case (endpoint === 'roundTimes' && address.length > 0):
+            _this.minerRoundTimes(pool, address, blockType, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'roundWork' && address.length > 0):
+            _this.minerRoundWork(pool, address, blockType, (code, message) => callback(code, message));
             break;
           case (endpoint === 'unsubscribeEmail'):
             _this.minerUnsubscribeEmail(pool, address, token, (code, message) => callback(code, message));
