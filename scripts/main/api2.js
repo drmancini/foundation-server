@@ -731,6 +731,64 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   }
 
   // API Endpoint for /mine/unsubscribeEmail for miner [address]
+  this.minerSubscribeEmail = function(pool, address, token, callback) {
+    const commands = [['hget', `${ pool }:miners:primary`, address]];
+    let error;
+
+    if (!address) {
+      error = 'No address supplied';
+    }
+
+    if (!token) {
+      error = 'No token supplied';
+    }
+
+    if (error) {
+      callback(400, {
+        error: error,
+        result: null
+      });
+    } else {
+      _this.executeCommands(commands, (results) => {
+        if (!results[0]) {
+            callback(400, {
+            error: 'Miner address cannot be found',
+            result: null
+          });
+        } else {
+          commands.length = 0;
+          const minerObject = JSON.parse(results[0]);
+
+          if (minerObject.token != token) {
+            error ='The token is invalid';
+          } else {
+            minerObject.subscribed = false;
+          }
+
+          commands.push([
+            ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)]
+          ]);
+
+          _this.executeCommands(commands, (results) => {
+            if (error) {
+              callback(400, {
+                error: error,
+                result: null
+              })
+            } else {
+              callback(200, {
+                error: null,
+                result: 'Miner subscribed to notifications'
+              });
+              // Ideally redirect
+            }
+          }, callback);
+        }
+      }, callback);
+    }
+  };
+
+  // API Endpoint for /mine/unsubscribeEmail for miner [address]
   this.minerUnsubscribeEmail = function(pool, address, token, callback) {
     const commands = [['hget', `${ pool }:miners:primary`, address]];
     let error;
@@ -767,6 +825,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             delete minerObject.alertLimit;
             delete minerObject.email;
             delete minerObject.token; 
+            delete minerObject.subscribed; 
           }
 
           commands.push([
@@ -1553,6 +1612,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'roundWork' && address.length > 0):
             _this.minerRoundWork(pool, address, blockType, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'subscribeEmail'):
+            _this.minerSubscribeEmail(pool, address, token, (code, message) => callback(code, message));
             break;
           case (endpoint === 'unsubscribeEmail'):
             _this.minerUnsubscribeEmail(pool, address, token, (code, message) => callback(code, message));
