@@ -141,19 +141,16 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       }
 
       if (ipValid) {
-        if (email) {
-          if (email != minerObject.email) {
-            minerObject.subscribed = false;
-            _this.mailer().catch(console.error);
-            // send subscribe email
-          }
-          minerObject.email = email;
-        }
         minerObject.activityAlerts = activityAlerts;
         minerObject.paymentAlerts = paymentAlerts;
         minerObject.alertLimit = alertLimit;
-        minerObject.token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
-
+        if (email && email != minerObject.email) {
+          minerObject.subscribed = false;
+          minerObject.email = email;
+          minerObject.token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+          _this.mailer().catch(console.error);
+        }
+        
         const commands = [
           ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)],
         ];
