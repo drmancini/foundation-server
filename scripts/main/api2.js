@@ -386,8 +386,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     ];
     
     _this.executeCommands(commands, (results) => {
+      console.log(results[0]);
       commands.length = 0;
       const minerObject = JSON.parse(results[0]);
+      console.log('miner:');
+      
 
       for (const [key, value] of Object.entries(results[0])) {
         const worker = JSON.parse(value);
