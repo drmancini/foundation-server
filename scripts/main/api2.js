@@ -636,6 +636,37 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
+  // API Endpoint for /miner/times for miner [address]
+  this.minerTimes = function(pool, address, blockType, callback) {
+    /* istanbul ignore next */
+    if (blockType == '') {
+      blockType = 'primary';
+    }
+    const output = {
+      maxTimes: 0,
+      minerTimes: 0
+    };
+    const commands = [
+      ['hgetall', `${ pool }:rounds:${ blockType }:current:shared:times`]];
+    _this.executeCommands(commands, (results) => {
+      for (const [key, value] of Object.entries(results[0])) {
+        const miner = key.split('.')[0] || null;
+        if (value > output.maxTimes) {
+          output.maxTimes = value;
+        }
+
+        if (miner === address && value > output.minerTimes) {
+          output.minerTimes = value;
+        }
+      };
+
+      callback(200, {
+        error: null,
+        result: output
+      });
+    }, callback);
+  }
+
   // API Endpoint for /mine/unsubscribeEmail for miner [address]
   minerUnsubscribeEmail = function(pool, address, token, callback) {
 
@@ -1441,6 +1472,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'stats2' && address.length > 0):
             _this.minerStats(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'times' && address.length > 0):
+            _this.minerTimes(pool, address, blockType, (code, message) => callback(code, message));
             break;
           case (endpoint === 'unsubscribeEmail'):
             _this.minerUnsubscribeEmail(pool, address, token, (code, message) => callback(code, message));
