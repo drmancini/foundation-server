@@ -99,6 +99,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
       if (ipValid) {
         if (email) {
+          if (email != minerObject.email) {
+            minerObject.subscribed = false;
+            // send subscribe email
+          }
           minerObject.email = email;
         }
         minerObject.activityAlerts = activityAlerts;
@@ -762,7 +766,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           if (minerObject.token != token) {
             error ='The token is invalid';
           } else {
-            minerObject.subscribed = false;
+            minerObject.subscribed = true;
           }
 
           commands.push([
