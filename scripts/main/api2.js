@@ -736,11 +736,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     let error;
 
     if (!address) {
-      error: 'No address supplied';
+      error = 'No address supplied';
     }
 
     if (!token) {
-      error: 'No token supplied';
+      error = 'No token supplied';
     }
 
     _this.executeCommands(commands, (results) => {
@@ -748,11 +748,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const miner = JSON.parse(results[0]);
 
       if (!results[0]) {
-        error: 'Miner address cannot be found';
+        error = 'Miner address cannot be found';
       }
 
       if (token && miner.token != token) {
-        error: 'The token is incorrect';
+        error ='The token is incorrect';
       }
 
       
