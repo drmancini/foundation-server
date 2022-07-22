@@ -38,82 +38,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // Main Endpoints
   //////////////////////////////////////////////////////////////////////////////
 
-  this.minerPayoutSettings = function(pool, body, callback) {
-    const dateNow = Date.now();
-    const twentyFourHours = 24 * 60 * 60 * 1000;
-    const minPayment = _this.poolConfigs[pool].primary.payments.minPayment;
-    const payoutLimit = body.payoutLimit;
-    const address = body.address;
-    const ipAddress = body.ipAddress;
-
-    if (minPayment > payoutLimit) {
-      callback(400, {
-        error: 'Payout limit below minimum pool payment',
-        result: null
-      });
-    }
-
-    let addressFound = false
-    let ipValid = false;
-    
-    const commands = [
-      ['hget', `${ pool }:miners:primary`, address],
-      ['hgetall', `${ pool }:workers:primary:shared`],
-    ];
-    
-    _this.executeCommands(commands, (results) => {
-      const minerObject = JSON.parse(results[0]);
-      commands.length = 0;
-
-      for (const [key, value] of Object.entries(results[1])) {
-        const worker = JSON.parse(value);
-        const miner = worker.worker.split('.')[0] || '';
-        
-        if (miner === address) {
-          addressFound = true;
-
-          if ((worker.time * 1000) >= (dateNow - twentyFourHours) && ipAddress === worker.ip) {
-            ipValid = true;
-          }
-        }
-      }
-
-      if (!addressFound) {
-        callback(400, {
-          error: 'Miner address not found',
-          result: null
-        });
-      }
-
-      if (ipValid) {
-        minerObject.payoutLimit = payoutLimit;
-        console.log(minerObject);
-        const commands = [
-          ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)],
-        ];
-        
-        _this.executeCommands(commands, (results) => {
-          if (results[0] == 0) {
-            callback(200, {
-              error: null,
-              result: 'Payout limit setting changed'
-            });
-          } else {
-            callback(400, {
-              error: 'Payout limit setting unchanged',
-              result: null
-            });
-          }
-        }, callback);
-      } else {
-        callback(400, {
-          error: 'IP address does not belong to active miner',
-          result: null
-        });
-      }
-    }, callback);
-  };
-
   // API Endpoint for /miner/alertSettings for miner [address]
   this.minerAlertSettings = function(pool, body, callback) {
     const dateNow = Date.now();
@@ -130,55 +54,105 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     console.log(body);
 
     const commands = [
-      ['hget', `${ pool }:miners:${ blockType }`, address],
-      ['hgetall', `${ pool }:workers:${ blockType }:shared`],
+      ['hget', `${ pool }:miners:primary`, address],
+      ['hgetall', `${ pool }:workers:primary:shared`],
     ];
 
     _this.executeCommands(commands, (results) => {
       commands.length = 0;
-
-      const miner = JSON.parse(results[0]) || {};
-      const ipAddresses = [];
-
-      if (!miner) {
+      let minerObject;
+      
+      if (result[0]) {
+        minerObject = JSON.parse(results[0]);
+      } else {
         callback(400, {
-          message: 'Miner cannot be found'
+          error: 'Miner address not found',
+          result: null
         });
-      } else if (!miner.email && !email) {
-        callback(400, {
-          message: 'No email address is set'
-        });
-      } else {  
-        for (const [key, value] of Object.entries(results[1])) {
-          const worker = JSON.parse(value);
-          if (worker.time < dateNow - oneDay && worker.offline != true && key === body.address) {
-            ipAddresses.push(worker.ip);
+      };
+      
+      let ipValid = false;
+
+      for (const [key, value] of Object.entries(results[1])) {
+        const worker = JSON.parse(value);
+        const miner = worker.worker.split('.')[0] || '';
+        
+        if (miner === address) {
+          if ((worker.time * 1000) >= (dateNow - twentyFourHours) && ipAddress === worker.ip) {
+            ipValid = true;
           }
         }
-      };
-
-      if (!ipAddresses.includes(ipAddress)) {
-        callback(400, {
-          error: 'IP address invalid',
-          result: null
-        })
-      } else {
-        miner.email = email;
-        miner.activityAlerts = activityAlerts;
-        miner.paymentAlerts = paymentAlerts;
-        miner.alertLimit = alertLimit;
-        miner.token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
-
-        // commands.push(['hset', `${ pool }:miners:${ blockType }`, address, JSON.stringify(miner)]);
-        _this.executeCommands(commands, (results) => {
-          callback(200, {
-            error: null,
-            result: {
-              email: miner.email,
-            }
-          })
-        }, callback);
       }
+
+      if (ipValid) {
+        // set minerObject
+        // minerObject.payoutLimit = payoutLimit;
+        console.log(minerObject);
+        const commands = [
+          // ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)],
+        ];
+        
+        _this.executeCommands(commands, (results) => {
+          if (results[0] == 0) {
+            callback(200, {
+              error: null,
+              result: 'Email notification settings changed'
+            });
+          } else {
+            callback(400, {
+              error: 'Email notification settings unchanged',
+              result: null
+            });
+          }
+        }, callback);
+      } else {
+        callback(400, {
+          error: 'IP address does not belong to active miner',
+          result: null
+        });
+      }
+      
+
+
+
+
+      
+      // if (!miner.email && !email) {
+      //   callback(400, {
+      //     message: 'No email address is set'
+      //   });
+      // } else {  
+      //   for (const [key, value] of Object.entries(results[1])) {
+      //     const worker = JSON.parse(value);
+      //     if (worker.time < dateNow - oneDay && worker.offline != true && key === body.address) {
+      //       ipAddresses.push(worker.ip);
+      //     }
+      //   }
+      // };
+
+      // if (!ipAddresses.includes(ipAddress)) {
+      //   callback(400, {
+      //     error: 'IP address invalid',
+      //     result: null
+      //   })
+      // } else {
+      //   miner.email = email;
+      //   miner.activityAlerts = activityAlerts;
+      //   miner.paymentAlerts = paymentAlerts;
+      //   miner.alertLimit = alertLimit;
+      //   miner.token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+
+      //   // commands.push(['hset', `${ pool }:miners:primary`, address, JSON.stringify(miner)]);
+      //   _this.executeCommands(commands, (results) => {
+      //     callback(200, {
+      //       error: null,
+      //       result: {
+      //         email: miner.email,
+      //       }
+      //     })
+      //   }, callback);
+      // }
+      
     }, callback);
   };
 
@@ -447,7 +421,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
     }
 
-    let addressFound = false
     let ipValid = false;
     
     const commands = [
@@ -456,7 +429,16 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     ];
     
     _this.executeCommands(commands, (results) => {
-      const minerObject = JSON.parse(results[0]);
+      let minerObject;
+      if (result[0]) {
+        minerObject = JSON.parse(results[0]);
+      } else {
+        callback(400, {
+          error: 'Miner address not found',
+          result: null
+        });
+      }
+      
       commands.length = 0;
 
       for (const [key, value] of Object.entries(results[1])) {
@@ -464,8 +446,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         const miner = worker.worker.split('.')[0] || '';
         
         if (miner === address) {
-          addressFound = true;
-
           if ((worker.time * 1000) >= (dateNow - twentyFourHours) && ipAddress === worker.ip) {
             ipValid = true;
           }
