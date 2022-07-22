@@ -681,11 +681,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       ['hgetall', `${ pool }:rounds:${ blockType }:current:shared:work`]];
     _this.executeCommands(commands, (results) => {
       for (const [key, value] of Object.entries(results[0])) {
+        const work = parseFloat(value);
         const miner = key.split('.')[0] || null;
-        output.maxWork += value;
+        output.maxWork += work;
         
         if (miner === address) {
-          output.minerWork += value;
+          output.minerWork += work;
         }
       };
 
