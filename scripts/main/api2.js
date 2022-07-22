@@ -740,31 +740,31 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
     }
 
-    const commands = [['hget', `${ pool }:miners:primary`, address]];
-    _this.executeCommands(commands, (results) => {
-      const miner = JSON.parse(results[0]);
-      commands.length = 0;
+    // const commands = [['hget', `${ pool }:miners:primary`, address]];
+    // _this.executeCommands(commands, (results) => {
+    //   const miner = JSON.parse(results[0]);
+    //   commands.length = 0;
 
-      if (!results[0]) {
-        callback(400, {
-          error: 'Miner address cannot be found',
-          result: null 
-        });
-      }
+    //   if (!results[0]) {
+    //     callback(400, {
+    //       error: 'Miner address cannot be found',
+    //       result: null 
+    //     });
+    //   }
 
-      if (miner.token != token) {
-        callback(400, {
-          error: 'The token is incorrect',
-          result: null
-        });
-      }
+    //   if (miner.token != token) {
+    //     callback(400, {
+    //       error: 'The token is incorrect',
+    //       result: null
+    //     });
+    //   }
 
-      if (!(miner.email)) {
-        callback(400, {
-          error: 'No email address registered',
-          result: null
-        });
-      }
+    //   if (!(miner.email)) {
+    //     callback(400, {
+    //       error: 'No email address registered',
+    //       result: null
+    //     });
+    //   }
 
       // if (miner.alertsEnabled === true && miner.email.length > 0 && miner.token === token) {
       //   miner.activityAlerts = false;
@@ -799,8 +799,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       //     result: null
       //   });
       // }
-      callback(200, { result: 'ok'});
-    }, callback);  
+    //   callback(200, { result: 'ok'});
+    // }, callback);  
   };
 
   // API Endpoint for /miner/work for miner [address]
