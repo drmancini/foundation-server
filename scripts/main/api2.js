@@ -688,10 +688,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         const miner = key.split('.')[0] || null;
         if (value > output.maxTimes) {
           output.maxTimes = value;
+          console.log('max: ' + value);
         }
 
         if (miner === address && value > output.minerTimes) {
           output.minerTimes = value;
+          console.log('miner: ' + value);
         }
       };
 
