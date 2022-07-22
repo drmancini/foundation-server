@@ -38,28 +38,13 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   });
 
   // Handle Times Updates
-  this.handleTimes = function(lastShare, shareType) {
-
-    const dateNow = Date.now();
-    const lastTime = lastShare.time || dateNow;
-
-    // Check for Continous Primary Mining
-    let times = lastShare.times || 0;
-    const timeChange = utils.roundTo(Math.max(dateNow - lastTime, 0) / 1000, 4);
-    if ((timeChange < 900) && (shareType === "valid")) {
-      times = times + timeChange;
-    }
-
-    return times;
-  };
-
-  this.handleTimes2 = function(lastShare, shareType) {
+  this.handleTimes = function(lastShare) {
     const dateNow = Date.now();
     const lastTime = lastShare.time || dateNow;
 
     // Check for Continous Primary Mining
     const timeChange = utils.roundTo(Math.max(dateNow - lastTime, 0) / 1000, 4);
-    if ((timeChange < 900) && (shareType === "valid")) {
+    if (timeChange < 900) {
       return timeChange;
     } else {
       return 0;
@@ -102,7 +87,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     let shares;
     const commands = [];
     const dateNow = Date.now();
-    const difficulty = shareType === 'valid' ? shareData.difficulty : -shareData.difficulty;
+    const difficulty = shareType === 'valid' ? shareData.difficulty : 0;
     const minerType = isSoloMining ? 'solo' : 'shared';
     const identifier = shareData.identifier || '';
     const ipLength = shareData.ip.split(':').length - 1;
@@ -127,12 +112,12 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     
 
     // Calculate Updated Share Data
-    const timesIncrement = _this.handleTimes2(lastShare, shareType);
-    const times = timesIncrement + lastShare.times || 0;
     const effort = _this.handleEffort(shares, worker, shareData, shareType, blockDifficulty, isSoloMining);
+    let timesIncrement = _this.handleTimes(lastShare);
+    const times = timesIncrement + lastShare.times || 0;
     const types = _this.handleTypes(lastShare, shareType);
-    const workIncrement = shareType === "valid" ? shareData.difficulty : 0;
-    const work = shareType === "valid" ? difficulty + (lastShare.work || 0) : (lastShare.work || 0);
+    let workIncrement = difficulty;
+    const work = shareType === workIncrement + (lastShare.work || 0);
 
     // Build Output Share
     const outputShare = {
@@ -160,6 +145,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       outputShare.times = 0;
       outputShare.types = { valid: 0, invalid: 0, stale: 0 };
       outputShare.work = difficulty;
+      timesIncrement = 0;
+      workIncrement = 0;
     }
 
     // Build Worker Activity Data
@@ -197,7 +184,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'stale', 1]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
       // commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:work`, worker, workIncrement]);
-      // commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, worker, timesIncrement]);
+      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, worker, parseFloat(timesIncrement)]);
       commands.push(['hset', `${ _this.pool }:workers:${ blockType }:${ minerType }`, worker, JSON.stringify(workerShare)]);
 
     // Handle Invalid Shares Submitted
@@ -206,7 +193,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       commands.push(['hincrby', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:counts`, 'invalid', 1]);
       commands.push(['hset', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:shares`, worker, JSON.stringify(outputShare)]);
       // commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:work`, worker, workIncrement]);
-      // commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, worker, timesIncrement]);
+      commands.push(['hincrbyfloat', `${ _this.pool }:rounds:${ blockType }:current:${ minerType }:times`, worker, parseFloat(timesIncrement)]);
       commands.push(['hset', `${ _this.pool }:workers:${ blockType }:${ minerType }`, worker, JSON.stringify(workerShare)]);
     }
 
