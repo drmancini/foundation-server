@@ -103,10 +103,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         minerObject.activityAlerts = activityAlerts;
         minerObject.paymentAlerts = paymentAlerts;
         minerObject.alertLimit = alertLimit;
+        minerObject.token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
 
-        // delete minerObject.alertsEnabled;
+        delete minerObject.alertsEnabled;
         
-        console.log(minerObject);
+        // console.log(minerObject);
         const commands = [
           ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)],
         ];
@@ -132,32 +133,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           result: null
         });
       }
-      
-
-
-
-
-      
-      
-
-      
-      //   miner.email = email;
-      //   miner.activityAlerts = activityAlerts;
-      //   miner.paymentAlerts = paymentAlerts;
-      //   miner.alertLimit = alertLimit;
-      //   miner.token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
-
-      //   // commands.push(['hset', `${ pool }:miners:primary`, address, JSON.stringify(miner)]);
-      //   _this.executeCommands(commands, (results) => {
-      //     callback(200, {
-      //       error: null,
-      //       result: {
-      //         email: miner.email,
-      //       }
-      //     })
-      //   }, callback);
-      
-      
     }, callback);
   };
 
