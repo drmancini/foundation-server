@@ -62,7 +62,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       commands.length = 0;
       let minerObject;
       
-      if (result[0]) {
+      if (results[0]) {
         minerObject = JSON.parse(results[0]);
       } else {
         callback(400, {
@@ -152,7 +152,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       //     })
       //   }, callback);
       // }
-      
+
     }, callback);
   };
 
@@ -430,7 +430,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     
     _this.executeCommands(commands, (results) => {
       let minerObject;
-      if (result[0]) {
+      if (results[0]) {
         minerObject = JSON.parse(results[0]);
       } else {
         callback(400, {
