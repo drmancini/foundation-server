@@ -733,7 +733,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /mine/unsubscribeEmail for miner [address]
   this.minerUnsubscribeEmail = function(pool, address, token, callback) {
     const commands = [['hget', `${ pool }:miners:primary`, address]];
-    let error = '';
+    let error;
 
     if (!address) {
       error: 'No address supplied';
