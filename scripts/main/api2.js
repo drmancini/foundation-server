@@ -734,7 +734,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /mine/unsubscribeEmail for miner [address]
   minerUnsubscribeEmail = function(pool, address, token, callback) {
 
-    const commands = [['hget', `${ pool }:miners:${ blockType }`, address]];
+    const commands = [['hget', `${ pool }:miners:primary`, address]];
     _this.executeCommands(commands, (results) => {
       const miner = JSON.parse(results[0]);
       commands.length = 0;
@@ -767,7 +767,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         delete miner.email;
         delete miner.token;
         commands.push([
-          ['hset', `${ pool }:miners:${ blockType }`, address, JSON.stringify(miner)]
+          ['hset', `${ pool }:miners:primary`, address, JSON.stringify(miner)]
         ]);
         _this.executeCommands(commands, (results) => {
           if (results[0] == 0) {
@@ -777,7 +777,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             });
 
             // ideally redirect
-            
+
           } else {
             callback(400, {
               error: null,
