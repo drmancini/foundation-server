@@ -432,7 +432,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
       if (ipValid) {
         minerObject.payoutLimit = payoutLimit;
-        console.log(minerObject);
         const commands = [
           ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)],
         ];
@@ -739,60 +738,61 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const miner = JSON.parse(results[0]);
       commands.length = 0;
 
-      if (!results[0]) {
-        callback(400, {
-          error: 'Miner address cannot be found',
-          result: null 
-        });
-      }
+      // if (!results[0]) {
+      //   callback(400, {
+      //     error: 'Miner address cannot be found',
+      //     result: null 
+      //   });
+      // }
 
-      if (miner.token != token) {
-        callback(400, {
-          error: 'The token is incorrect',
-          result: null
-        });
-      }
+      // if (miner.token != token) {
+      //   callback(400, {
+      //     error: 'The token is incorrect',
+      //     result: null
+      //   });
+      // }
 
-      if (!(miner.email)) {
-        callback(400, {
-          error: 'No email address registered',
-          result: null
-        });
-      }
+      // if (!(miner.email)) {
+      //   callback(400, {
+      //     error: 'No email address registered',
+      //     result: null
+      //   });
+      // }
 
-      if (miner.alertsEnabled === true && miner.email.length > 0 && miner.token === token) {
-        miner.activityAlerts = false;
-        miner.paymentAlerts = false;
-        delete miner.alertLimit;
-        delete miner.email;
-        delete miner.token;
-        commands.push([
-          ['hset', `${ pool }:miners:primary`, address, JSON.stringify(miner)]
-        ]);
-        _this.executeCommands(commands, (results) => {
-          if (results[0] == 0) {
-            callback(200, {
-              error: null,
-              result: 'Miner unsubscribed from notifications'
-            });
+      // if (miner.alertsEnabled === true && miner.email.length > 0 && miner.token === token) {
+      //   miner.activityAlerts = false;
+      //   miner.paymentAlerts = false;
+      //   delete miner.alertLimit;
+      //   delete miner.email;
+      //   delete miner.token;
+      //   commands.push([
+      //     ['hset', `${ pool }:miners:primary`, address, JSON.stringify(miner)]
+      //   ]);
+      //   _this.executeCommands(commands, (results) => {
+      //     if (results[0] == 0) {
+      //       callback(200, {
+      //         error: null,
+      //         result: 'Miner unsubscribed from notifications'
+      //       });
 
-            // ideally redirect
+      //       // ideally redirect
 
-          } else {
-            callback(400, {
-              error: null,
-              result: 'Something went wrong and miner not unsubscribed from notifications'
-            });
-          }
-        }, callback);
+      //     } else {
+      //       callback(400, {
+      //         error: null,
+      //         result: 'Something went wrong and miner not unsubscribed from notifications'
+      //       });
+      //     }
+      //   }, callback);
 
         
-      } else {
-        callback(400, {
-          error: 'Miner is not subscribed to emails',
-          result: null
-        });
-      }
+      // } else {
+      //   callback(400, {
+      //     error: 'Miner is not subscribed to emails',
+      //     result: null
+      //   });
+      // }
+      callback(200, { result: 'ok'});
     }, callback);  
   };
 
