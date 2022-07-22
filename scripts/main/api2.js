@@ -473,13 +473,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         }
       }
 
-      if (!addressFound) {
-        callback(400, {
-          error: 'Miner address not found',
-          result: null
-        });
-      }
-
       if (ipValid) {
         minerObject.payoutLimit = payoutLimit;
         console.log(minerObject);
