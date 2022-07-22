@@ -767,70 +767,33 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             delete minerObject.alertLimit;
             delete minerObject.email;
             delete minerObject.token; 
-
-            console.log(minerObject);
           }
 
-          
+          commands.push([
+            // ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)]
+          ]);
+
+          _this.executeCommands(commands, (results) => {
 
 
-          const output = { test: 'ok'};
-
-
-          if (error) {
-            callback(400, {
-              error: error,
-              result: null
-            })
-          } else {
-            callback(200, {
-              error: null,
-              result: output
-            });
-          }
-
+            if (error) {
+              callback(400, {
+                error: error,
+                result: null
+              })
+            } else {
+              callback(200, {
+                error: null,
+                result: 'ok'
+              });
+            }
+          }, callback);
         }
-        
-  
-        // if (!results[0]) {
-        
-        // }
-  
-        // if (token && miner.token != token) {
-        //   error ='The token is incorrect';
-        // }
-  
-        
-  
-        
-        
       }, callback);
     }
     
 
 
-
-    //   if (!results[0]) {
-    //     callback(400, {
-    //       error: 'Miner address cannot be found',
-    //       result: null 
-    //     });
-    //   }
-
-
-    //   if (!(miner.email)) {
-    //     callback(400, {
-    //       error: 'No email address registered',
-    //       result: null
-    //     });
-    //   }
-
-      // if (miner.alertsEnabled === true && miner.email.length > 0 && miner.token === token) {
-      //   miner.activityAlerts = false;
-      //   miner.paymentAlerts = false;
-      //   delete miner.alertLimit;
-      //   delete miner.email;
-      //   delete miner.token;
       //   commands.push([
       //     ['hset', `${ pool }:miners:primary`, address, JSON.stringify(miner)]
       //   ]);
