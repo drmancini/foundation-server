@@ -757,10 +757,18 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           });
         } else {
           commands.length = 0;
-          const miner = JSON.parse(results[0]);
+          const minerObject = JSON.parse(results[0]);
 
-          if (miner.token != token) {
-            error ='The token is incorrect';
+          if (minerObject.token != token) {
+            error ='The token is invalid';
+          } else {
+            minerObject.activityAlerts = false;
+            minerObject.paymentAlerts = false;
+            delete minerObject.alertLimit;
+            delete minerObject.email;
+            delete minerObject.token; 
+
+            console.log(minerObject);
           }
 
           
