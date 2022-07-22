@@ -733,27 +733,46 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /mine/unsubscribeEmail for miner [address]
   this.minerUnsubscribeEmail = function(pool, address, token, callback) {
     const commands = [['hget', `${ pool }:miners:primary`, address]];
+    let error = '';
+
+    if (!address) {
+      error: 'No address supplied';
+    }
+
+    if (!token) {
+      error: 'No token supplied';
+    }
 
     _this.executeCommands(commands, (results) => {
-      const miner = JSON.parse(results[0]);
-      let error = '';
       commands.length = 0;
+      const miner = JSON.parse(results[0]);
 
       if (!results[0]) {
         error: 'Miner address cannot be found';
       }
 
-      if (!token || !address) {
-        error: 'Missing API parameters';
-      } 
+      if (token && miner.token != token) {
+        error: 'The token is incorrect';
+      }
+
+      
 
       const output = { test: 'ok'};
-      callback(200, output);
+      if (error) {
+        callback(400, {
+          error: error,
+          result: null
+        })
+      } else {
+        callback(200, {
+          error: null,
+          result: output
+        });
+      }
+      
     }, callback);
 
-    // _this.executeCommands(commands, (results) => {
-    //   const miner = JSON.parse(results[0]);
-    //   commands.length = 0;
+
 
     //   if (!results[0]) {
     //     callback(400, {
@@ -762,12 +781,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     //     });
     //   }
 
-    //   if (miner.token != token) {
-    //     callback(400, {
-    //       error: 'The token is incorrect',
-    //       result: null
-    //     });
-    //   }
 
     //   if (!(miner.email)) {
     //     callback(400, {
