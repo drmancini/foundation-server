@@ -65,10 +65,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       if (results[0]) {
         minerObject = JSON.parse(results[0]);
       } else {
-        // callback(400, {
-        //   error: 'Miner address not found',
-        //   result: null
-        // });
+        callback(400, {
+          error: 'Miner address not found',
+          result: null
+        });
       };
       
       // if (!ipAddress) {
