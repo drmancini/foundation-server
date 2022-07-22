@@ -77,7 +77,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         });
       }
 
-      if (!email && !emailPattern.test(minerObject.email.test)) {
+      if (!email && !emailPattern.test(minerObject.email)) {
         callback(400, {
           error: 'Email address not set',
           result: null
