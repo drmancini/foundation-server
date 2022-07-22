@@ -740,7 +740,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       });
     }
 
-    // const commands = [['hget', `${ pool }:miners:primary`, address]];
+    const commands = [['hget', `${ pool }:miners:primary`, address]];
+
+    _this.executeCommands(commands, (results) => {
+      callback(200, { result: 'ok'});
+    }, callback);
+
     // _this.executeCommands(commands, (results) => {
     //   const miner = JSON.parse(results[0]);
     //   commands.length = 0;
