@@ -770,6 +770,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           }
 
           commands.push([
+            []
             // ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)]
           ]);
 
