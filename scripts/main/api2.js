@@ -128,7 +128,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const alertLimit = body.alertLimit || 10;
 
     console.log(body);
-    
+
     const commands = [
       ['hget', `${ pool }:miners:${ blockType }`, address],
       ['hgetall', `${ pool }:workers:${ blockType }:shared`],
@@ -169,7 +169,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         miner.alertLimit = alertLimit;
         miner.token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
 
-        commands.push(['hset', `${ pool }:miners:${ blockType }`, address, JSON.stringify(miner)]);
+        // commands.push(['hset', `${ pool }:miners:${ blockType }`, address, JSON.stringify(miner)]);
         _this.executeCommands(commands, (results) => {
           callback(200, {
             error: null,
