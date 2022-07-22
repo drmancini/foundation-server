@@ -8,7 +8,6 @@ const utils = require('./utils');
 const Algorithms = require('foundation-stratum').algorithms;
 const { Sequelize } = require('sequelize');
 const PaymentsModel = require('../../models/payments.model');
-const { CommandCompleteMessage } = require('pg-protocol/dist/messages');
 
 ////////////////////////////////////////////////////////////////////////////////
 
