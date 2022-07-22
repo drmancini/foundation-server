@@ -113,21 +113,19 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         ];
 
         _this.executeCommands(commands, (results) => {
-        //   if (results[0] == 0) {
-        //     callback(200, {
-        //       error: null,
-        //       result: 'Notification settings changed'
-        //     });
-        //   } else {
-        //     callback(400, {
-        //       error: 'Notification settings unchanged',
-        //       result: null
-        //     });
-        //   }
-          callback(200, { result: 'ok'});
+          if (results[0] == 0) {
+            callback(200, {
+              error: null,
+              result: 'Notification settings changed'
+            });
+          } else {
+            callback(400, {
+              error: 'Notification settings unchanged',
+              result: null
+            });
+          }
         }, callback);
 
-        
       } else {
         callback(400, {
           error: 'IP address does not belong to active miner',
