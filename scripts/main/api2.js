@@ -736,7 +736,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     _this.executeCommands(commands, (results) => {
 
-        if (!results[0]) {
+      if (!results[0]) {
         callback(400, {
           error: 'Miner address cannot be found',
           result: null 
@@ -749,11 +749,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           error: 'Missing API parameters',
           result: null 
         });
-      } else {
-        callback(200, { result: 'ok'});
-      }
+      } 
 
-      
+      const output = { test: 'ok'};
+      callback(200, output);
     }, callback);
 
     // _this.executeCommands(commands, (results) => {
