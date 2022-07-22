@@ -324,6 +324,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       } else {
         hiddenEmail = '';
       }
+      console.log(miner);
       const output = {
         firstJoined: miner.firstJoined,
         payoutLimit: miner.payoutLimit || 0,
