@@ -42,7 +42,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     switch (template) {
       case 'subscribe':
-        activeTemplate = '../../handlebars/registration.handlebars.js';
+        activeTemplate = '../../handlebars/registration.handlebars';
         break;
       default:
         console.log('incorrect template selected');
@@ -70,8 +70,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     const filePath = path.join(__dirname, activeTemplate);
     const source = fs.readFileSync(filePath, 'utf-8').toString();
-    const tempTemplate = handlebars.templates[source];    
-    // const tempTemplate = handlebars.compile(source);    
+    const tempTemplate = handlebars.compile(source);    
     const htmlToSend = tempTemplate(replacements);
 
     const messageObject = {
