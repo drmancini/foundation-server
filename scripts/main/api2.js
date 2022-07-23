@@ -63,12 +63,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const filePath = path.join(__dirname, '../../handlebars/registration.handlebars.js');
     const source = fs.readFileSync(filePath, 'utf-8').toString();
     // const template = handlebars.compile(source);
-    const replacements = {
+    const tempReplacements = {
       minerAddress: 'Umut YEREBAKMAZ',
       unsubscribeLink: 'asdasd',
       unsubscribeLink: 'dssadsa'
     };
-    const htmlToSend = source(replacements);
+    const htmlToSend = source(tempReplacements);
 
     
 
