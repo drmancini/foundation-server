@@ -38,9 +38,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   this.mailer = async function (email, subject, template, replacements) {
-    // Generate test SMTP service account from ethereal.email
-    // Only needed if you don't have a real mail account for testing
-    let testAccount = await nodemailer.createTestAccount();
+    let activeTemplate;
+
+    switch (template) {
+      case 'subscribe':
+        activeTemplate = '../../handlebars/registration.handlebars';
+        break;
+      default:
+        console.log('incorrect template selected');
+    }
   
     // create reusable transporter object using the default SMTP transport
     let transporter = nodemailer.createTransport({
@@ -61,27 +67,23 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       // },
     });
   
-    const filePath = path.join(__dirname, '../../handlebars/registration.handlebars');
+
+    const filePath = path.join(__dirname, activeTemplate);
     const source = fs.readFileSync(filePath, 'utf-8').toString();
-    const tempTemplate = handlebars.compile(source);
-    
+    const tempTemplate = handlebars.compile(source);    
     const htmlToSend = tempTemplate(replacements);
 
-    
-
     const messageObject = {
-      from: '"Raptoreum zone" <info@raptoreum.zone>', // sender address
-      to: email, // list of receivers
-      subject: subject, // Subject line
-      // text: "Hello world?", // plain text body
-      html: htmlToSend, // html body
+      from: '"Raptoreum zone" <info@raptoreum.zone>',
+      to: email, 
+      subject: subject, 
+      html: htmlToSend
     };
 
     // send mail with defined transport object
     let info = await transporter.sendMail(messageObject);
   
     console.log("Message sent: %s", info.messageId);
-    // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
   };
 
   // Main Endpoints
