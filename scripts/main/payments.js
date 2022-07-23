@@ -912,6 +912,8 @@ const PoolPayments = function (logger, client, sequelize) {
     // Update Worker Shares
     const deleteCurrent = function(round, pool, blockType) {
       return [
+        ['del', `${ pool }:rounds:${ blockType }:round-${ round.height }:work`],
+        ['del', `${ pool }:rounds:${ blockType }:round-${ round.height }:times`],
         ['del', `${ pool }:rounds:${ blockType }:round-${ round.height }:counts`],
         ['del', `${ pool }:rounds:${ blockType }:round-${ round.height }:shares`]];
     };

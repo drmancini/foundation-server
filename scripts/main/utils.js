@@ -9,6 +9,10 @@ const crypto = require('crypto');
 
 ////////////////////////////////////////////////////////////////////////////////
 
+export async function sendEmail() {
+  console.log('email sent');
+}
+
 // Calculate Average of Object Property
 exports.calculateAverage = function(data, property) {
   const average = data.reduce((p_sum, a) => p_sum + a[property], 0) / data.length;

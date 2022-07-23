@@ -8,6 +8,8 @@ const utils = require('./utils');
 const Algorithms = require('foundation-stratum').algorithms;
 const { Sequelize } = require('sequelize');
 const nodemailer = require("nodemailer");
+const handlebars = require("handlebars");
+const fs = require("fs");
 const PaymentsModel = require('../../models/payments.model');
 
 ////////////////////////////////////////////////////////////////////////////////
