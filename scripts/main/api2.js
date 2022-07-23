@@ -841,7 +841,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
               })
             } else {
               console.log('attempting redirect');
-              callback(301, `http://www.seznam.cz`);
+              callback(301, {  Location: `http://www.seznam.cz` });
               // Ideally redirect
             }
           }, callback);
