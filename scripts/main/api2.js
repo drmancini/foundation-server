@@ -64,12 +64,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const filePath = path.join(__dirname, '../../handlebars/registration.handlebars');
     const source = fs.readFileSync(filePath, 'utf-8').toString();
     const tempTemplate = handlebars.compile(source);
-    const tempReplacements = {
-      minerAddress: 'Umut YEREBAKMAZ',
-      unsubscribeLink: 'asdasd',
-      unsubscribeLink: 'dssadsa'
-    };
-    const htmlToSend = tempTemplate(tempReplacements);
+    
+    const htmlToSend = tempTemplate(replacements);
 
     
 
@@ -155,17 +151,18 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         minerObject.paymentAlerts = paymentAlerts;
         minerObject.alertLimit = alertLimit;
         if (email && email != minerObject.email) {
+          const mailEmail = 'michal.pobuda@me.com';
+          const mailSubject = 'Confirm Raptoreum zone notification settings';
+          const mailTemplate = 'subscribe';
+          const token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+          const mailReplacements = {
+            minerAddress: address,
+            subscribeLink: `https://raptoreum.zone:3030/api/v2/zone/miner/subscribeEmail?address=${ address }&token=${ token }`,
+            unsubscribeLink: `https://raptoreum.zone:3030/api/v2/zone/miner/unsubscribeEmail?address=${ address }&token=${ token }`
+          };
           minerObject.subscribed = false;
           minerObject.email = email;
-          minerObject.token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
-          const mailEmail = 'michal.pobuda@me.com';
-          const mailSubject = 'subscribe dude';
-          const mailTemplate = 'subscribe';
-          const mailReplacements = {
-            address: 'asdasdasdasdasd',
-            subscribeLink: 'asdasd',
-            unsubscribeLink: 'asdasasd'
-          };
+          minerObject.token = token;
           _this.mailer(mailEmail, mailSubject, mailTemplate, mailReplacements).catch(console.error);
         }
 
