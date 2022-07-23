@@ -9,9 +9,9 @@ const crypto = require('crypto');
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export async function sendEmail() {
-  console.log('email sent');
-}
+// export async function sendEmail() {
+//   console.log('email sent');
+// }
 
 // Calculate Average of Object Property
 exports.calculateAverage = function(data, property) {
