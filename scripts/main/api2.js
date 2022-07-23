@@ -70,7 +70,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     const filePath = path.join(__dirname, activeTemplate);
     const source = fs.readFileSync(filePath, 'utf-8').toString();
-    const tempTemplate = handlebars.source;    
+    const tempTemplate = handlebars.templates[source];    
     // const tempTemplate = handlebars.compile(source);    
     const htmlToSend = tempTemplate(replacements);
 
