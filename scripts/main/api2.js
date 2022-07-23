@@ -829,20 +829,25 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             minerObject.subscribed = true;
           }
 
-          commands.push([
-            ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)]
-          ]);
-
-          _this.executeCommands(commands, (results) => {
-            if (error) {
-              callback(400, {
-                error: error,
-                result: null
-              })
-            } else {
-              callback(301, {  Location: `http://www.seznam.cz` });
-            }
-          }, callback);
+          if (!error) {
+            commands.push([
+              ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)]
+            ]);
+            _this.executeCommands(commands, (results) => {
+              
+                // commands.length = 0;
+                // _this.executeCommands(commands, (results) => {
+                //   callback(301, {  Location: `http://dev.raptoreum.zone/miners/${ address }` });
+                // }, callback);
+                callback(301, {  Location: `http://dev.raptoreum.zone/miners/${ address }` });
+              
+            }, callback);
+          } else {
+            callback(400, {
+              error: error,
+              result: null
+            })
+          }
         }
       }, callback);
     }
