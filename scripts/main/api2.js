@@ -61,15 +61,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       // },
     });
   
-    const filePath = path.join(__dirname, '../../handlebars/registration.handlebars.js');
+    const filePath = path.join(__dirname, '../../handlebars/registration.handlebars');
     const source = fs.readFileSync(filePath, 'utf-8').toString();
-    // const template = handlebars.compile(source);
+    const template = handlebars.compile(source);
     const tempReplacements = {
       minerAddress: 'Umut YEREBAKMAZ',
       unsubscribeLink: 'asdasd',
       unsubscribeLink: 'dssadsa'
     };
-    const htmlToSend = source(tempReplacements);
+    const htmlToSend = template(tempReplacements);
 
     
 
