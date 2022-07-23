@@ -42,7 +42,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     switch (template) {
       case 'subscribe':
-        activeTemplate = '../../handlebars/registration.handlebars';
+        activeTemplate = '../../handlebars/registration.handlebars.js';
         break;
       default:
         console.log('incorrect template selected');
@@ -70,7 +70,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     const filePath = path.join(__dirname, activeTemplate);
     const source = fs.readFileSync(filePath, 'utf-8').toString();
-    const tempTemplate = handlebars.compile(source);    
+    const tempTemplate = handlebars.source;    
+    // const tempTemplate = handlebars.compile(source);    
     const htmlToSend = tempTemplate(replacements);
 
     const messageObject = {
@@ -825,22 +826,20 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
           if (minerObject.token != token) {
             error ='The token is invalid';
-          } else {
-            minerObject.subscribed = true;
-          }
+          } 
 
           if (!error) {
+            minerObject.subscribed = true;
+
             commands.push([
               ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)]
             ]);
             _this.executeCommands(commands, (results) => {
-              
-                // commands.length = 0;
-                // _this.executeCommands(commands, (results) => {
-                //   callback(301, {  Location: `http://dev.raptoreum.zone/miners/${ address }` });
-                // }, callback);
+                commands.length = 0;
+
+                // improve redirect so that I display a "subscribed" message
+
                 callback(301, {  Location: `http://dev.raptoreum.zone/miners/${ address }` });
-              
             }, callback);
           } else {
             callback(400, {
