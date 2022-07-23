@@ -1588,7 +1588,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       body: message,
     };
     if (code == 301) {
-      response.writeHead(code, { message }).end();
+      response.writeHead(code, message ).end();
     } else {
       response.writeHead(code, _this.headers);
       response.end(JSON.stringify(payload));
