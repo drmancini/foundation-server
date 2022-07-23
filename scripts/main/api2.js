@@ -840,6 +840,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
                 result: null
               })
             } else {
+              console.log('attempting redirect');
               callback(301, `http://www.seznam.cz`);
               // Ideally redirect
             }
@@ -1589,6 +1590,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       body: message,
     };
     if (code == 301) {
+      console.log('Im here');
       response.writeHead(code, { message }).end();
     } else {
       response.writeHead(code, _this.headers);
