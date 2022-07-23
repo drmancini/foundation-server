@@ -794,7 +794,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   }
 
-  // API Endpoint for /mine/unsubscribeEmail for miner [address]
+  // API Endpoint for /mine/subscribeEmail for miner [address]
   this.minerSubscribeEmail = function(pool, address, token, callback) {
     const commands = [['hget', `${ pool }:miners:primary`, address]];
     let error;
@@ -840,10 +840,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
                 result: null
               })
             } else {
-              callback(200, {
-                error: null,
-                result: 'Miner subscribed to notifications'
-              });
+              callback(301, `http://www.seznam.cz`);
               // Ideally redirect
             }
           }, callback);
@@ -1591,8 +1588,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       headers: _this.headers,
       body: message,
     };
-    response.writeHead(code, _this.headers);
-    response.end(JSON.stringify(payload));
+    if (code == 301) {
+      response.writeHead(code, { message }).end();
+    } else {
+      response.writeHead(code, _this.headers);
+      response.end(JSON.stringify(payload));
+    }
   };
 
   // Determine API Endpoint Called
