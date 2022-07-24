@@ -1438,11 +1438,12 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
       for (const [key, value] of Object.entries(results[1])) {
         const miner = key.split('.')[0];
-        totalWork += value;
-        if (!miner in minerWork) {
-          minerWork[miner] = value;
+        const work = parseFloat(value);
+        totalWork += work;
+        if (!(miner in minerWork)) {
+          minerWork[miner] = work;
         } else {
-          minerWork[miner] += value;
+          minerWork[miner] += work;
         }
       }
       
