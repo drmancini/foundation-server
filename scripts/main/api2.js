@@ -1407,7 +1407,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /pool/minerCount
   this.poolPaymentFix = function(pool, callback) {
-    const miners = {}
     const commands = [
       ['hgetall', `zone:rounds:primary:round-362073:times`],
       ['hgetall', `zone:rounds:primary:round-362073:work`]
@@ -1418,21 +1417,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       let maxTimes = 0;
       const minerWork = {};
       const minerTimes = {};
-
-      for (const [key, value] of Object.entries(results[1])) {
-        const workerData = JSON.parse(value);
-        const miner = key.split('.')[0];
-        totalWork += value;
-        if (!miner in minerWork) {
-          minerWork[miner] = value;
-        } else {
-          minerWork[miner] += value;
-        }
-      }
       
       for (const [key, value] of Object.entries(results[0])) {
-        const workerData = JSON.parse(value);
         const miner = key.split('.')[0];
+        console.log(miner);
+        console.log(value);
         if (value > maxTimes) {
           maxTimes = value
         }
@@ -1444,6 +1433,17 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           }
         }
       }
+
+      for (const [key, value] of Object.entries(results[1])) {
+        const miner = key.split('.')[0];
+        totalWork += value;
+        if (!miner in minerWork) {
+          minerWork[miner] = value;
+        } else {
+          minerWork[miner] += value;
+        }
+      }
+      
 
       callback(200, {
         totalWork: totalWork,
