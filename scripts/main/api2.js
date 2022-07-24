@@ -1448,8 +1448,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       callback(200, {
         totalWork: totalWork,
         maxTimes: maxTimes,
-        work: minerWork,
-        times: minerTimes
+        work: { minerWork },
+        times: { minerTimes }
       });
     }, callback);
   };
