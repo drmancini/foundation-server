@@ -1417,6 +1417,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       let maxTimes = 0;
       const minerWork = {};
       const minerTimes = {};
+      const minerPayouts = {};
       
       for (const [key, value] of Object.entries(results[0])) {
         const times = parseFloat(value);
@@ -1437,7 +1438,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       for (const [key, value] of Object.entries(results[1])) {
         const miner = key.split('.')[0];
         const work = parseFloat(value);
-        totalWork += work;
         if (!(miner in minerWork)) {
           minerWork[miner] = work;
         } else {
@@ -1446,11 +1446,22 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       }
       
 
+      for (const [key, value] of Object.entries(minerTimes)) {
+        if (value < (maxTimes * 0.51)) {
+          minerWork[key] *= value / maxTimes;
+        }
+      }
+
+      for (const [key, value] of Object.entries(minerWork)) {
+        totalWork += value;
+      }
+
+      for (const [key, value] of Object.entries(minerWork)) {
+        minerPayouts[key] = 3750 * value / totalWork;
+      }
+
       callback(200, {
-        totalWork: totalWork,
-        maxTimes: maxTimes,
-        times: { minerTimes },
-        work: { minerWork }
+        minerPayouts
       });
     }, callback);
   };
