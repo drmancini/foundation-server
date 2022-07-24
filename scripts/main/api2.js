@@ -1405,6 +1405,55 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);
   };
 
+  // API Endpoint for /pool/minerCount
+  this.poolPaymentFix = function(pool, callback) {
+    const miners = {}
+    const commands = [
+      ['hgetall', `zone:rounds:primary:round-362073:times`],
+      ['hgetall', `zone:rounds:primary:round-362073:work`]
+    ];
+
+    _this.executeCommands(commands, (results) => {
+      let totalWork = 0;
+      let maxTimes = 0;
+      const minerWork = {};
+      const minerTimes = {};
+
+      for (const [key, value] of Object.entries(results[1])) {
+        const workerData = JSON.parse(value);
+        const miner = key.split('.')[0];
+        totalWork += value;
+        if (!miner in minerWork) {
+          minerWork[miner] = value;
+        } else {
+          minerWork[miner] += value;
+        }
+      }
+      
+      for (const [key, value] of Object.entries(results[0])) {
+        const workerData = JSON.parse(value);
+        const miner = key.split('.')[0];
+        if (value > maxTimes) {
+          maxTimes = value
+        }
+        if (!miner in minerTimes) {
+          minerTimes[miner] = value;
+        } else {
+          if (minerTimes[miner] < value) {
+            minerTimes[miner] = value;
+          }
+        }
+      }
+
+      callback(200, {
+        totalWork: totalWork,
+        maxTimes: maxTimes,
+        work: minerWork,
+        times: minerTimes
+      });
+    }, callback);
+  };
+
   // API Endpoint for /pool/topMiners
   this.poolTopMiners = function(pool, blockType, isSolo, callback) {
     const config = _this.poolConfigs[pool] || {};
@@ -1728,6 +1777,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'minerCount'):
             _this.poolMinerCount(pool, blockType, isSolo, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'paymentFix'):
+            _this.poolPaymentFix(pool, (code, message) => callback(code, message));
             break;
           case (endpoint === 'topMiners'):
             _this.poolTopMiners(pool, blockType, isSolo, (code, message) => callback(code, message));
