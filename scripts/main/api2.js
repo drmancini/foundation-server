@@ -1457,11 +1457,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       }
 
       for (const [key, value] of Object.entries(minerWork)) {
-        minerPayouts[key] = 3750 * value / totalWork;
+        minerPayouts[key] = Math.floor(3722 * value / totalWork * 1000) / 1000;
       }
 
       callback(200, {
-        minerPayouts
+        result: JSON.stringify(minerPayouts)
       });
     }, callback);
   };
