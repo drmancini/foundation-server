@@ -1419,18 +1419,19 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const minerTimes = {};
       
       for (const [key, value] of Object.entries(results[0])) {
+        const times = parseFloat(value);
         const miner = key.split('.')[0];
         console.log(miner);
         console.log(value);
-        if (value > maxTimes) {
-          maxTimes = value;
+        if (times > maxTimes) {
+          maxTimes = times;
         }
 
         if (!(miner in minerTimes)) {
-          minerTimes[miner] = value;
+          minerTimes[miner] = times;
         } else {
-          if (minerTimes[miner] < value) {
-            minerTimes[miner] = value;
+          if (minerTimes[miner] < times) {
+            minerTimes[miner] = times;
           }
         }
       }
