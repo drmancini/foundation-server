@@ -15,7 +15,7 @@
   >
     <tr>
       <td>
-        <table align="center" width="480">
+        <table align="center" width="480px">
           <tr>
             <td style="font-size: 20px;
               margin-bottom:10px;
@@ -34,12 +34,13 @@
             <td>
               <table 
                 align="center"
+                width="480px"
 
                 style="padding:32px; border:1px solid #C5D2D2; border-radius:8px; background: rgb(227,123,70); background: linear-gradient(180deg, #F2F3F3 0%, rgba(255, 255, 255, 0.5) 50%);"
               >
                 <tr>
-                  <td style="text-align:center; color: #838A8B; padding-bottom:16px">
-                    You have subscribed to receive notifications to this email address. We will alert you whenever a worker stops mining to the address
+                  <td align="center" style="font-weight: 700;font-size: 20px;">
+                    <span style="color: rgb(222, 133, 48);">{{ inactiveMiners }}</span> of {{ totalMiners }} workers went offline
                   </td>
                 </tr>
                 <tr>
@@ -49,9 +50,9 @@
                       font-size:13px;
                       vertical-align: middle;
                       font-family: 'Space Mono', monospace; 
-                      color: #313D40"
+                      color: #000"
                     >
-                      {{ minerAddress }}
+                    {{ minerAddress }}
                   </td>
                 </tr>
                 <tr>
@@ -64,9 +65,11 @@
                   <td 
                     style="margin-top:10px;width:100%;text-align:center;color:#838A8B;"
                   >
-                    Confirm your subscription by clicking the button
+                    We think
+                      (<span style="font-weight: 700;">{{ minerList }}</span>)
+                      {{ isOrAre }} offline.
                     <a 
-                      href="{{ subscribeLink }}"
+                      href="{{ dashboardLink }}"
                       style="
                         text-transform: uppercase;
                         text-decoration:none;
@@ -78,10 +81,10 @@
                         background-color:rgb(35,173,203);
                         display:block;
                         box-shadow: inset 0px 0px 8px rgba(255, 255, 255, 0.45);
-                        width: 30%;
+                        width: 150px;
                         margin:0 auto;
                         margin-top:26px">
-                      Subscribe
+                      See dashboard
                     </a>
                   </td>
                 </tr>
