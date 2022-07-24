@@ -1423,9 +1423,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         console.log(miner);
         console.log(value);
         if (value > maxTimes) {
-          maxTimes = value
+          maxTimes = value;
         }
-        if (!miner in minerTimes) {
+
+        if (!(miner in minerTimes)) {
           minerTimes[miner] = value;
         } else {
           if (minerTimes[miner] < value) {
@@ -1448,7 +1449,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       callback(200, {
         totalWork: totalWork,
         maxTimes: maxTimes,
-        work: { minerWork },
         times: { minerTimes }
       });
     }, callback);
