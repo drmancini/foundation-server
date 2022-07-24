@@ -1421,8 +1421,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       for (const [key, value] of Object.entries(results[0])) {
         const times = parseFloat(value);
         const miner = key.split('.')[0];
-        console.log(miner);
-        console.log(value);
         if (times > maxTimes) {
           maxTimes = times;
         }
@@ -1451,7 +1449,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       callback(200, {
         totalWork: totalWork,
         maxTimes: maxTimes,
-        times: { minerTimes }
+        times: { minerTimes },
+        work: { minerWork }
       });
     }, callback);
   };
