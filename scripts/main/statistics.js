@@ -310,11 +310,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         } 
       };
 
-      for (const [key, value] of Object.entries(minerNotifications)) {
-        
-        console.log(key);
-        console.log(value);
-      };
+      minerNotifications.forEach((notification) => {
+        console.log(notification.email);
+        console.log(notification.workers);
+      });
       
     callback(commands);
     }, handler);
