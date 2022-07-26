@@ -304,7 +304,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             }
 
             workerObject.offline = true;
-            commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker, JSON.stringify(workerObject)]);
+            // commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker, JSON.stringify(workerObject)]);
           }
         } 
       };
@@ -324,7 +324,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             minerList: minerList,
             unsubscribeLink: `https://raptoreum.zone:3030/api/v2/zone/miner/unsubscribeEmail?address=${ notification.miner }&token=${ notification.token }`
           };
-          utils.mailer(mailEmail, mailSubject, mailTemplate, mailReplacements).catch(console.error);
+          // utils.mailer(mailEmail, mailSubject, mailTemplate, mailReplacements).catch(console.error);
         });
       };
     callback(commands);
