@@ -320,8 +320,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         if (miner.subscribed === true && miner.activityAlerts === true) {
           minerNotifications.push({
             miner: key,
-            alertLimit: alertLimit,
-            email: email
+            alertLimit: miner.alertLimit,
+            email: miner.email
           });
         };
       }
