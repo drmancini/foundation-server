@@ -274,6 +274,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       // Find all subscribed miners with notifications set 
       for (const [key, value] of Object.entries(results[0])) {
         const miner = JSON.parse(value);
+        console.log(miner);
         if (miner.subscribed == true && miner.activityAlerts == true) {
           console.log('herts');
           minerNotifications.push({
