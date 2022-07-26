@@ -310,11 +310,11 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         } 
       };
 
-      workersOffline.forEach((element) => {
-        console.log(element);
-      })
-      console.log('workers offline:');
-      console.log(workersOffline);
+      for (const [key, value] of Object.entries(workersOffline)) {
+        console.log(key);
+        console.log(value);
+      };
+      
     callback(commands);
     }, handler);
   };
