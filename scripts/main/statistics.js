@@ -287,16 +287,16 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       console.log(minerNotifications);
 
       for (const [key, value] of Object.entries(results[1])) {
+        const workerObject = JSON.parse(value);
         const worker = key;
         const miner = worker.split('.')[0];
-        const workerObject = JSON.parse(value);
-        const shouldNotify = minerNotifications.find(element => element.miner == miner);
-
-        if (shouldNotify && workerObject.offline == false && workerObject.time < offlineCutoff) {
-        // if (workerObject.offline == false && workerObject.time < offlineCutoff && isNotified) {
-          
-console.log(worker);
-      //     const minerIndex = minerNotifications.map(object => object.miner).indexOf(miner);
+        const toNotify = minerNotifications.find(element => element.miner == miner);
+        
+        if (toNotify && workerObject.offline == false && workerObject.time < offlineCutoff) {
+          const minerIndex = minerNotifications.map(object => object.miner).indexOf(miner);
+          console.log(minerIndex);
+          console.log(worker);
+      
           
       //     console.log('we would notify ' + key);
 
@@ -316,7 +316,7 @@ console.log(worker);
         } 
       };
 
-      console.log('workers offlinr:');
+      console.log('workers offline:');
       console.log(workersOffline);
     callback(commands);
     }, handler);
