@@ -294,13 +294,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         
         if (toNotify && workerObject.offline == false && workerObject.time < offlineCutoff) {
           const minerIndex = minerNotifications.map(object => object.miner).indexOf(miner);
-          console.log(minerIndex);
+          console.log(minerNotifications[minerIndex].alertLimit);
           console.log(worker);
-      
-          
-      //     console.log('we would notify ' + key);
 
-      //     if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit * 60) {
+          // if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit * 60) {
       //       const workerName = worker.split('.')[1];
       //       console.log('miner ' + miner + ' has a limit ' + minerNotifications[minerIndex].alertLimit + ' and we will notify worker ' + workerName);
 
