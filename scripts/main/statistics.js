@@ -305,7 +305,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             if (workersOffline[miner] === undefined) {
               workersOffline[miner] = [ workerName ];
             } else {
-              workersOffline.push(workerName);
+              workersOffline[miner].push(workerName);
             }
               
       //       workersOffline[miner].push(workerName);
