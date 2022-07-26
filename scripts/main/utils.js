@@ -275,7 +275,7 @@ exports.mailer = async function (email, subject, template, replacements) {
   // send mail with defined transport object
   let info = await transporter.sendMail(messageObject);
 
-  return `Message sent: ${ info.messageId }`;
+  console.log(`Message sent: ${ info.messageId }`);
 };
 
 // Process Blocks for API Endpoints
