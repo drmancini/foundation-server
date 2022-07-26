@@ -40,7 +40,7 @@
               >
                 <tr>
                   <td align="center" style="font-weight: 700;font-size: 20px;">
-                    <span style="color: rgb(222, 133, 48);">{{ inactiveMiners }}</span> workers went offline
+                    <span style="color: rgb(222, 133, 48);">{{ inactiveMiners }}</span> workers offline
                   </td>
                 </tr>
                 <tr>
@@ -65,9 +65,8 @@
                   <td 
                     style="margin-top:10px;width:100%;text-align:center;color:#838A8B;"
                   >
-                    We think
-                      (<span style="font-weight: 700;">{{ minerList }}</span>)
-                      {{ isOrAre }} offline.
+                    We think that (<span style="font-weight: 700;">{{ minerList }}</span>)
+                      {{ isOrAre }} offline. Please check the dashboard and your miner settings.
                     <a 
                       href="{{ dashboardLink }}"
                       style="
