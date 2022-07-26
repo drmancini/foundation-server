@@ -286,13 +286,16 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       console.log('to be alerted:');
       console.log(minerNotifications);
 
-      // for (const [key, value] of Object.entries(results[1])) {
-      //   const worker = key;
-      //   const miner = worker.split('.')[0];
-      //   const workerObject = JSON.parse(value);
-      //   const shouldNotify = minerNotifications.find(el => { el.miner === miner });
+      for (const [key, value] of Object.entries(results[1])) {
+        const worker = key;
+        const miner = worker.split('.')[0];
+        const workerObject = JSON.parse(value);
+        const shouldNotify = minerNotifications.find(el => { el.miner === miner });
 
-      //   if (workerObject.offline == false && workerObject.time < offlineCutoff && isNotified) {
+        if (workerObject.offline == false && workerObject.time < offlineCutoff && isNotified) {
+        // if (workerObject.offline == false && workerObject.time < offlineCutoff && isNotified) {
+          
+console.log(worker);
       //     const minerIndex = minerNotifications.map(object => object.miner).indexOf(miner);
           
       //     console.log('we would notify ' + key);
@@ -310,8 +313,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       //       // commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)]);
       //       logger.debug('Statistics', _this.pool, `Worker ${ worker } was flagged as inactive`);
       //     }
-      //   } 
-      // };
+        } 
+      };
 
       console.log('workers offlinr:');
       console.log(workersOffline);
