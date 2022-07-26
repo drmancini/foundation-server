@@ -305,9 +305,9 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             }
 
             workerObject.offline = true;
+            console.log('workerobj:');
             console.log(workerObject);
-      //       // commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)]);
-            logger.debug('Statistics', _this.pool, `Worker ${ worker } was flagged as inactive`);
+            // commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)]);
           }
         } 
       };
