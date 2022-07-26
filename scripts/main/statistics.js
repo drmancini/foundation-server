@@ -302,7 +302,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             const workerName = worker.split('.')[1];
             console.log('miner ' + miner + ' has a limit ' + minerNotifications[minerIndex].alertLimit + ' and we will notify worker ' + workerName);
 
-            if (!(workersOffline[miner].length > 0)) {
+            if (workersOffline[miner] === undefined) {
               workersOffline[miner] = [];
             }
               console.log('asd: ' + workersOffline[miner].length);
