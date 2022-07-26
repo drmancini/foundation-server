@@ -296,8 +296,6 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           // if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit * 60) {
 
             const workerName = worker.split('.')[1];
-            console.log('miner ' + miner + ' has a limit ' + minerNotifications[minerIndex].alertLimit + ' and we will notify worker ' + workerName);
-
             if (minerNotifications[minerIndex].workers === undefined) {
               minerNotifications[minerIndex].workers = [ workerName ];
             } else {
@@ -312,6 +310,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 
       minerNotifications.forEach((notification) => {
         console.log(notification.email);
+        console.log(notification.miner);
         console.log(notification.workers);
       });
       
