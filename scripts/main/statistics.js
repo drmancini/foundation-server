@@ -311,7 +311,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 
       if (minerNotifications.length > 0) {
         minerNotifications.forEach((notification) => {
-          const minerList = notification.workers.join(', ');
+          // const minerList = notification.workers.join(', ');
           const inactiveWorkers = notification.workers.length;
           const mailEmail = 'michal.pobuda@me.com'; // notification.email
           const workerText = inactiveWorkers > 1 ? ' workers went offline' : ' worker went offline';
@@ -321,7 +321,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             inactiveMiners: inactiveWorkers,
             isOrAre: inactiveWorkers > 1 ? 'are' : 'is',
             minerAddress: notification.miner,
-            minerList: minerList,
+            // minerList: minerList,
             unsubscribeLink: `https://raptoreum.zone:3030/api/v2/zone/miner/unsubscribeEmail?address=${ notification.miner }&token=${ notification.token }`
           };
           // utils.mailer(mailEmail, mailSubject, mailTemplate, mailReplacements).catch(console.error);
