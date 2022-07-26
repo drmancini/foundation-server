@@ -266,7 +266,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     _this.executeCommands(workerLookups, (results) => {
       const commands = [];
       const dateNow = Date.now() / 1000 | 0;
-      const tenMinutes = 1 * 10; // change to 10 * 60
+      const tenMinutes = 60 * 10; // change to 10 * 60
       const offlineCutoff = dateNow - tenMinutes;
       const minerNotifications = [];
 
@@ -292,8 +292,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         if (toNotify && workerObject.offline == false && workerObject.time < offlineCutoff) {
           const minerIndex = minerNotifications.map(object => object.miner).indexOf(miner);
           
-          if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit) {
-          // if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit * 60) {
+          // if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit) {
+          if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit * 60) {
 
             const workerName = worker.split('.')[1];
             if (minerNotifications[minerIndex].workers === undefined) {
@@ -595,7 +595,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         }, () => { });
       }, () => { });
-    }, 10 * 1000); // every minute
+    }, 60 * 1000); // every minute
 
     setInterval(() => {
       _this.handleWorkerInfo2(blockType, (results) => {
