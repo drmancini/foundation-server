@@ -165,8 +165,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           minerObject.subscribed = false;
           minerObject.email = email;
           minerObject.token = token;
-          const email = utils.mailer(mailEmail, mailSubject, mailTemplate, mailReplacements).catch(console.error);
-          console.log(email);
+          const sentEmail = utils.mailer(mailEmail, mailSubject, mailTemplate, mailReplacements).catch(console.error);
+          console.log(sentEmail);
         }
 
         const commands = [
