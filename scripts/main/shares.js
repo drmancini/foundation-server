@@ -153,7 +153,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const workerShare = {
       time: dateNow / 1000 | 0,
       worker: worker,
-      ip: ip
+      ip: ip,
+      offline: false
     };
 
     // Build Secondary Output (Solo)
@@ -262,6 +263,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       time: dateNow / 1000 | 0,
       worker: worker,
       ip: ip,
+      offline: false
     };
     
     // Build Secondary Output (Solo)

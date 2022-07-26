@@ -299,6 +299,59 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
   };
 
+  // Tag Offline Workers in Redis
+  this.handleOfflineTags = function(blockType, callback, handler) {
+    const workerLookups = [
+      ['hgetall', `${_this.pool}:miners:${blockType}`],
+      ['hgetall', `${_this.pool}:workers:${blockType}:shared`]
+    ];
+    _this.executeCommands(workerLookups, (results) => {
+      const commands = [];
+      const dateNow = Date.now() / 1000 | 0;
+      const tenMinutes = 60 * 10;
+      const offlineCutoff = dateNow - tenMinutes;
+      const minerNotifications = [];
+      const workersOffline = {};
+
+      // Find all subscribed miners with notifications set 
+      for (const [key, value] of Object.entries(results[0])) {
+        const miner = JSON.parse(value);
+
+        if (miner.subscribed === true && miner.activityAlerts === true) {
+          minerNotifications.push({
+            miner: key,
+            alertLimit: alertLimit,
+            email: email
+          });
+        };
+      }
+
+      for (const [key, value] of Object.entries(results[1])) {
+        const worker = key;
+        const workerObject = JSON.parse(value);
+
+        if (workerObject.offline == false && workerObject.time < offlineCutoff) {
+          const miner = worker.split('.')[0];
+          const minerIndex = minerNotifications.map(object => object.miner).indexOf(miner);
+          if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit * 60) {
+            const workerName = worker.split('.')[1];
+            if (!(workersOffline[miner].length > 0)) {
+              workersOffline[miner] = [];
+            }
+            workersOffline[miner].push(workerName);
+            workerObject.offline = true;
+            console.log(workerObject);
+            // commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)]);
+            logger.debug('Statistics', _this.pool, `Worker ${ worker } was flagged as inactive`);
+          }
+        }      
+      };
+    callback(commands);
+    }, handler);
+  };
+
+  // Notify Offline Workers
+
   // Handle Offline Workers in Redis
   this.handleOfflineWorkers = function (blockType, callback, handler) {
     const workerLookups = [
@@ -553,7 +606,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 
     // Handle Offline Worker Tagging 
     setInterval(() => {
-      _this.handleOfflineWorkers(blockType, (results) => {
+      _this.handleOfflineTags(blockType, (results) => {
         _this.executeCommands(results, () => {
           if (_this.poolConfig.debug) {
             logger.debug('Statistics', _this.pool, `Finished updating offline worker tagginng for ${blockType} configuration.`);
