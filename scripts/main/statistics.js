@@ -289,10 +289,11 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 
       for (const [key, value] of Object.entries(results[1])) {
         const worker = key;
+        const miner = worker.split('.')[0];
         const workerObject = JSON.parse(value);
-
-        if (workerObject.offline == false && workerObject.time < offlineCutoff) {
-          const miner = worker.split('.')[0];
+        const isNotified = minerNotifications.some(el => { el.miner === miner });
+        
+        if (workerObject.offline == false && workerObject.time < offlineCutoff && isNotified) {
           const minerIndex = minerNotifications.map(object => object.miner).indexOf(miner);
           
           console.log('we would notify ' + key);
