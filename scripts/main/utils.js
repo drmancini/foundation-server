@@ -4,8 +4,12 @@
  *
  */
 
-const os = require('os');
 const crypto = require('crypto');
+const fs = require('fs');
+const handlebars = require("handlebars");
+const nodemailer = require("nodemailer");
+const os = require('os');
+const path = require('path');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -219,6 +223,59 @@ exports.loggerSeverity = {
   'warning': 2,
   'error': 3,
   'special': 4
+};
+
+// Send email 
+exports.mailer = async function (email, subject, template, replacements) {
+  let activeTemplate;
+
+  switch (template) {
+    case 'subscribe':
+      activeTemplate = '../../handlebars/registration.handlebars';
+      break;
+    case 'inactivity':
+      activeTemplate = '../../handlebars/inactive-miners.handlebars';
+      break;
+    default:
+      console.log('incorrect template selected');
+  }
+
+  // create reusable transporter object using the default SMTP transport
+  let transporter = nodemailer.createTransport({
+    sendmail: true,
+    newline: 'unix',
+    path: '/usr/sbin/sendmail',
+    secure: false,
+    // host: "localhost",
+    // port: 465,
+    // secure: true, // true for 465, false for other ports
+    // auth: {
+    //   user: "info", // generated ethereal user
+    //   pass: "lopata", // generated ethereal password
+    // },
+    // tls: {
+    //   // do not fail on invalid certs
+    //   rejectUnauthorized: false,
+    // },
+  });
+
+
+  const filePath = path.join(__dirname, activeTemplate);
+  const source = fs.readFileSync(filePath, 'utf-8').toString();
+  const tempTemplate = handlebars.compile(source);    
+  const htmlToSend = tempTemplate(replacements);
+
+  const messageObject = {
+    from: '"Raptoreum zone" <info@raptoreum.zone>',
+    to: email, 
+    subject: subject, 
+    html: htmlToSend
+  };
+
+  // send mail with defined transport object
+  let info = await transporter.sendMail(messageObject);
+
+  return `Message sent: ${ info.messageId }`;
 };
 
 // Process Blocks for API Endpoints

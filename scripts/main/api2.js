@@ -7,10 +7,10 @@
 const utils = require('./utils');
 const Algorithms = require('foundation-stratum').algorithms;
 const { Sequelize } = require('sequelize');
-const nodemailer = require("nodemailer");
-const handlebars = require("handlebars");
-const fs = require('fs');
-const path = require('path');
+// const nodemailer = require("nodemailer");
+// const handlebars = require("handlebars");
+// const fs = require('fs');
+// const path = require('path');
 const PaymentsModel = require('../../models/payments.model');
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -37,54 +37,54 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     'Content-Type': 'application/json'
   };
 
-  this.mailer = async function (email, subject, template, replacements) {
-    let activeTemplate;
+  // this.mailer = async function (email, subject, template, replacements) {
+  //   let activeTemplate;
 
-    switch (template) {
-      case 'subscribe':
-        activeTemplate = '../../handlebars/registration.handlebars';
-        break;
-      default:
-        console.log('incorrect template selected');
-    }
+  //   switch (template) {
+  //     case 'subscribe':
+  //       activeTemplate = '../../handlebars/registration.handlebars';
+  //       break;
+  //     default:
+  //       console.log('incorrect template selected');
+  //   }
   
-    // create reusable transporter object using the default SMTP transport
-    let transporter = nodemailer.createTransport({
-      sendmail: true,
-	    newline: 'unix',
-	    path: '/usr/sbin/sendmail',
-      secure: false,
-      // host: "localhost",
-      // port: 465,
-      // secure: true, // true for 465, false for other ports
-      // auth: {
-      //   user: "info", // generated ethereal user
-      //   pass: "lopata", // generated ethereal password
-      // },
-      // tls: {
-      //   // do not fail on invalid certs
-      //   rejectUnauthorized: false,
-      // },
-    });
+  //   // create reusable transporter object using the default SMTP transport
+  //   let transporter = nodemailer.createTransport({
+  //     sendmail: true,
+	//     newline: 'unix',
+	//     path: '/usr/sbin/sendmail',
+  //     secure: false,
+  //     // host: "localhost",
+  //     // port: 465,
+  //     // secure: true, // true for 465, false for other ports
+  //     // auth: {
+  //     //   user: "info", // generated ethereal user
+  //     //   pass: "lopata", // generated ethereal password
+  //     // },
+  //     // tls: {
+  //     //   // do not fail on invalid certs
+  //     //   rejectUnauthorized: false,
+  //     // },
+  //   });
   
 
-    const filePath = path.join(__dirname, activeTemplate);
-    const source = fs.readFileSync(filePath, 'utf-8').toString();
-    const tempTemplate = handlebars.compile(source);    
-    const htmlToSend = tempTemplate(replacements);
+  //   const filePath = path.join(__dirname, activeTemplate);
+  //   const source = fs.readFileSync(filePath, 'utf-8').toString();
+  //   const tempTemplate = handlebars.compile(source);    
+  //   const htmlToSend = tempTemplate(replacements);
 
-    const messageObject = {
-      from: '"Raptoreum zone" <info@raptoreum.zone>',
-      to: email, 
-      subject: subject, 
-      html: htmlToSend
-    };
+  //   const messageObject = {
+  //     from: '"Raptoreum zone" <info@raptoreum.zone>',
+  //     to: email, 
+  //     subject: subject, 
+  //     html: htmlToSend
+  //   };
 
-    // send mail with defined transport object
-    let info = await transporter.sendMail(messageObject);
+  //   // send mail with defined transport object
+  //   let info = await transporter.sendMail(messageObject);
   
-    console.log("Message sent: %s", info.messageId);
-  };
+  //   console.log("Message sent: %s", info.messageId);
+  // };
 
   // Main Endpoints
   //////////////////////////////////////////////////////////////////////////////
@@ -165,7 +165,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           minerObject.subscribed = false;
           minerObject.email = email;
           minerObject.token = token;
-          _this.mailer(mailEmail, mailSubject, mailTemplate, mailReplacements).catch(console.error);
+          const email = utils.mailer(mailEmail, mailSubject, mailTemplate, mailReplacements).catch(console.error);
+          console.log(email);
         }
 
         const commands = [
