@@ -275,7 +275,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       for (const [key, value] of Object.entries(results[0])) {
         const miner = JSON.parse(value);
 
-        if (miner.subscribed === true && miner.activityAlerts === true) {
+        if (miner.subscribed == true && miner.activityAlerts == true) {
+          console.log('herts');
           minerNotifications.push({
             miner: key,
             alertLimit: miner.alertLimit,
@@ -291,8 +292,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         const worker = key;
         const miner = worker.split('.')[0];
         const workerObject = JSON.parse(value);
-        const isNotified = minerNotifications.some(el => { el.miner === miner });
-        
+        const shouldNotify = minerNotifications.find(el => { el.miner === miner });
+
         if (workerObject.offline == false && workerObject.time < offlineCutoff && isNotified) {
           const minerIndex = minerNotifications.map(object => object.miner).indexOf(miner);
           
