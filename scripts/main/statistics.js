@@ -310,6 +310,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
 
       if (minerNotifications.length > 0) {
         minerNotifications.forEach((notification) => {
+          console.log(notification);
           const minerList = notification.workers.length > 1 ? notification.workers.join(', ') : notification.workers[0];
           const inactiveWorkers = notification.workers.length;
           const mailEmail = 'michal.pobuda@me.com'; // notification.email
