@@ -277,7 +277,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         if (miner.subscribed == true && miner.activityAlerts == true) {
           minerNotifications.push({
             miner: key,
-            token: token,
+            token: miner.token,
             alertLimit: miner.alertLimit,
             email: miner.email
           });
