@@ -303,9 +303,11 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             console.log('miner ' + miner + ' has a limit ' + minerNotifications[minerIndex].alertLimit + ' and we will notify worker ' + workerName);
 
             if (workersOffline[miner] === undefined) {
-              workersOffline[miner] = [];
+              workersOffline[miner] = [ workerName ];
+            } else {
+              workersOffline.push(workerName);
             }
-              console.log('asd: ' + workersOffline[miner].length);
+              
       //       workersOffline[miner].push(workerName);
       //       workerObject.offline = true;
       //       console.log(workerObject);
