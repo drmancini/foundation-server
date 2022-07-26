@@ -294,10 +294,13 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         
         if (toNotify && workerObject.offline == false && workerObject.time < offlineCutoff) {
           const minerIndex = minerNotifications.map(object => object.miner).indexOf(miner);
-          console.log(minerNotifications[minerIndex].alertLimit);
-          console.log(worker);
+          
 
+          if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit) {
+            console.log(worker);
           // if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit * 60) {
+
+
       //       const workerName = worker.split('.')[1];
       //       console.log('miner ' + miner + ' has a limit ' + minerNotifications[minerIndex].alertLimit + ' and we will notify worker ' + workerName);
 
@@ -309,7 +312,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       //       console.log(workerObject);
       //       // commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)]);
       //       logger.debug('Statistics', _this.pool, `Worker ${ worker } was flagged as inactive`);
-      //     }
+          }
         } 
       };
 
