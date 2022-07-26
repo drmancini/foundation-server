@@ -272,6 +272,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       const workersOffline = {};
 
       // Find all subscribed miners with notifications set 
+      console.log(results[0]);
       for (const [key, value] of Object.entries(results[0])) {
         const miner = JSON.parse(value);
         console.log(key);
