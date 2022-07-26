@@ -305,13 +305,14 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             }
 
             workerObject.offline = true;
-            console.log('workerobj:');
-            console.log(workerObject);
-            // commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)]);
+            // commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker, JSON.stringify(workerObject)]);
           }
         } 
       };
 
+      workersOffline.forEach((element) => {
+        console.log(element);
+      })
       console.log('workers offline:');
       console.log(workersOffline);
     callback(commands);
