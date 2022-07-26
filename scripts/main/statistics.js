@@ -298,10 +298,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             const workerName = worker.split('.')[1];
             console.log('miner ' + miner + ' has a limit ' + minerNotifications[minerIndex].alertLimit + ' and we will notify worker ' + workerName);
 
-            if (workersOffline[miner] === undefined) {
-              workersOffline[miner] = [ workerName ];
+            if (minerNotifications[minerIndex].workers === undefined) {
+              minerNotifications[minerIndex].workers = [ workerName ];
             } else {
-              workersOffline[miner].push(workerName);
+              minerNotifications[minerIndex].workers.push(workerName);
             }
 
             workerObject.offline = true;
@@ -310,7 +310,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         } 
       };
 
-      for (const [key, value] of Object.entries(workersOffline)) {
+      for (const [key, value] of Object.entries(minerNotifications)) {
+        
         console.log(key);
         console.log(value);
       };
