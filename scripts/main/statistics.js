@@ -6,7 +6,6 @@
 
 const https = require('https');
 const utils = require('./utils');
-const nodemailer = require("nodemailer");
 const axios = require('axios');
 const { Console } = require('console');
 const { id } = require('apicache');
@@ -258,47 +257,6 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     });
   };
 
-  this.mailer = async function () {
-    // Generate test SMTP service account from ethereal.email
-    // Only needed if you don't have a real mail account for testing
-    let testAccount = await nodemailer.createTestAccount();
-  
-    // create reusable transporter object using the default SMTP transport
-    let transporter = nodemailer.createTransport({
-      sendmail: true,
-	    newline: 'unix',
-	    path: '/usr/sbin/sendmail',
-      secure: false,
-      // host: "localhost",
-      // port: 465,
-      // secure: true, // true for 465, false for other ports
-      // auth: {
-      //   user: "info", // generated ethereal user
-      //   pass: "lopata", // generated ethereal password
-      // },
-      // tls: {
-      //   // do not fail on invalid certs
-      //   rejectUnauthorized: false,
-      // },
-    });
-  
-    // send mail with defined transport object
-    let info = await transporter.sendMail({
-      from: '"Raptoreum zone" <info@raptoreum.zone>', // sender address
-      to: "michal.pobuda@me.com", // list of receivers
-      subject: "Hello", // Subject line
-      text: "Hello world?", // plain text body
-      html: "<b>Hello world?</b>", // html body
-    });
-  
-    console.log("Message sent: %s", info.messageId);
-    // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
-  
-    // Preview only available when sending through an Ethereal account
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-    // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
-  };
-
   // Tag Offline Workers in Redis
   this.handleOfflineTags = function(blockType, callback, handler) {
     const workerLookups = [
@@ -308,7 +266,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     _this.executeCommands(workerLookups, (results) => {
       const commands = [];
       const dateNow = Date.now() / 1000 | 0;
-      const tenMinutes = 60 * 10;
+      const tenMinutes = 60 * 1; // change to 10
       const offlineCutoff = dateNow - tenMinutes;
       const minerNotifications = [];
       const workersOffline = {};
@@ -326,6 +284,9 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         };
       }
 
+      console.log('to be alerted:');
+      console.log(minerNotifications);
+
       for (const [key, value] of Object.entries(results[1])) {
         const worker = key;
         const workerObject = JSON.parse(value);
@@ -333,8 +294,13 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         if (workerObject.offline == false && workerObject.time < offlineCutoff) {
           const miner = worker.split('.')[0];
           const minerIndex = minerNotifications.map(object => object.miner).indexOf(miner);
+          
+          console.log('we would notify ' + key);
+
           if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit * 60) {
             const workerName = worker.split('.')[1];
+            console.log('miner ' + miner + ' has a limit ' + minerNotifications[minerIndex].alertLimit + ' and we will notify worker ' + workerName);
+
             if (!(workersOffline[miner].length > 0)) {
               workersOffline[miner] = [];
             }
@@ -344,8 +310,11 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             // commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker.worker, JSON.stringify(workerObject)]);
             logger.debug('Statistics', _this.pool, `Worker ${ worker } was flagged as inactive`);
           }
-        }      
+        } 
       };
+
+      console.log('workers offlinr:');
+      console.log(workersOffline);
     callback(commands);
     }, handler);
   };
