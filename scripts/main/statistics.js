@@ -292,7 +292,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         const workerObject = JSON.parse(value);
         const shouldNotify = minerNotifications.find(el => { el.miner === miner });
 
-        if (workerObject.offline == false && workerObject.time < offlineCutoff && isNotified) {
+        if (shouldNotify) {
         // if (workerObject.offline == false && workerObject.time < offlineCutoff && isNotified) {
           
 console.log(worker);
