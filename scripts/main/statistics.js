@@ -266,10 +266,9 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     _this.executeCommands(workerLookups, (results) => {
       const commands = [];
       const dateNow = Date.now() / 1000 | 0;
-      const tenMinutes = 60000 * 10; // change to 10 * 60
+      const tenMinutes = 1 * 10; // change to 10 * 60
       const offlineCutoff = dateNow - tenMinutes;
       const minerNotifications = [];
-      const workersOffline = {};
 
       // Find all subscribed miners with notifications set 
       for (const [key, value] of Object.entries(results[0])) {
@@ -304,14 +303,14 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             }
 
             workerObject.offline = true;
-            // commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker, JSON.stringify(workerObject)]);
+            commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker, JSON.stringify(workerObject)]);
           }
         } 
       };
 
       if (minerNotifications.length > 0) {
         minerNotifications.forEach((notification) => {
-          // const minerList = notification.workers.join(', ');
+          const minerList = notification.workers.length > 1 ? notification.workers.join(', ') : notification.workers[0];
           const inactiveWorkers = notification.workers.length;
           const mailEmail = 'michal.pobuda@me.com'; // notification.email
           const workerText = inactiveWorkers > 1 ? ' workers went offline' : ' worker went offline';
@@ -321,10 +320,10 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             inactiveMiners: inactiveWorkers,
             isOrAre: inactiveWorkers > 1 ? 'are' : 'is',
             minerAddress: notification.miner,
-            // minerList: minerList,
+            minerList: minerList,
             unsubscribeLink: `https://raptoreum.zone:3030/api/v2/zone/miner/unsubscribeEmail?address=${ notification.miner }&token=${ notification.token }`
           };
-          // utils.mailer(mailEmail, mailSubject, mailTemplate, mailReplacements).catch(console.error);
+          utils.mailer(mailEmail, mailSubject, mailTemplate, mailReplacements).catch(console.error);
         });
       };
     callback(commands);
@@ -594,7 +593,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         }, () => { });
       }, () => { });
-    }, 100000 * 1000); // every minute
+    }, 10 * 1000); // every minute
 
     setInterval(() => {
       _this.handleWorkerInfo2(blockType, (results) => {
