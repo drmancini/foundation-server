@@ -113,7 +113,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     }
 
     if (!isSoloMining) {
-      lastBlockTime = (blockType == 'primary') ? (results[4].blockTime || 0) : (results[5].blockTime || 0);
+      // lastBlockTime = (blockType == 'primary') ? (results[4].blockTime || 0) : (results[5].blockTime || 0);
     } 
 
     // Establish Last Share Data for Miner
