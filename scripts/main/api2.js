@@ -1367,24 +1367,28 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       
       for (const [key, value] of Object.entries(results[0])) {
         const miner = key.split('.')[0];
-        const work = parseFloat(value);
-        workTotalWork += work;
-        if (!(miner in workWork)) {
-          workWork[miner] = work;
-        } else {
-          workWork[miner] += work;
+        if (miner == 'RH9D66SNzq4SNMpb2phFwQKtnosFaQzfE9') {
+          const work = parseFloat(value);
+          workTotalWork += work;
+          if (!(miner in workWork)) {
+            workWork[miner] = work;
+          } else {
+            workWork[miner] += work;
+          }
         }
       }
 
       for (const [key, value] of Object.entries(results[1])) {
         const miner = key.split('.')[0];
-        const share = JSON.parse(value);
-        const work = parseFloat(share.work);
-        sharesTotalWork += work;
-        if (!(miner in sharesWork)) {
-          sharesWork[miner] = work;
-        } else {
-          sharesWork[miner] += work;
+        if (miner == 'RH9D66SNzq4SNMpb2phFwQKtnosFaQzfE9') {
+          const share = JSON.parse(value);
+          const work = parseFloat(share.work);
+          sharesTotalWork += work;
+          if (!(miner in sharesWork)) {
+            sharesWork[miner] = work;
+          } else {
+            sharesWork[miner] += work;
+          }
         }
       }
 
