@@ -1407,7 +1407,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       }
 
       callback(200, {
-        result: JSON.stringify(minerPayouts)
+        result: JSON.stringify(minerPayouts),
+        work: JSON.stringify(minerWork)
       });
     }, callback);
   };
