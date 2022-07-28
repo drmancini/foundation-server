@@ -1377,7 +1377,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       }
 
       for (const [key, value] of Object.entries(workWork)) {
-        const payout = reward * value / workTotalWork;
+        const payout = Math.floor(reward * value / workTotalWork * 1000) / 1000;
         payouts[key] = payout;
       }
 
