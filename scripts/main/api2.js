@@ -678,38 +678,38 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /miner/roundTimes for miner [address]
-  this.minerRoundTimes = function(pool, address, blockType, callback) {
-    /* istanbul ignore next */
-    if (blockType == '') {
-      blockType = 'primary';
-    }
-    const output = {
-      maxTimes: 0,
-      minerTimes: 0
-    };
-    const commands = [
-      ['hgetall', `${ pool }:rounds:${ blockType }:current:shared:times`]];
-    _this.executeCommands(commands, (results) => {
-      for (const [key, value] of Object.entries(results[0])) {
-        const miner = key.split('.')[0] || null;
-        const work = parseFloat(value);
-        if (work > output.maxTimes) {
-          output.maxTimes = work;
-          // console.log('max: ' + value);
-        }
+  // this.minerRoundTimes = function(pool, address, blockType, callback) {
+  //   /* istanbul ignore next */
+  //   if (blockType == '') {
+  //     blockType = 'primary';
+  //   }
+  //   const output = {
+  //     maxTimes: 0,
+  //     minerTimes: 0
+  //   };
+  //   const commands = [
+  //     ['hgetall', `${ pool }:rounds:${ blockType }:current:shared:times`]];
+  //   _this.executeCommands(commands, (results) => {
+  //     for (const [key, value] of Object.entries(results[0])) {
+  //       const miner = key.split('.')[0] || null;
+  //       const work = parseFloat(value);
+  //       if (work > output.maxTimes) {
+  //         output.maxTimes = work;
+  //         // console.log('max: ' + value);
+  //       }
 
-        if (miner === address && work > output.minerTimes) {
-          output.minerTimes = work;
-          // console.log('miner: ' + value);
-        }
-      };
+  //       if (miner === address && work > output.minerTimes) {
+  //         output.minerTimes = work;
+  //         // console.log('miner: ' + value);
+  //       }
+  //     };
 
-      callback(200, {
-        error: null,
-        result: output
-      });
-    }, callback);
-  }
+  //     callback(200, {
+  //       error: null,
+  //       result: output
+  //     });
+  //   }, callback);
+  // }
 
   // API Endpoint for /miner/roundTimes for miner [address]
   this.minerRoundWork = function(pool, address, blockType, callback) {
@@ -1355,34 +1355,33 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /pool/minerCount
   this.poolPaymentFix = function(pool, callback) {
     const commands = [
-      ['hgetall', `zone:rounds:primary:round-362073:times`],
-      ['hgetall', `zone:rounds:primary:round-362073:work`]
+      ['hgetall', `zone:rounds:primary:round-364573:work`]
     ];
 
     _this.executeCommands(commands, (results) => {
       let totalWork = 0;
-      let maxTimes = 0;
+      // let maxTimes = 0;
       const minerWork = {};
-      const minerTimes = {};
+      // const minerTimes = {};
       const minerPayouts = {};
       
+      // for (const [key, value] of Object.entries(results[0])) {
+      //   const times = parseFloat(value);
+      //   const miner = key.split('.')[0];
+      //   if (times > maxTimes) {
+      //     maxTimes = times;
+      //   }
+
+      //   if (!(miner in minerTimes)) {
+      //     minerTimes[miner] = times;
+      //   } else {
+      //     if (minerTimes[miner] < times) {
+      //       minerTimes[miner] = times;
+      //     }
+      //   }
+      // }
+
       for (const [key, value] of Object.entries(results[0])) {
-        const times = parseFloat(value);
-        const miner = key.split('.')[0];
-        if (times > maxTimes) {
-          maxTimes = times;
-        }
-
-        if (!(miner in minerTimes)) {
-          minerTimes[miner] = times;
-        } else {
-          if (minerTimes[miner] < times) {
-            minerTimes[miner] = times;
-          }
-        }
-      }
-
-      for (const [key, value] of Object.entries(results[1])) {
         const miner = key.split('.')[0];
         const work = parseFloat(value);
         if (!(miner in minerWork)) {
@@ -1393,18 +1392,18 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       }
       
 
-      for (const [key, value] of Object.entries(minerTimes)) {
-        if (value < (maxTimes * 0.51)) {
-          minerWork[key] *= value / maxTimes;
-        }
-      }
+      // for (const [key, value] of Object.entries(minerTimes)) {
+      //   if (value < (maxTimes * 0.51)) {
+      //     minerWork[key] *= value / maxTimes;
+      //   }
+      // }
 
       for (const [key, value] of Object.entries(minerWork)) {
         totalWork += value;
       }
 
       for (const [key, value] of Object.entries(minerWork)) {
-        minerPayouts[key] = Math.floor(3722 * value / totalWork * 1000) / 1000;
+        minerPayouts[key] = Math.floor(3721.87559545 * value / totalWork * 1000) / 1000;
       }
 
       callback(200, {
@@ -1682,9 +1681,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           case (endpoint === 'stats2' && address.length > 0):
             _this.minerStats(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
             break;
-          case (endpoint === 'roundTimes' && address.length > 0):
-            _this.minerRoundTimes(pool, address, blockType, (code, message) => callback(code, message));
-            break;
+          // case (endpoint === 'roundTimes' && address.length > 0):
+          //   _this.minerRoundTimes(pool, address, blockType, (code, message) => callback(code, message));
+          //   break;
           case (endpoint === 'roundWork' && address.length > 0):
             _this.minerRoundWork(pool, address, blockType, (code, message) => callback(code, message));
             break;
