@@ -1362,7 +1362,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       let workTotalWork = 0;
       let sharesTotalWork = 0;
       const workWork = {};
-      const sharesWork = {};
+      const reward = 3721.87;
+      const payouts = {};
       
       for (const [key, value] of Object.entries(results[0])) {
         const miner = key.split('.')[0];
@@ -1375,9 +1376,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         }
       }
 
+      for (const [key, value] of Object.entries(workWork)) {
+        const payout = reward * value / workTotalWork;
+        payouts[key] = payout;
+      }
+
       callback(200, {
         // totalShares: sharesTotalWork,
         totalWork: workTotalWork,
+        payouts: JSON.stringify(payouts),
         // shares: JSON.stringify(sharesWork),
         work: JSON.stringify(workWork)
       });
