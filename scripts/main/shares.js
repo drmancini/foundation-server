@@ -42,12 +42,10 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const dateNow = Date.now();
     const lastBlockTime = lastBlock.blockTime || 0;
     const roundTime = (dateNow - lastBlockTime) / 1000;
-    console.log('round: ' + roundTime);
     const lastTime = lastShare.time || dateNow;
 
     // Check for Continous Primary Mining
     let times = lastShare.times || 0;
-    console.log('previous times: ' + times);
     const timeChange = utils.roundTo(Math.max(dateNow - lastTime, 0) / 1000, 4);
     
     if (timeChange < 900) {
@@ -55,7 +53,6 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     }
 
     if (times > roundTime) {
-      console.log('rewriting times!')
       times = roundTime;
     }
 
