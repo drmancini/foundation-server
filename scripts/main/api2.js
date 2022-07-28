@@ -1355,60 +1355,44 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /pool/minerCount
   this.poolPaymentFix = function(pool, callback) {
     const commands = [
-      ['hgetall', `zone:rounds:primary:round-364619:work`]
+      ['hgetall', `zone:rounds:primary:round-364784:work`],
+      ['hgetall', `zone:rounds:primary:round-364784:shares`]
     ];
 
     _this.executeCommands(commands, (results) => {
-      let totalWork = 0;
-      // let maxTimes = 0;
-      const minerWork = {};
-      // const minerTimes = {};
-      const minerPayouts = {};
+      let workTotalWork = 0;
+      let sharesTotalWork = 0;
+      const workWork = {};
+      const sharesWork = {};
       
-      // for (const [key, value] of Object.entries(results[0])) {
-      //   const times = parseFloat(value);
-      //   const miner = key.split('.')[0];
-      //   if (times > maxTimes) {
-      //     maxTimes = times;
-      //   }
-
-      //   if (!(miner in minerTimes)) {
-      //     minerTimes[miner] = times;
-      //   } else {
-      //     if (minerTimes[miner] < times) {
-      //       minerTimes[miner] = times;
-      //     }
-      //   }
-      // }
-
       for (const [key, value] of Object.entries(results[0])) {
         const miner = key.split('.')[0];
         const work = parseFloat(value);
-        if (!(miner in minerWork)) {
-          minerWork[miner] = work;
+        workTotalWork += work;
+        if (!(miner in workWork)) {
+          workWork[miner] = work;
         } else {
-          minerWork[miner] += work;
+          workWork[miner] += work;
         }
       }
-      
 
-      // for (const [key, value] of Object.entries(minerTimes)) {
-      //   if (value < (maxTimes * 0.51)) {
-      //     minerWork[key] *= value / maxTimes;
-      //   }
-      // }
-
-      for (const [key, value] of Object.entries(minerWork)) {
-        totalWork += value;
-      }
-
-      for (const [key, value] of Object.entries(minerWork)) {
-        minerPayouts[key] = Math.floor(3721.87559545 * value / totalWork * 1000) / 1000;
+      for (const [key, value] of Object.entries(results[1])) {
+        const miner = key.split('.')[0];
+        const share = JSON.parse(value);
+        const work = parseFloat(share.work);
+        sharesTotalWork += work;
+        if (!(miner in sharesWork)) {
+          sharesWork[miner] = work;
+        } else {
+          sharesWork[miner] += work;
+        }
       }
 
       callback(200, {
-        result: JSON.stringify(minerPayouts),
-        work: JSON.stringify(minerWork)
+        totalShares: sharesTotalWork,
+        totalWork: workTotalWork,
+        shares: JSON.stringify(sharesWork),
+        work: JSON.stringify(workWork)
       });
     }, callback);
   };
