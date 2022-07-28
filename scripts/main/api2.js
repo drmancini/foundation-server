@@ -1355,8 +1355,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /pool/minerCount
   this.poolPaymentFix = function(pool, callback) {
     const commands = [
-      ['hgetall', `zone:rounds:primary:round-364784:work`],
-      ['hgetall', `zone:rounds:primary:round-364784:shares`]
+      ['hgetall', `zone:rounds:primary:round-364888:work`]
     ];
 
     _this.executeCommands(commands, (results) => {
@@ -1367,35 +1366,19 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       
       for (const [key, value] of Object.entries(results[0])) {
         const miner = key.split('.')[0];
-        if (miner == 'RH9D66SNzq4SNMpb2phFwQKtnosFaQzfE9') {
-          const work = parseFloat(value);
-          workTotalWork += work;
-          if (!(key in workWork)) {
-            workWork[key] = work;
-          } else {
-            workWork[key] += work;
-          }
-        }
-      }
-
-      for (const [key, value] of Object.entries(results[1])) {
-        const miner = key.split('.')[0];
-        if (miner == 'RH9D66SNzq4SNMpb2phFwQKtnosFaQzfE9') {
-          const share = JSON.parse(value);
-          const work = parseFloat(share.work);
-          sharesTotalWork += work;
-          if (!(key in sharesWork)) {
-            sharesWork[key] = work;
-          } else {
-            sharesWork[key] += work;
-          }
+        const work = parseFloat(value);
+        workTotalWork += work;
+        if (!(miner in workWork)) {
+          workWork[miner] = work;
+        } else {
+          workWork[miner] += work;
         }
       }
 
       callback(200, {
-        totalShares: sharesTotalWork,
+        // totalShares: sharesTotalWork,
         totalWork: workTotalWork,
-        shares: JSON.stringify(sharesWork),
+        // shares: JSON.stringify(sharesWork),
         work: JSON.stringify(workWork)
       });
     }, callback);
