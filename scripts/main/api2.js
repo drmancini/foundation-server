@@ -1370,10 +1370,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         if (miner == 'RH9D66SNzq4SNMpb2phFwQKtnosFaQzfE9') {
           const work = parseFloat(value);
           workTotalWork += work;
-          if (!(miner in workWork)) {
-            workWork[miner] = work;
+          if (!(key in workWork)) {
+            workWork[key] = work;
           } else {
-            workWork[miner] += work;
+            workWork[key] += work;
           }
         }
       }
@@ -1384,10 +1384,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           const share = JSON.parse(value);
           const work = parseFloat(share.work);
           sharesTotalWork += work;
-          if (!(miner in sharesWork)) {
-            sharesWork[miner] = work;
+          if (!(key in sharesWork)) {
+            sharesWork[key] = work;
           } else {
-            sharesWork[miner] += work;
+            sharesWork[key] += work;
           }
         }
       }
