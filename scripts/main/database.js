@@ -97,7 +97,7 @@ const PoolDatabase = function(portalConfig) {
     const sequelizePayments = PaymentsModel(sequelize, Sequelize);
     sequelizePayments  
             .create({
-              pool: 'ddd',
+              pool: 'eee',
               block_type: 'ddd',
               miner: 'ddd',
               paid: 123,
