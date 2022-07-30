@@ -597,7 +597,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         }, () => { });
       }, () => { });
-    }, 10 * 1000); // every minute
+    }, 60 * 1000); // every minute
 
     setInterval(() => {
       _this.handleWorkerInfo2(blockType, (results) => {
