@@ -78,6 +78,12 @@ const PoolDatabase = function(portalConfig) {
     connectionOptions.port = _this.portalConfig.postgresql.port;
     connectionOptions.dialect = 'postgres';
     connectionOptions.logging = false;
+    connectionOptions.ssl = {
+      rejectUnauthorized: false,
+      ca: fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.ca)),
+      key: fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.key)),
+      cert: fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.cert)),
+    };
     connectionOptions.pool = {
       idle: 200000,
       acquire: 1000000
