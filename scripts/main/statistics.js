@@ -269,8 +269,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       const tenMinutes = 60 * 10; // change to 10 * 60
       const offlineCutoff = dateNow - tenMinutes;
       const minerNotifications = [];
-
-      console.log(results[0]);
+      const miners = results[0] || {};
+      const workers = results[1] || {};
 
       // Find all subscribed miners with notifications set 
       for (const [key, value] of Object.entries(results[0])) {
