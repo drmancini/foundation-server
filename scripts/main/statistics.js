@@ -270,66 +270,65 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       const offlineCutoff = dateNow - tenMinutes;
       const minerNotifications = [];
 
-      if (results[0].length > 0) {
+      console.log(results[0]);
 
-        // Find all subscribed miners with notifications set 
-        for (const [key, value] of Object.entries(results[0])) {
-          const miner = JSON.parse(value);
-          if (miner.subscribed == true && miner.activityAlerts == true) {
-            minerNotifications.push({
-              miner: key,
-              token: miner.token,
-              alertLimit: miner.alertLimit,
-              email: miner.email
-            });
-          };
-        }
-
-        for (const [key, value] of Object.entries(results[1])) {
-          const workerObject = JSON.parse(value);
-          const worker = key;
-          const miner = worker.split('.')[0];
-          const toNotify = minerNotifications.find(element => element.miner == miner);
-          
-          if (toNotify && workerObject.offline == false && workerObject.time < offlineCutoff) {
-            const minerIndex = minerNotifications.map(object => object.miner).indexOf(miner);
-            
-            // if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit) {
-            if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit * 60) {
-
-              const workerName = worker.split('.')[1];
-              if (minerNotifications[minerIndex].workers === undefined) {
-                minerNotifications[minerIndex].workers = [ workerName ];
-              } else {
-                minerNotifications[minerIndex].workers.push(workerName);
-              }
-
-              workerObject.offline = true;
-              commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker, JSON.stringify(workerObject)]);
-            }
-          } 
-        };
-
-        if (minerNotifications.length > 0) {
-          minerNotifications.forEach((notification) => {
-            if (notification.workers != undefined) {
-              const minerList = notification.workers.join(', ');
-              const inactiveWorkers = notification.workers.length;
-              const mailEmail = 'michal.pobuda@me.com'; // notification.email
-              const workerText = inactiveWorkers > 1 ? ' workers went offline' : ' worker went offline';
-              const mailSubject = inactiveWorkers + workerText;
-              const mailTemplate = 'inactivity';
-              const mailReplacements = {
-                inactiveMiners: inactiveWorkers,
-                isOrAre: inactiveWorkers > 1 ? 'are' : 'is',
-                minerAddress: notification.miner,
-                minerList: minerList,
-                unsubscribeLink: `https://raptoreum.zone:3030/api/v2/zone/miner/unsubscribeEmail?address=${ notification.miner }&token=${ notification.token }`
-              };
-              utils.mailer(mailEmail, mailSubject, mailTemplate, mailReplacements).catch(console.error);
-            }
+      // Find all subscribed miners with notifications set 
+      for (const [key, value] of Object.entries(results[0])) {
+        const miner = JSON.parse(value);
+        if (miner.subscribed == true && miner.activityAlerts == true) {
+          minerNotifications.push({
+            miner: key,
+            token: miner.token,
+            alertLimit: miner.alertLimit,
+            email: miner.email
           });
         };
+      }
+
+      for (const [key, value] of Object.entries(results[1])) {
+        const workerObject = JSON.parse(value);
+        const worker = key;
+        const miner = worker.split('.')[0];
+        const toNotify = minerNotifications.find(element => element.miner == miner);
+        
+        if (toNotify && workerObject.offline == false && workerObject.time < offlineCutoff) {
+          const minerIndex = minerNotifications.map(object => object.miner).indexOf(miner);
+          
+          // if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit) {
+          if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit * 60) {
+
+            const workerName = worker.split('.')[1];
+            if (minerNotifications[minerIndex].workers === undefined) {
+              minerNotifications[minerIndex].workers = [ workerName ];
+            } else {
+              minerNotifications[minerIndex].workers.push(workerName);
+            }
+
+            workerObject.offline = true;
+            commands.push(['hset', `${ _this.pool }:workers:${ blockType }:shared`, worker, JSON.stringify(workerObject)]);
+          }
+        } 
+      };
+
+      if (minerNotifications.length > 0) {
+        minerNotifications.forEach((notification) => {
+          if (notification.workers != undefined) {
+            const minerList = notification.workers.join(', ');
+            const inactiveWorkers = notification.workers.length;
+            const mailEmail = 'michal.pobuda@me.com'; // notification.email
+            const workerText = inactiveWorkers > 1 ? ' workers went offline' : ' worker went offline';
+            const mailSubject = inactiveWorkers + workerText;
+            const mailTemplate = 'inactivity';
+            const mailReplacements = {
+              inactiveMiners: inactiveWorkers,
+              isOrAre: inactiveWorkers > 1 ? 'are' : 'is',
+              minerAddress: notification.miner,
+              minerList: minerList,
+              unsubscribeLink: `https://raptoreum.zone:3030/api/v2/zone/miner/unsubscribeEmail?address=${ notification.miner }&token=${ notification.token }`
+            };
+            utils.mailer(mailEmail, mailSubject, mailTemplate, mailReplacements).catch(console.error);
+          }
+        });
       };
     callback(commands);
     }, handler);
@@ -598,7 +597,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         }, () => { });
       }, () => { });
-    }, 60 * 1000); // every minute
+    }, 10 * 1000); // every minute
 
     setInterval(() => {
       _this.handleWorkerInfo2(blockType, (results) => {
