@@ -324,7 +324,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
               isOrAre: inactiveWorkers > 1 ? 'are' : 'is',
               minerAddress: notification.miner,
               minerList: minerList,
-              unsubscribeLink: `https://raptoreum.zone:3030/api/v2/zone/miner/unsubscribeEmail?address=${ notification.miner }&token=${ notification.token }`
+              unsubscribeLink: `https://api.raptoreum.zone/api/v2/zone/miner/unsubscribeEmail?address=${ notification.miner }&token=${ notification.token }`
             };
             utils.mailer(mailEmail, mailSubject, mailTemplate, mailReplacements).catch(console.error);
           }

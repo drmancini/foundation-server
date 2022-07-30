@@ -100,14 +100,14 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         minerObject.paymentAlerts = paymentAlerts;
         minerObject.alertLimit = alertLimit;
         if (email && email != minerObject.email) {
-          const mailEmail = 'michal.pobuda@me.com';
+          const mailEmail = email;
           const mailSubject = 'Confirm Raptoreum zone notification settings';
           const mailTemplate = 'subscribe';
           const token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
           const mailReplacements = {
             minerAddress: address,
-            subscribeLink: `https://raptoreum.zone:3030/api/v2/zone/miner/subscribeEmail?address=${ address }&token=${ token }`,
-            unsubscribeLink: `https://raptoreum.zone:3030/api/v2/zone/miner/unsubscribeEmail?address=${ address }&token=${ token }`
+            subscribeLink: `https://api.raptoreum.zone/api/v2/zone/miner/subscribeEmail?address=${ address }&token=${ token }`,
+            unsubscribeLink: `https://api.raptoreum.zone/api/v2/zone/miner/unsubscribeEmail?address=${ address }&token=${ token }`
           };
           minerObject.subscribed = false;
           minerObject.email = email;
