@@ -273,7 +273,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
       const workers = results[1] || {};
 
       // Find all subscribed miners with notifications set 
-      for (const [key, value] of Object.entries(results[0])) {
+      for (const [key, value] of Object.entries(miners)) {
         const miner = JSON.parse(value);
         if (miner.subscribed == true && miner.activityAlerts == true) {
           minerNotifications.push({
@@ -285,7 +285,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         };
       }
 
-      for (const [key, value] of Object.entries(results[1])) {
+      for (const [key, value] of Object.entries(workers)) {
         const workerObject = JSON.parse(value);
         const worker = key;
         const miner = worker.split('.')[0];
