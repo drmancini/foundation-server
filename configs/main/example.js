@@ -24,6 +24,8 @@ config.tls = {};
 config.tls.ca = '';
 config.tls.key = '';
 config.tls.cert = '';
+config.tls.apikey = '';
+config.tls.apicert = '';
 
 // Postgres Configuration
 config.postgresql = {};
@@ -32,6 +34,7 @@ config.postgresql.host = '127.0.0.1';
 config.postgresql.user = '';
 config.postgresql.password = '';
 config.postgresql.database = '';
+config.postgresql.tls = false;
 
 // Redis Configuration
 config.redis = {};
