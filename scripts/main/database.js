@@ -83,6 +83,21 @@ const PoolDatabase = function(portalConfig) {
     };
 
     const sequelize = new Sequelize(database, username, password, connectionOptions);
+
+
+
+
+    const sequelizePayments = PaymentsModel(sequelize, Sequelize);
+    sequelizePayments  
+            .create({
+              pool: 'ddd',
+              block_type: 'ddd',
+              miner: 'ddd',
+              paid: 123,
+              transaction: 'ddd',
+              time: 123,
+            });
+
     return sequelize;
   };
 };
