@@ -419,7 +419,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       if (results[0]) {
         minerObject = JSON.parse(results[0]);
       } else {
-        callback(400, {
+        callback(200, {
           error: 'Miner address not found',
           result: null
         });
@@ -451,7 +451,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
               result: 'Payout limit setting changed'
             });
           } else {
-            callback(400, {
+            callback(200, {
               error: 'Payout limit setting unchanged',
               result: null
             });
@@ -459,7 +459,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         }, callback);
       } else {
         console.log('IP not valid');
-        callback(400, {
+        callback(200, {
           error: 'IP address does not belong to active miner',
           result: null
         });
@@ -763,7 +763,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     } else {
       _this.executeCommands(commands, (results) => {
         if (!results[0]) {
-            callback(400, {
+            callback(200, {
             error: 'Miner address cannot be found',
             result: null
           });
@@ -820,7 +820,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     } else {
       _this.executeCommands(commands, (results) => {
         if (!results[0]) {
-            callback(400, {
+            callback(200, {
             error: 'Miner address cannot be found',
             result: null
           });
