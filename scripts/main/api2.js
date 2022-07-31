@@ -69,14 +69,14 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       };
       
       if (!ipAddress) {
-        callback(400, {
+        callback(200, {
           error: 'IP address is invalid',
           result: null
         });
       }
 
       if (!email && !emailPattern.test(minerObject.email)) {
-        callback(400, {
+        callback(200, {
           error: 'Email address not set',
           result: null
         });
@@ -106,8 +106,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           const token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
           const mailReplacements = {
             minerAddress: address,
-            subscribeLink: `https://api.raptoreum.zone/api/v2/zone/miner/subscribeEmail?address=${ address }&token=${ token }`,
-            unsubscribeLink: `https://api.raptoreum.zone/api/v2/zone/miner/unsubscribeEmail?address=${ address }&token=${ token }`
+            subscribeLink: `https://raptoreum.zone:3066/api/v2/zone/miner/subscribeEmail?address=${ address }&token=${ token }`,
+            unsubscribeLink: `https://raptoreum.zone:3066/api/v2/zone/miner/unsubscribeEmail?address=${ address }&token=${ token }`
           };
           minerObject.subscribed = false;
           minerObject.email = email;
@@ -126,7 +126,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
               result: 'Notification settings changed'
             });
           } else {
-            callback(400, {
+            callback(200, {
               error: 'Notification settings unchanged',
               result: null
             });
@@ -134,7 +134,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         }, callback);
 
       } else {
-        callback(400, {
+        callback(200, {
           error: 'IP address does not belong to active miner',
           result: null
         });
