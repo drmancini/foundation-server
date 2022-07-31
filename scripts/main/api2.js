@@ -49,7 +49,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const activityAlerts = body.activityAlerts || false;
     const paymentAlerts = body.paymentAlerts || false;
     const alertLimit = body.alertLimit || 10;
-    console.log('asd');
     const commands = [
       ['hget', `${ pool }:miners:primary`, address],
       ['hgetall', `${ pool }:workers:primary:shared`],
@@ -443,7 +442,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         const commands = [
           ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)],
         ];
-        
+        console.log('asd');
         _this.executeCommands(commands, (results) => {
           if (results[0] == 0) {
             callback(200, {
