@@ -399,8 +399,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const address = body.address;
     const ipAddress = body.ipAddress;
 
-    console.log(body);
-
     if (minPayment > payoutLimit) {
       callback(400, {
         error: 'Payout limit below minimum pool payment',
@@ -440,6 +438,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         }
       }
 
+      console.log('ip valid: ' + ipValid);
+      
       if (ipValid) {
         minerObject.payoutLimit = payoutLimit;
         const commands = [
@@ -460,7 +460,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         }, callback);
       } else {
         console.log('IP not valid');
-        callback(200, {
+        callback(400, {
           error: 'IP address does not belong to active miner',
           result: null
         });
