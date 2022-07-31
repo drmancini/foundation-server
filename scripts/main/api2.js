@@ -399,8 +399,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const address = body.address;
     const ipAddress = body.ipAddress;
 
-    console.log('asd');
-    
+    console.log(body);
+
     if (minPayment > payoutLimit) {
       callback(400, {
         error: 'Payout limit below minimum pool payment',
