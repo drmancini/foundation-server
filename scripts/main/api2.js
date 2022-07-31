@@ -399,6 +399,8 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const address = body.address;
     const ipAddress = body.ipAddress;
 
+    console.log('asd');
+    
     if (minPayment > payoutLimit) {
       callback(400, {
         error: 'Payout limit below minimum pool payment',
@@ -442,7 +444,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         const commands = [
           ['hset', `${ pool }:miners:primary`, address, JSON.stringify(minerObject)],
         ];
-        console.log('asd');
         _this.executeCommands(commands, (results) => {
           if (results[0] == 0) {
             callback(200, {
