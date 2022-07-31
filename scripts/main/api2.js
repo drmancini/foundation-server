@@ -786,7 +786,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
                 // improve redirect so that I display a "subscribed" message
 
-                callback(301, {  Location: `http://dev.raptoreum.zone/miners/${ address }` });
+                callback(301, {  Location: `http://dev.raptoreum.zone/miners/${ address }?subscribe=true` });
             }, callback);
           } else {
             callback(400, {
@@ -850,10 +850,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
                 result: null
               })
             } else {
-              callback(200, {
-                error: null,
-                result: 'Miner unsubscribed from notifications'
-              });
+              callback(301, {  Location: `http://dev.raptoreum.zone/miners/${ address }?unsubscribe=true` });
+              // callback(200, {
+              //   error: null,
+              //   result: 'Miner unsubscribed from notifications'
+              // });
               // Ideally redirect
             }
           }, callback);
