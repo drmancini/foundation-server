@@ -459,6 +459,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           }
         }, callback);
       } else {
+        console.log('IP not valid');
         callback(400, {
           error: 'IP address does not belong to active miner',
           result: null
