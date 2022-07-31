@@ -434,6 +434,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         
         if (miner === address) {
           if ((worker.time * 1000) >= (dateNow - twentyFourHours) && ipAddress === worker.ip) {
+            console.log('IP valid');
             ipValid = true;
           }
         }
