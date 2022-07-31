@@ -49,6 +49,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const activityAlerts = body.activityAlerts || false;
     const paymentAlerts = body.paymentAlerts || false;
     const alertLimit = body.alertLimit || 10;
+    console.log(body);
     const commands = [
       ['hget', `${ pool }:miners:primary`, address],
       ['hgetall', `${ pool }:workers:primary:shared`],
@@ -438,8 +439,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         }
       }
 
-      console.log('ip valid: ' + ipValid);
-      
       if (ipValid) {
         minerObject.payoutLimit = payoutLimit;
         const commands = [
