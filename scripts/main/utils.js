@@ -226,7 +226,7 @@ exports.loggerSeverity = {
 };
 
 // Send email 
-exports.mailer = async function (email, subject, template, replacements) {
+exports.mailer = async function (email, subject, unsubscribeLink, template, replacements) {
   let activeTemplate;
 
   switch (template) {
@@ -269,7 +269,12 @@ exports.mailer = async function (email, subject, template, replacements) {
     from: '"Raptoreum zone" <info@raptoreum.zone>',
     to: email, 
     subject: subject, 
-    html: htmlToSend
+    html: htmlToSend,
+    list: {
+      unsubscribe: {
+        url: unsubscribeLink,
+      }
+    }
   };
 
   // send mail with defined transport object
