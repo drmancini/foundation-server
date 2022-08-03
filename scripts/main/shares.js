@@ -82,7 +82,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
         difficulties2 += workValue;
       } else if (!isSoloMining) {
         difficulties2 += workValue;
-      }asd
+      }
 
       difficulties2 += workValue;
     });
