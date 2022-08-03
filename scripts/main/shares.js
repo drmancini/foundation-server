@@ -78,11 +78,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     Object.keys(works).forEach((work) => {
       const workTotal = works[work];
       const workValue = /^-?\d*(\.\d+)?$/.test(workTotal) ? parseFloat(workTotal) : 0;
-      if (isSoloMining && work === worker && shareInfo.solo) {
-        difficulties2 += workValue;
-      } else if (!isSoloMining && !shareInfo.solo) {
-        difficulties2 += workValue;
-      }
+      difficulties2 += workValue;
     });
 
     // Calculate Effort for Shared/Solo Mining
