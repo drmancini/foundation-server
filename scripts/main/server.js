@@ -58,7 +58,7 @@ const PoolServer = function (logger, client, sequelize) {
 
     // Handle API Requests
     /* istanbul ignore next */
-    app.get('/api/v1/:pool/:endpoint?', cache('1 minute'), (req, res) => {
+    app.get('/v1/:endpoint?', cache('1 minute'), (req, res) => {
       api.handleApiV1(req, (code, message) => {
         api.buildResponse(code, message, res);
       });
@@ -66,7 +66,7 @@ const PoolServer = function (logger, client, sequelize) {
 
     // Handle v2 API Requests
     /* istanbul ignore next */
-    app.get('/api/v2/:pool/:type/:endpoint?', cache('1 minute'), (req, res) => {
+    app.get('/v2/:type/:endpoint?', cache('1 minute'), (req, res) => {
       api2.handleApiV2(req, (code, message) => {
         api2.buildResponse(code, message, res);
       });
@@ -74,7 +74,7 @@ const PoolServer = function (logger, client, sequelize) {
 
     // Handle v2 API PUT Requests
     /* istanbul ignore next */
-    app.put('/api/v2/:pool/:type/:endpoint?', cache('10 seconds'), (req, res) => {
+    app.put('/v2/:type/:endpoint?', cache('10 seconds'), (req, res) => {
       api2.handleApiV2(req, (code, message) => {
         api2.buildResponse(code, message, res);
       });
@@ -82,11 +82,11 @@ const PoolServer = function (logger, client, sequelize) {
 
     // Handle v3 API PUT Requests
     /* istanbul ignore next */
-    app.put('/api/v3/:pool/:type/:endpoint?', cache('1 minute'), (req, res) => {
-      api2.handleApiV3(req, (code, message) => {
-        api2.buildResponse(code, message, res);
-      });
-    });
+    // app.put('/api/v3/:pool/:type/:endpoint?', cache('1 minute'), (req, res) => {
+    //   api2.handleApiV3(req, (code, message) => {
+    //     api2.buildResponse(code, message, res);
+    //   });
+    // });
 
     // ERRORS - Handles API Errors
     /* istanbul ignore next */

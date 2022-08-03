@@ -104,10 +104,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           const mailSubject = 'Confirm Raptoreum zone notification settings';
           const mailTemplate = 'subscribe';
           const token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
-          const mailUnsubscribe = `https://raptoreum.zone:3066/api/v2/zone/miner/unsubscribeEmail?address=${ address }&token=${ token }`;
+          const mailUnsubscribe = `https://api.raptoreum.zone/v2/miner/unsubscribeEmail?address=${ address }&token=${ token }`;
           const mailReplacements = {
             minerAddress: address,
-            subscribeLink: `https://raptoreum.zone:3066/api/v2/zone/miner/subscribeEmail?address=${ address }&token=${ token }`,
+            subscribeLink: `https://api.raptoreum.zone/v2/miner/subscribeEmail?address=${ address }&token=${ token }`,
             unsubscribeLink: mailUnsubscribe
           };
           minerObject.subscribed = false;
@@ -784,9 +784,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             ]);
             _this.executeCommands(commands, (results) => {
                 commands.length = 0;
-
-                // improve redirect so that I display a "subscribed" message
-
                 callback(301, {  Location: `http://dev.raptoreum.zone/miners/${ address }?subscribe=true` });
             }, callback);
           } else {
@@ -852,11 +849,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
               })
             } else {
               callback(301, {  Location: `http://dev.raptoreum.zone/miners/${ address }?unsubscribe=true` });
-              // callback(200, {
-              //   error: null,
-              //   result: 'Miner unsubscribed from notifications'
-              // });
-              // Ideally redirect
             }
           }, callback);
         }

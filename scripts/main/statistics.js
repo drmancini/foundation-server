@@ -319,7 +319,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
             const workerText = inactiveWorkers > 1 ? ' workers went offline' : ' worker went offline';
             const mailSubject = inactiveWorkers + workerText;
             const mailTemplate = 'inactivity';
-            const mailUnsubscribe = `https://api.raptoreum.zone/api/v2/zone/miner/unsubscribeEmail?address=${ notification.miner }&token=${ notification.token }`;
+            const mailUnsubscribe = `https://api.raptoreum.zone/v2/miner/unsubscribeEmail?address=${ notification.miner }&token=${ notification.token }`;
             const mailReplacements = {
               inactiveMiners: inactiveWorkers,
               isOrAre: inactiveWorkers > 1 ? 'are' : 'is',
