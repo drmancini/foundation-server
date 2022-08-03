@@ -83,8 +83,6 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       } else if (!isSoloMining) {
         difficulties2 += workValue;
       }
-
-      difficulties2 += workValue;
     });
 
     // Calculate Effort for Shared/Solo Mining
