@@ -89,8 +89,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const effort = shareType === "valid" ? (difficulties + shareData.difficulty) : difficulties;
     const effort2 = shareType === "valid" ? (difficulties2 + shareData.difficulty) : difficulties2;
 
-    console.log('old: ' + effort / blockDifficulty * 100;)
-    console.log('new: ' + effort2 / blockDifficulty * 100;)
+    console.log('old: ' + effort / blockDifficulty * 100);
+    console.log('new: ' + effort2 / blockDifficulty * 100);
     return effort / blockDifficulty * 100;
   };
 
