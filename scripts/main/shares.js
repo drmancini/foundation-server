@@ -64,16 +64,6 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Calculate Work Sum from Shared/Solo Mining
     let difficulties = 0;
-    // let difficulties2 = 0;
-    // Object.keys(shares).forEach((share) => {
-    //   const shareInfo = JSON.parse(shares[share]);
-    //   const workValue = /^-?\d*(\.\d+)?$/.test(shareInfo.work) ? parseFloat(shareInfo.work) : 0;
-    //   if (isSoloMining && share === worker && shareInfo.solo) {
-    //     difficulties += workValue;
-    //   } else if (!isSoloMining && !shareInfo.solo) {
-    //     difficulties += workValue;
-    //   }
-    // });
 
     Object.keys(works).forEach((address) => {
       const workTotal = works[address];
@@ -87,10 +77,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Calculate Effort for Shared/Solo Mining
     const effort = shareType === "valid" ? (difficulties + shareData.difficulty) : difficulties;
-    // const effort2 = shareType === "valid" ? (difficulties2 + shareData.difficulty) : difficulties2;
 
-    console.log('old: ' + effort / blockDifficulty * 100);
-    // console.log('new: ' + effort2 / blockDifficulty * 100);
     return effort / blockDifficulty * 100;
   };
 
