@@ -1582,6 +1582,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // Determine API Endpoint Called
   this.handleApiV2 = function(req, callback) {
 
+    const pool = 'zone';
     let type, endpoint, body, blockType, isSolo, address, worker, page, token, countervalue, remoteAddress;
     const miscellaneous = ['pools'];
 
@@ -1592,7 +1593,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
     // If Path Params Exist
     if (req.params) {
-      pool = utils.validateInput(req.params.pool || '');
+      // pool = utils.validateInput(req.params.pool || '');
       type = utils.validateInput(req.params.type || '');
       endpoint = utils.validateInput(req.params.endpoint || '');
     }
@@ -1655,9 +1656,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           case (endpoint === 'stats2' && address.length > 0):
             _this.minerStats(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
             break;
-          // case (endpoint === 'roundTimes' && address.length > 0):
-          //   _this.minerRoundTimes(pool, address, blockType, (code, message) => callback(code, message));
-          //   break;
           case (endpoint === 'roundWork' && address.length > 0):
             _this.minerRoundWork(pool, address, blockType, (code, message) => callback(code, message));
             break;
@@ -1718,70 +1716,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'workerCount'):
             _this.poolWorkerCount(pool, blockType, isSolo, (code, message) => callback(code, message));
-            break;
-          default:
-            callback(405, 'The requested endpoint does not exist. Verify your input and try again');
-            break;
-        }
-        break;
-      default:
-        callback(405, 'The requested endpoint does not exist. Verify your input and try again');
-      break;
-    }
-  };
-
-  // Determine API Endpoint Called
-  this.handleApiV3 = function(req, callback) {
-
-    let type, endpoint, body, isSolo, blockType, remoteAddress;
-    const miscellaneous = ['pools'];
-
-    // If Socket Params Exist
-    if (req.socket) {
-      remoteAddress = req.socket.remoteAddress;
-    }
-
-    // If Path Params Exist
-    if (req.params) {
-      pool = utils.validateInput(req.params.pool || '');
-      type = utils.validateInput(req.params.type || '');
-      endpoint = utils.validateInput(req.params.endpoint || '');
-    }
-
-    // If Query Params Exist
-    if (req.query) {
-      blockType = utils.validateInput(req.query.blockType || '');
-      isSolo = utils.validateInput(req.query.isSolo || '');
-      address = utils.validateInput(req.query.address || '');
-      page = utils.validateInput(req.query.page || '');
-    }
-
-    if (req.body) {
-      body = req.body || '';
-    }
-
-    // Check if Requested Pool Exists
-    if (!(pool in _this.poolConfigs) && !(miscellaneous.includes(pool))) {
-      callback(404, 'The requested pool was not found. Verify your input and try again');
-      return;
-    }
-
-    // Select Endpoint from Parameters
-    switch (true) {
-      case (type === 'miner'):
-        switch (true) {
-          case (endpoint === 'payoutSettings'):
-            _this.minerPayoutSettings(pool, body, blockType, isSolo, (code, message) => callback(code, message));
-            break;
-          default:
-            callback(405, 'The requested endpoint does not exist. Verify your input and try again');
-            break;
-        }
-        break;
-      case (type === 'pool'):
-        switch (true) {
-          case (endpoint === 'clientIP'):
-            _this.poolClientIP(remoteAddress, (code, message) => callback(code, message));
             break;
           default:
             callback(405, 'The requested endpoint does not exist. Verify your input and try again');
