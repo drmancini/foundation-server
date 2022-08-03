@@ -75,9 +75,15 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       }
     });
 
-    Object.keys(works).forEach((work) => {
-      const workTotal = works[work];
+    Object.keys(works).forEach((address) => {
+      const workTotal = works[address];
       const workValue = /^-?\d*(\.\d+)?$/.test(workTotal) ? parseFloat(workTotal) : 0;
+      if (isSoloMining && address === worker) {
+        difficulties2 += workValue;
+      } else if (!isSoloMining) {
+        difficulties2 += workValue;
+      }
+
       difficulties2 += workValue;
     });
 
