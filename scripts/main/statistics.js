@@ -324,7 +324,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
               inactiveMiners: inactiveWorkers,
               isOrAre: inactiveWorkers > 1 ? 'are' : 'is',
               minerAddress: notification.miner,
-              dashboardLink: `https://dev.raptoreum.zone/miners/${ notification.miner }`,
+              dashboardLink: `https://raptoreum.zone/miners/${ notification.miner }`,
               minerList: minerList,
               unsubscribeLink: mailUnsubscribe
             };

@@ -784,7 +784,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             ]);
             _this.executeCommands(commands, (results) => {
                 commands.length = 0;
-                callback(301, {  Location: `http://dev.raptoreum.zone/miners/${ address }?subscribe=true` });
+                callback(301, {  Location: `http://raptoreum.zone/miners/${ address }?subscribe=true` });
             }, callback);
           } else {
             callback(400, {
@@ -848,7 +848,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
                 result: null
               })
             } else {
-              callback(301, {  Location: `http://dev.raptoreum.zone/miners/${ address }?unsubscribe=true` });
+              callback(301, {  Location: `http://raptoreum.zone/miners/${ address }?unsubscribe=true` });
             }
           }, callback);
         }
