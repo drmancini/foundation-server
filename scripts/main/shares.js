@@ -64,8 +64,11 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
 
     // Calculate Work Sum from Shared/Solo Mining
     let difficulties = 0;
-    console.log(works);
-    
+
+    if (works == null) {
+      return 0;
+    }
+
     Object.keys(works).forEach((address) => {
       const workTotal = works[address];
       const workValue = /^-?\d*(\.\d+)?$/.test(workTotal) ? parseFloat(workTotal) : 0;
