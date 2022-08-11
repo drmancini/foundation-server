@@ -1359,7 +1359,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       const workWork = {};
       const reward = 3721.87;
       const payouts = {};
-      
+      console.log(results[0]);
       for (const [key, value] of Object.entries(results[0])) {
         const miner = key.split('.')[0];
         const work = parseFloat(value);
