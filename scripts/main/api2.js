@@ -1350,7 +1350,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /pool/minerCount
   this.poolPaymentFix = function(pool, callback) {
     const commands = [
-      ['hgetall', `zone:rounds:primary:round-364888:work`]
+      ['hgetall', `zone:rounds:primary:current:shared:workx`]
     ];
 
     _this.executeCommands(commands, (results) => {
