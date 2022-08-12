@@ -8,7 +8,6 @@ const fs = require('fs');
 const path = require('path');
 const redis = require('redis');
 const Sequelize = require('sequelize');
-const PaymentsModel = require('../../models/payments.model');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -95,20 +94,6 @@ const PoolDatabase = function(portalConfig) {
     };
 
     const sequelize = new Sequelize(database, username, password, connectionOptions);
-
-
-
-
-    const sequelizePayments = PaymentsModel(sequelize, Sequelize);
-    sequelizePayments  
-            .create({
-              pool: 'eee',
-              block_type: 'ddd',
-              miner: 'ddd',
-              paid: 123,
-              transaction: 'ddd',
-              time: 123,
-            });
 
     return sequelize;
   };
