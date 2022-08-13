@@ -48,6 +48,7 @@
   "dependencies": {
     "apicache": "^1.6.3",
     "async": "3.2.2",
+    "blueimp-md5": "^2.19.0",
     "body-parser": "1.20.0",
     "colors": "1.4.0",
     "compression": "*",
@@ -55,10 +56,16 @@
     "dateformat": "4.6.3",
     "express": "4.17.3",
     "express-rate-limit": "^5.5.1",
-    "foundation-stratum": "0.0.40",
+    "foundation-stratum": "https://github.com/drmancini/foundation-v1-stratum.git#my-upgrade",
+    "handlebars": "^4.7.7",
+    "nodemailer": "^6.7.5",
     "nodemon": "2.0.15",
+    "pg": "^8.7.3",
+    "pg-hstore": "^2.3.4",
     "pm2": "^5.2.0",
-    "redis": "^3.1.1"
+    "redis": "^3.1.1",
+    "request-ip": "^3.0.2",
+    "sequelize": "^6.17.0"
   },
   "devDependencies": {
     "codecov": "^3.8.1",
@@ -66,7 +73,8 @@
     "jest": "^26.6.3",
     "mockdate": "^3.0.5",
     "nock": "^13.0.10",
-    "redis-mock": "^0.56.3"
+    "redis-mock": "^0.56.3",
+    "sequelize-mock": "^0.10.2"
   },
   "engines": {
     "node": ">=12.16"

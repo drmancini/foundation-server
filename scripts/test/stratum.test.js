@@ -7,6 +7,9 @@
 const redis = require('redis-mock');
 jest.mock('redis', () => jest.requireActual('redis-mock'));
 
+const sequelizeMock = require('sequelize-mock');
+const sequelize = new sequelizeMock();
+
 const mock = require('./daemon.mock.js');
 const nock = require('nock');
 
@@ -42,7 +45,7 @@ nock.disableNetConnect();
 nock.enableNetConnect('127.0.0.1');
 
 const logger = new PoolLogger(portalConfig);
-const poolShares = new PoolShares(logger, client, poolConfig, portalConfig);
+const poolShares = new PoolShares(logger, client, sequelize, poolConfig, portalConfig);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -269,7 +272,7 @@ describe('Test stratum functionality', () => {
     const poolStratum = new PoolStratum(logger, poolConfigCopy, configCopy, poolShares);
     const shareData = {
       'job': '4',
-      'ip': '::1',
+      'ip': '::1.1.1.1',
       'port': 3001,
       'blockDiff': 137403310.58987552,
       'blockDiffActual': 137403310.58987552,

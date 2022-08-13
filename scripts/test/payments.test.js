@@ -8,6 +8,22 @@ const MockDate = require('mockdate');
 const redis = require('redis-mock');
 jest.mock('redis', () => jest.requireActual('redis-mock'));
 
+const sequelizeMock = require('sequelize-mock');
+const sequelize = new sequelizeMock();
+
+jest.mock('../../models/payments.model.js', () => () => {  
+  const SequelizeMock = require("sequelize-mock");
+  const dbMock = new SequelizeMock();
+  return dbMock.define('payments', {
+    pool: 'asd',
+    block_type: 'primary',  
+    time: 123,
+    paid: 123.4,
+    transaction: 'asd',
+    miner: 'asd'
+  })
+});
+
 const nock = require('nock');
 const mockDaemon = require('./daemon.mock.js');
 const mockPayments = require('./payments.mock.js');
@@ -65,14 +81,14 @@ describe('Test payments functionality', () => {
   });
 
   test('Test initialization of payments', () => {
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     expect(typeof poolPayments.portalConfig).toBe('object');
     expect(typeof poolPayments.handleManagement).toBe('function');
     expect(typeof poolPayments.handleIntervals).toBe('function');
   });
 
   test('Test round shares if deleteable [1]', () => {
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const rounds = [
       { height: 180, category: 'immature', serialized: 'test' },
       { height: 181, category: 'immature', serialized: 'test' },
@@ -81,7 +97,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test round shares if deleteable [2]', () => {
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const rounds = [
       { height: 180, category: 'immature', serialized: 'test' },
       { height: 181, category: 'immature', serialized: 'test' },
@@ -92,7 +108,7 @@ describe('Test payments functionality', () => {
 
   test('Test address validation functionality [1]', (done) => {
     mockDaemon.mockValidateAddress();
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.checkAddress(daemon, 'test', 'validateaddress', (error, results) => {
       expect(error).toBe(true);
@@ -104,7 +120,7 @@ describe('Test payments functionality', () => {
 
   test('Test address validation functionality [2]', (done) => {
     mockDaemon.mockValidateAddressError();
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.checkAddress(daemon, 'test', 'validateaddress', (error, results) => {
       expect(error).toBe(true);
@@ -116,7 +132,7 @@ describe('Test payments functionality', () => {
 
   test('Test address validation functionality [3]', (done) => {
     mockDaemon.mockValidateAddressSecondary();
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.checkAddress(daemon, 'test', 'validateaddress', (error, results) => {
       expect(error).toBe(null);
@@ -128,7 +144,7 @@ describe('Test payments functionality', () => {
 
   test('Test address validation functionality [4]', (done) => {
     mockDaemon.mockGetAddressInfo();
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.handleAddress(daemon, 'test', 'Bitcoin', (error, results) => {
       expect(error).toBe(null);
@@ -140,7 +156,7 @@ describe('Test payments functionality', () => {
 
   test('Test address validation functionality [5]', (done) => {
     mockDaemon.mockValidateAddressSecondary();
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.handleAddress(daemon, 'test', 'Bitcoin', (error, results) => {
       expect(error).toBe(null);
@@ -152,7 +168,7 @@ describe('Test payments functionality', () => {
 
   test('Test address validation functionality [6]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.handleAddress(daemon, 'test', 'Bitcoin', (error, results) => {
       expect(error).toBe(true);
@@ -166,7 +182,7 @@ describe('Test payments functionality', () => {
   test('Test balance retrieval from daemon [1]', (done) => {
     mockDaemon.mockGetBalance();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.handleBalance(daemon, poolConfig, 'Bitcoin', 'primary', (error, results) => {
       expect(error).toBe(null);
@@ -181,7 +197,7 @@ describe('Test payments functionality', () => {
 
   test('Test balance retrieval from daemon [2]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.handleBalance(daemon, poolConfig, 'Bitcoin', 'primary', (error, results) => {
       expect(error).toBe(true);
@@ -195,7 +211,7 @@ describe('Test payments functionality', () => {
   test('Test balance retrieval from daemon [3]', (done) => {
     mockDaemon.mockGetBalanceInvalid();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.handleBalance(daemon, poolConfig, 'Bitcoin', 'primary', (error, results) => {
       expect(error).toBe(true);
@@ -209,7 +225,7 @@ describe('Test payments functionality', () => {
   test('Test balance retrieval from daemon [4]', (done) => {
     mockDaemon.mockGetBalanceInvalid();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.handleBalance(daemon, poolConfig, 'Bitcoin', 'auxiliary', (error, results) => {
       expect(error).toBe(true);
@@ -222,7 +238,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of orphan shares/times [1]', (done) => {
     MockDate.set(1637878085886);
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const round = { orphanShares: { 'example': 8 }, orphanTimes: { 'example': 1 }};
     const expected = [
       ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
@@ -236,7 +252,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of orphan shares/times [2]', (done) => {
     MockDate.set(1637878085886);
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const round = { orphanShares: { 'example': 8 }, orphanTimes: {}};
     const expected = [
       ['hincrby', 'Pool1:rounds:primary:current:shared:counts', 'valid', 1],
@@ -249,7 +265,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test handling of orphan shares/times [3]', (done) => {
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.handleOrphans({}, 'Bitcoin', 'primary', (error, results) => {
       expect(error).toBe(null);
       expect(results).toStrictEqual([]);
@@ -260,7 +276,7 @@ describe('Test payments functionality', () => {
   test('Test calculation of unspent inputs in daemon [1]', (done) => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -276,7 +292,7 @@ describe('Test payments functionality', () => {
 
   test('Test calculation of unspent inputs in daemon [2]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
     poolPayments.handleUnspent(daemon, config, 'checks', 'Bitcoin', 'primary', (error, results) => {
@@ -291,7 +307,7 @@ describe('Test payments functionality', () => {
   test('Test calculation of unspent inputs in daemon [3]', (done) => {
     mockDaemon.mockListUnspentEmpty();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -309,7 +325,7 @@ describe('Test payments functionality', () => {
   test('Test calculation of unspent inputs in daemon [4]', (done) => {
     mockDaemon.mockListUnspentInvalid();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -327,7 +343,7 @@ describe('Test payments functionality', () => {
   test('Test calculation of unspent inputs in daemon [5]', (done) => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -346,7 +362,7 @@ describe('Test payments functionality', () => {
   test('Test calculation of unspent inputs in daemon [5]', (done) => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].auxiliary = { coin: { name: 'Bitcoin', symbol: 'BTC' }, payments: {} };
     poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].auxiliary.payments.minPaymentSatoshis = 500000;
@@ -366,7 +382,7 @@ describe('Test payments functionality', () => {
   test('Test handling of duplicate rounds [1]', (done) => {
     mockDaemon.mockDuplicateRounds();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const rounds = [
       { hash: 'abcd', height: 180, duplicate: true },
@@ -384,7 +400,7 @@ describe('Test payments functionality', () => {
   });
 
   test('Test handling of duplicate rounds [2]', (done) => {
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.handleDuplicates(daemon, [], 'Bitcoin', 'primary', (error, results) => {
       expect(error).toBe(true);
@@ -396,7 +412,7 @@ describe('Test payments functionality', () => {
   test('Test handling of duplicate rounds [3]', (done) => {
     mockDaemon.mockDuplicateBlocks();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const rounds = [
       { hash: 'abcd', height: 180, duplicate: true },
@@ -416,7 +432,7 @@ describe('Test payments functionality', () => {
   test('Test handling of duplicate rounds [4]', (done) => {
     mockDaemon.mockDuplicateBlocks();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const rounds = [
       { hash: 'abcd', height: 180, duplicate: true },
@@ -435,7 +451,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of immature blocks [1]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -453,7 +469,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of immature blocks [2]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -470,7 +486,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of immature blocks [3]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -488,7 +504,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of immature blocks [4]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -506,7 +522,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of immature blocks [5]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -524,7 +540,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of immature blocks [6]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -542,7 +558,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of immature blocks [6]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].auxiliary = { payments: {} };
     poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].auxiliary.payments.minPaymentSatoshis = 500000;
@@ -561,7 +577,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of generate blocks [1]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -580,7 +596,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of generate blocks [2]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -597,7 +613,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of generate blocks [3]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -616,7 +632,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of generate blocks [4]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -635,7 +651,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of generate blocks [5]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -654,7 +670,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of generate blocks [6]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -673,7 +689,7 @@ describe('Test payments functionality', () => {
 
   test('Test handling of generate blocks [7]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].auxiliary = { payments: {} };
     poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].auxiliary.payments.minPaymentSatoshis = 500000;
@@ -699,7 +715,7 @@ describe('Test payments functionality', () => {
       ['sadd', 'Pool1:blocks:primary:pending', mockBuildBlock(183, 'hash', 12.5, 'txid', 8, 'worker', false)]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-      const poolPayments = new PoolPayments(logger, client);
+      const poolPayments = new PoolPayments(logger, client, sequelize);
       const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
       const config = poolPayments.poolConfigs['Pool1'];
       poolPayments.handleBlocks(daemon, config, 'primary', (error, results) => {
@@ -723,7 +739,7 @@ describe('Test payments functionality', () => {
       ['sadd', 'Pool1:blocks:primary:pending', mockBuildBlock(183, 'hash', 12.5, 'txid', 8, 'worker', false)]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-      const poolPayments = new PoolPayments(logger, client);
+      const poolPayments = new PoolPayments(logger, client, sequelize);
       const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
       const config = poolPayments.poolConfigs['Pool1'];
       poolPayments.handleBlocks(daemon, config, 'primary', (error, results) => {
@@ -741,7 +757,7 @@ describe('Test payments functionality', () => {
       ['hincrbyfloat', 'Pool1:payments:primary:balances', 'worker2', 391.15]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-      const poolPayments = new PoolPayments(logger, client);
+      const poolPayments = new PoolPayments(logger, client, sequelize);
       poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
       const config = poolPayments.poolConfigs['Pool1'];
       poolPayments.handleWorkers(config, 'primary', [[]], (error, results) => {
@@ -761,7 +777,7 @@ describe('Test payments functionality', () => {
       ['hincrbyfloat', 'Pool1:payments:auxiliary:balances', 'worker2', 391.15]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-      const poolPayments = new PoolPayments(logger, client);
+      const poolPayments = new PoolPayments(logger, client, sequelize);
       poolPayments.poolConfigs['Pool1'].auxiliary = { payments: {} };
       poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
       const config = poolPayments.poolConfigs['Pool1'];
@@ -779,7 +795,7 @@ describe('Test payments functionality', () => {
   test('Test main transaction handling [1]', (done) => {
     mockDaemon.mockGetTransactionsGenerate();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
@@ -800,7 +816,7 @@ describe('Test payments functionality', () => {
 
   test('Test main transaction handling [2]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
@@ -816,7 +832,7 @@ describe('Test payments functionality', () => {
   test('Test main transaction handling [3]', (done) => {
     mockDaemon.mockGetTransactionsImmature();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
@@ -838,7 +854,7 @@ describe('Test payments functionality', () => {
   test('Test main transaction handling [4]', (done) => {
     mockDaemon.mockGetTransactionsSplit();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
@@ -860,7 +876,7 @@ describe('Test payments functionality', () => {
   test('Test main transaction handling [5]', (done) => {
     mockDaemon.mockGetTransactionsOrphan();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.poolConfigs['Pool1'].primary.address = 'tltc1qa0z9fsraqpvasgfj6c72a59ztx0xh9vfv9ccwd';
     const config = poolPayments.poolConfigs['Pool1'];
@@ -879,7 +895,7 @@ describe('Test payments functionality', () => {
   test('Test main transaction handling [6]', (done) => {
     mockDaemon.mockGetTransactionsSingle();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
@@ -900,7 +916,7 @@ describe('Test payments functionality', () => {
   test('Test main transaction handling [7]', (done) => {
     mockDaemon.mockGetTransactionsValue();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
@@ -922,7 +938,7 @@ describe('Test payments functionality', () => {
   test('Test main transaction handling [8]', (done) => {
     mockDaemon.mockGetTransactionsError1();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
@@ -941,7 +957,7 @@ describe('Test payments functionality', () => {
   test('Test main transaction handling [9]', (done) => {
     mockDaemon.mockGetTransactionsError2();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
@@ -960,7 +976,7 @@ describe('Test payments functionality', () => {
   test('Test main transaction handling [10]', (done) => {
     mockDaemon.mockGetTransactionsError3();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
     const rounds = [{ transaction: 'efaab94af3973b6d1148d030a75abbea6b5e2af4e4c989738393a55e1d44fd2c' }];
@@ -977,7 +993,7 @@ describe('Test payments functionality', () => {
   test('Test main transaction handling [11]', (done) => {
     mockDaemon.mockGetTransactionsValue();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     poolPayments.poolConfigs['Pool1'].auxiliary = { payments: {} };
     poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
@@ -1002,7 +1018,7 @@ describe('Test payments functionality', () => {
       ['hset', 'Pool1:rounds:primary:round-180:shares', 'worker2', JSON.stringify({ time: 0, work: 28, worker: 'worker2', times: 40, solo: false })]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-      const poolPayments = new PoolPayments(logger, client);
+      const poolPayments = new PoolPayments(logger, client, sequelize);
       const config = poolPayments.poolConfigs['Pool1'];
       const rounds = [{ height: 180 }];
       poolPayments.handleShares(config, 'primary', [rounds, [], []], (error, results) => {
@@ -1027,7 +1043,7 @@ describe('Test payments functionality', () => {
       ['hset', 'Pool1:rounds:primary:round-181:shares', 'worker2', JSON.stringify({ time: 0, work: 40, worker: 'worker2', times: 43, solo: false })]];
     mockSetupClient(client, commands, 'Bitcoin', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-      const poolPayments = new PoolPayments(logger, client);
+      const poolPayments = new PoolPayments(logger, client, sequelize);
       const config = poolPayments.poolConfigs['Pool1'];
       const rounds = [{ height: 180 }, { height: 181 }];
       poolPayments.handleShares(config, 'primary', [rounds, [], []], (error, results) => {
@@ -1047,7 +1063,7 @@ describe('Test payments functionality', () => {
   test('Test calculation of currency owed [1]', (done) => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1070,7 +1086,7 @@ describe('Test payments functionality', () => {
   test('Test calculation of currency owed [2]', (done) => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1093,7 +1109,7 @@ describe('Test payments functionality', () => {
 
   test('Test calculation of currency owed [3]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1114,7 +1130,7 @@ describe('Test payments functionality', () => {
   test('Test calculation of currency owed [4]', (done) => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1137,7 +1153,7 @@ describe('Test payments functionality', () => {
   test('Test calculation of currency owed [5]', (done) => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1158,7 +1174,7 @@ describe('Test payments functionality', () => {
   test('Test calculation of currency owed [6]', (done) => {
     mockDaemon.mockListUnspent();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].auxiliary = { payments: {} };
     poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].auxiliary.payments.minPaymentSatoshis = 500000;
@@ -1181,7 +1197,7 @@ describe('Test payments functionality', () => {
 
   test('Test reward calculation given rounds/workers [1]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1199,7 +1215,7 @@ describe('Test payments functionality', () => {
 
   test('Test reward calculation given rounds/workers [2]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1218,7 +1234,7 @@ describe('Test payments functionality', () => {
 
   test('Test reward calculation given rounds/workers [3]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'orphan', height: 180, reward: 12.50, solo: false, worker: 'example' };
     poolPayments.handleRewards(config, 'checks', 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{ 'example': 8 }]], (error, results) => {
@@ -1232,7 +1248,7 @@ describe('Test payments functionality', () => {
 
   test('Test reward calculation given rounds/workers [4]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'immature', height: 180, reward: 12.50, solo: false, worker: 'example' };
     poolPayments.handleRewards(config, 'checks', 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{}]], (error, results) => {
@@ -1246,7 +1262,7 @@ describe('Test payments functionality', () => {
 
   test('Test reward calculation given rounds/workers [4]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const config = poolPayments.poolConfigs['Pool1'];
     const round = { category: 'immature', height: 180, reward: 12.50, solo: false, worker: 'example' };
     poolPayments.handleRewards(config, 'payments', 'primary', [[round], {}, [{ 'example': 20.15 }], [{}], [{}]], (error, results) => {
@@ -1260,7 +1276,7 @@ describe('Test payments functionality', () => {
 
   test('Test reward calculation given rounds/workers [5]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1282,7 +1298,7 @@ describe('Test payments functionality', () => {
 
   test('Test reward calculation given rounds/workers [6]', (done) => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1304,39 +1320,33 @@ describe('Test payments functionality', () => {
     });
   });
 
-  test('Test sending currency through daemon [1]', (done) => {
-    mockDaemon.mockSendMany();
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
-    const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
-    const config = poolPayments.poolConfigs['Pool1'];
-    const expected = [
-      ["zadd", "Pool1:payments:primary:records", 1637878085, "{\"time\":1637878085886,\"paid\":117.12181095,\"miners\":3,\"transaction\":\"transactionID\"}"]];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
-      expect(error).toBe(null);
-      expect(results.length).toBe(3);
-      expect(results[2]).toStrictEqual(expected);
-      nock.cleanAll();
-      console.log.mockClear();
-      done();
+  test('Test individual limits for payouts [1]', (done) => {
+    const poolPayments = new PoolPayments(logger, client, sequelize);
+    const commands = [
+      ['hset', 'Pool1:miners:primary', 'miner1', '{"payoutLimit":1}'],
+      ['hset', 'Pool1:miners:primary', 'miner2', '{"payoutLimit":100}'],
+      ['hset', 'Pool1:miners:primary', 'miner3', '{"payoutLimit":2}']];
+    mockSetupClient(client, commands, 'Pool1', () => {
+      poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
+      poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
+      poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
+      const config = poolPayments.poolConfigs['Pool1'];
+      const workers = { miner1: { balance: 100}, miner2: { balance: 100}, miner3: {balance: 100}};
+      poolPayments.handleLimits(config, 'primary', [mockPayments.rounds, workers], (error, results) => {
+        expect(error).toBe(null);
+        expect(results.length).toBe(4);
+        console.log.mockClear();
+        done();
+      });
     });
   });
 
-  test('Test sending currency through daemon [2]', (done) => {
+  test('Test sending currency through daemon [1]', (done) => {
     mockDaemon.mockSendMany();
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers2], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1, [], 0], (error, results) => {
       expect(error).toBe(null);
       expect(results.length).toBe(2);
       nock.cleanAll();
@@ -1348,14 +1358,10 @@ describe('Test payments functionality', () => {
   test('Test sending currency through daemon [3]', (done) => {
     mockDaemon.mockSendManyError1();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1, {a: 1, b: 2}, 3], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('RPC command did not return txid. Disabling payments to prevent possible double-payouts'));
       expect(results).toStrictEqual([]);
@@ -1368,14 +1374,10 @@ describe('Test payments functionality', () => {
   test('Test sending currency through daemon [4]', (done) => {
     mockDaemon.mockSendManyError2();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1, {a: 1, b: 2}, 3], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error sending payments {"code":-5}'));
       expect(results).toStrictEqual([]);
@@ -1388,14 +1390,10 @@ describe('Test payments functionality', () => {
   test('Test sending currency through daemon [5]', (done) => {
     mockDaemon.mockSendManyError3();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1, {a: 1, b: 2}, 3], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Insufficient funds for payments: {"code":-6}'));
       expect(results).toStrictEqual([]);
@@ -1408,14 +1406,10 @@ describe('Test payments functionality', () => {
   test('Test sending currency through daemon [6]', (done) => {
     mockDaemon.mockSendManyError4();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1, {a: 1, b: 2}, 3], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error sending payments {"message":"error"}'));
       expect(results).toStrictEqual([]);
@@ -1428,14 +1422,10 @@ describe('Test payments functionality', () => {
   test('Test sending currency through daemon [7]', (done) => {
     mockDaemon.mockSendManyError5();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
-    poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].primary.payments.processingFee = parseFloat(0.0004);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'primary', [mockPayments.rounds, mockPayments.workers1, {a: 1, b: 2}, 3], (error, results) => {
       expect(error).toBe(true);
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Error sending payments'));
       expect(results).toStrictEqual([]);
@@ -1447,16 +1437,11 @@ describe('Test payments functionality', () => {
 
   test('Test sending currency through daemon [8]', (done) => {
     mockDaemon.mockSendMany();
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].auxiliary = { coin: { symbol: 'BTC' }, payments: {} };
-    poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
-    poolPayments.poolConfigs['Pool1'].auxiliary.payments.minPaymentSatoshis = 500000;
-    poolPayments.poolConfigs['Pool1'].auxiliary.payments.coinPrecision = 8;
-    poolPayments.poolConfigs['Pool1'].auxiliary.payments.processingFee = parseFloat(0.0004);
     const daemon = new Stratum.daemon([poolConfig.primary.payments.daemon], () => {});
     const config = poolPayments.poolConfigs['Pool1'];
-    poolPayments.handleSending(daemon, config, 'auxiliary', [mockPayments.rounds, mockPayments.workers1], (error, results) => {
+    poolPayments.handleSending(daemon, config, 'auxiliary', [mockPayments.rounds, mockPayments.workers1, {a: 1, b: 2}, 3], (error, results) => {
       expect(error).toBe(null);
       expect(results.length).toBe(3);
       nock.cleanAll();
@@ -1468,7 +1453,7 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [1]', (done) => {
     MockDate.set(1637878085886);
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1489,7 +1474,7 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [2]', (done) => {
     MockDate.set(1637878085886);
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1512,7 +1497,7 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [3]', (done) => {
     MockDate.set(1637878085886);
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1535,7 +1520,7 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [4]', (done) => {
     MockDate.set(1637878085886);
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1561,7 +1546,7 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [5]', (done) => {
     MockDate.set(1637878085886);
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1582,7 +1567,7 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [6]', (done) => {
     MockDate.set(1637878085886);
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1611,7 +1596,7 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [7]', (done) => {
     MockDate.set(1637878085886);
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1640,7 +1625,7 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [8]', (done) => {
     MockDate.set(1637878085886);
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1669,7 +1654,7 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [9]', (done) => {
     MockDate.set(1637878085886);
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1693,7 +1678,7 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [10]', (done) => {
     MockDate.set(1637878085886);
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 500000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1719,7 +1704,7 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [11]', (done) => {
     MockDate.set(1637878085886);
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].primary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.minPaymentSatoshis = 50000000;
     poolPayments.poolConfigs['Pool1'].primary.payments.coinPrecision = 8;
@@ -1744,7 +1729,7 @@ describe('Test payments functionality', () => {
   test('Test final updates given pipeline end [12]', (done) => {
     MockDate.set(1637878085886);
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.poolConfigs['Pool1'].auxiliary = { payments: {} };
     poolPayments.poolConfigs['Pool1'].auxiliary.payments.magnitude = 100000000;
     poolPayments.poolConfigs['Pool1'].auxiliary.payments.minPaymentSatoshis = 500000;
@@ -1765,7 +1750,7 @@ describe('Test payments functionality', () => {
 
   test('Test info message on successful pipeline', () => {
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolPayments = new PoolPayments(logger, client);
+    const poolPayments = new PoolPayments(logger, client, sequelize);
     poolPayments.outputPaymentInfo(['Pool1']);
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('Payment processing setup to run every'));
     console.log.mockClear();

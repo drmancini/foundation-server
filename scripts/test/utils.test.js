@@ -9,6 +9,9 @@ const colors = require('colors');
 const os = require('os');
 const utils = require('../main/utils');
 
+const sequelizeMock = require('sequelize-mock');
+const sequelize = new sequelizeMock();
+
 ////////////////////////////////////////////////////////////////////////////////
 
 describe('Test utility functionality', () => {
@@ -471,6 +474,20 @@ describe('Test utility functionality', () => {
     expect(processed.luck1).toBe(101.43);
     expect(processed.luck10).toBe(176.5);
     expect(processed.luck100).toBe(175.54);
+  });
+
+  test('Test implemented processMinerPayments [1]', () => {
+    const blockType = 'primary';
+    const payments = [
+      { block_type: 'primary', time: '123', paid: 123, transaction: 'asd', miner: 'asd'},
+      { block_type: 'auxiliary', time: '123', paid: 123, transaction: 'asd', miner: 'asd'}];
+    const processed = utils.processMinerPayments(payments, blockType);
+    expect(processed.length).toBe(1);
+  });
+
+  test('Test implemented processMinerPayments [2]', () => {
+    const blockType = 'primary';
+    expect(utils.processMinerPayments(null, blockType)).toStrictEqual({});
   });
 
   test('Test implemented processMiners [1]', () => {

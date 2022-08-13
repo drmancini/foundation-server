@@ -7,6 +7,9 @@
 const redis = require('redis-mock');
 jest.mock('redis', () => jest.requireActual('redis-mock'));
 
+const SequelizeMock = require("sequelize-mock");
+const sequelize = new SequelizeMock();
+
 const mock = require('./daemon.mock.js');
 const nock = require('nock');
 
@@ -43,7 +46,7 @@ describe('Test workers functionality', () => {
   });
 
   test('Test initialization of workers', () => {
-    const poolWorkers = new PoolWorkers(logger, client);
+    const poolWorkers = new PoolWorkers(logger, client, sequelize);
     expect(typeof poolWorkers.portalConfig).toBe('object');
     expect(typeof poolWorkers.createPromises).toBe('function');
     expect(typeof poolWorkers.setupWorkers).toBe('function');
@@ -52,7 +55,7 @@ describe('Test workers functionality', () => {
   test('Test worker stratum creation', (done) => {
     mock.mockDaemon();
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const poolWorkers = new PoolWorkers(logger, client);
+    const poolWorkers = new PoolWorkers(logger, client, sequelize);
     poolWorkers.setupWorkers(() => {
       expect(consoleSpy).toHaveBeenCalled();
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching('p2p has been disabled in the configuration'));

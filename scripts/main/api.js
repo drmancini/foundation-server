@@ -774,12 +774,13 @@ const PoolApi = function (client, poolConfigs, portalConfig) {
   // Determine API Endpoint Called
   this.handleApiV1 = function(req, callback) {
 
-    let pool, endpoint, method;
+    const pool = 'zone';
+    let endpoint, method;
     const miscellaneous = ['pools'];
 
     // If Path Params Exist
     if (req.params) {
-      pool = utils.validateInput(req.params.pool || '');
+      // pool = utils.validateInput(req.params.pool || '');
       endpoint = utils.validateInput(req.params.endpoint || '');
     }
 

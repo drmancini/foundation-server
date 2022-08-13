@@ -7,6 +7,7 @@
 /* eslint-disable-next-line no-unused-vars */
 const redis = require('redis-mock');
 jest.mock('redis', () => jest.requireActual('redis-mock'));
+jest.mock('sequelize', () => jest.requireActual('sequelize-mock'));
 
 const PoolDatabase = require('../main/database');
 const portalConfig = require('../../configs/main/example.js');

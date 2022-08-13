@@ -136,7 +136,9 @@ const PoolStratum = function (logger, poolConfig, portalConfig, poolShares, pool
     let poolStratum = Stratum.create(_this.poolConfig, _this.portalConfig, _this.authorizeWorker, callback);
     poolStratum = _this.handleEvents(poolStratum);
     poolStratum.setupPool();
-    _this.handleStatistics(poolStratum);
+    if (_this.poolConfig.statistics.enabled) {
+      _this.handleStatistics(poolStratum);
+    }
     this.poolStratum = poolStratum;
   };
 };

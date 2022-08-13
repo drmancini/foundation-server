@@ -115,22 +115,6 @@ const PoolLoader = function(logger, portalConfig) {
     return true;
   };
 
-  // Validate Pool Settings
-  this.validatePoolVariables = function(poolConfig) {
-
-    // Establish Statistics Variables
-    const historicalInterval = poolConfig.statistics.historicalInterval || 1800;
-    const historicalWindow = poolConfig.statistics.historicalWindow || 86400;
-
-    // Check Historical Settings
-    if (historicalWindow / historicalInterval >= 50) {
-      logger.error('Builder', 'Setup', 'Historical retention must be limited to <= 50 records. Check your configuration files.');
-      return false;
-    }
-
-    return true;
-  };
-
   // Validate Pool Configs
   this.validatePoolConfigs = function(poolConfig) {
     const name = poolConfig.name;
@@ -138,7 +122,6 @@ const PoolLoader = function(logger, portalConfig) {
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.mining, name)) return false;
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.block, name)) return false;
     if (!_this.validatePoolAlgorithms(poolConfig.primary.coin.algorithms.coinbase, name)) return false;
-    if (!_this.validatePoolVariables(poolConfig)) return false;
     if (!_this.validatePoolRecipients(poolConfig)) return false;
     return true;
   };

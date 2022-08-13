@@ -4,10 +4,18 @@
  *
  */
 
-const os = require('os');
 const crypto = require('crypto');
+const fs = require('fs');
+const handlebars = require("handlebars");
+const nodemailer = require("nodemailer");
+const os = require('os');
+const path = require('path');
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// export async function sendEmail() {
+//   console.log('email sent');
+// }
 
 // Calculate Average of Object Property
 exports.calculateAverage = function(data, property) {
@@ -217,6 +225,64 @@ exports.loggerSeverity = {
   'special': 4
 };
 
+// Send email 
+exports.mailer = async function (email, subject, unsubscribeLink, template, replacements) {
+  let activeTemplate;
+
+  switch (template) {
+    case 'subscribe':
+      activeTemplate = '../../handlebars/registration.handlebars';
+      break;
+    case 'inactivity':
+      activeTemplate = '../../handlebars/inactive-miners.handlebars';
+      break;
+    default:
+      console.log('incorrect template selected');
+  }
+
+  // create reusable transporter object using the default SMTP transport
+  let transporter = nodemailer.createTransport({
+    sendmail: true,
+    newline: 'unix',
+    path: '/usr/sbin/sendmail',
+    secure: false,
+    // host: "localhost",
+    // port: 465,
+    // secure: true, // true for 465, false for other ports
+    // auth: {
+    //   user: "info", // generated ethereal user
+    //   pass: "lopata", // generated ethereal password
+    // },
+    // tls: {
+    //   // do not fail on invalid certs
+    //   rejectUnauthorized: false,
+    // },
+  });
+
+
+  const filePath = path.join(__dirname, activeTemplate);
+  const source = fs.readFileSync(filePath, 'utf-8').toString();
+  const tempTemplate = handlebars.compile(source);    
+  const htmlToSend = tempTemplate(replacements);
+
+  const messageObject = {
+    from: '"Raptoreum zone" <info@raptoreum.zone>',
+    to: email, 
+    subject: subject, 
+    html: htmlToSend,
+    list: {
+      unsubscribe: {
+        url: unsubscribeLink,
+      }
+    }
+  };
+
+  // send mail with defined transport object
+  let info = await transporter.sendMail(messageObject);
+
+  console.log(`Message sent: ${ info.messageId }`);
+};
+
 // Process Blocks for API Endpoints
 exports.processBlocks = function(blocks) {
   const output = blocks
@@ -267,6 +333,16 @@ exports.processLuck = function(pending, confirmed) {
   output['luck100'] = exports.calculateAverage(sorted.slice(0, 100), 'luck');
   return output;
 };
+
+// Process Miner Payments for API Endpoints
+exports.processMinerPayments = function(payments, blockType) {
+  let output = {};
+  if(payments) {
+    output = payments.filter((payment) => payment.block_type === blockType);
+    output.forEach((payment) => {delete payment.block_type});
+  };
+  return output;
+}
 
 // Process Miners for API Endpoints
 exports.processMiners = function(shares, hashrate, multiplier, hashrateWindow, active) {
@@ -428,7 +504,7 @@ exports.processWork = function(shares, address, type, identifier) {
         const worker = share.worker.split('.')[0];
         const workValue = /^-?\d*(\.\d+)?$/.test(share.work) ? parseFloat(share.work) : 0;
         if (!address || address === share.worker || (type === 'miner' && address === worker)) {
-          output += workValue;
+          output += workValue > 0 ? workValue : 0;
         }
       }
     });

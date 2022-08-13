@@ -9,7 +9,24 @@ const redis = require('redis-mock');
 const events = require('events');
 jest.mock('redis', () => jest.requireActual('redis-mock'));
 
+const sequelizeMock = require('sequelize-mock');
+const sequelize = new sequelizeMock();
+
+jest.mock('../../models/payments.model.js', () => () => {  
+  const SequelizeMock = require("sequelize-mock");
+  const dbMock = new SequelizeMock();
+  return dbMock.define('payments', {
+    pool: 'asd',
+    block_type: 'primary',  
+    time: 123,
+    paid: 123.4,
+    transaction: 'asd',
+    miner: 'asd'
+  })
+});
+
 const PoolApi = require('../main/api');
+const PoolApi2 = require('../main/api2');
 const PoolServer = require('../main/server');
 const PoolLogger = require('../main/logger');
 const poolConfig = require('../../configs/pools/example.js');
@@ -60,6 +77,16 @@ describe('Test server functionality', () => {
     const response = mockResponse();
     response.on('end', (payload) => {
       const expected = '{"version":"0.0.3","statusCode":500,"headers":{"Access-Control-Allow-Headers":"Content-Type, Access-Control-Allow-Headers, Access-Control-Allow-Origin, Access-Control-Allow-Methods","Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"GET","Content-Type":"application/json"},"body":"The server was unable to handle your request. Verify your input or try again later"}';
+      expect(payload).toBe(expected);
+    });
+    poolServer.handleErrors(mainApi, 'test', response);
+  });
+
+  test('Test handleErrors functionality [2]', () => {
+    const mainApi = new PoolApi2();
+    const response = mockResponse();
+    response.on('end', (payload) => {
+      const expected = '{"version":"0.0.1","statusCode":500,"headers":{"Access-Control-Allow-Headers":"Content-Type, Access-Control-Allow-Headers, Access-Control-Allow-Origin, Access-Control-Allow-Methods","Access-Control-Allow-Origin":"*","Access-Control-Allow-Methods":"GET, PUT","Content-Type":"application/json"},"body":"The server was unable to handle your request. Verify your input or try again later"}';
       expect(payload).toBe(expected);
     });
     poolServer.handleErrors(mainApi, 'test', response);

@@ -8,20 +8,31 @@ const fs = require('fs');
 const async = require('async');
 const utils = require('./utils');
 const Stratum = require('foundation-stratum');
+const Sequelize = require('sequelize');
+const PaymentsModel = require('../../models/payments.model');
+const { Console } = require('console');
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Main Payments Function
-const PoolPayments = function (logger, client) {
+const PoolPayments = function (logger, client, sequelize) {
 
   const _this = this;
   process.setMaxListeners(0);
 
   this.pools = [];
   this.client = client;
+  this.sequelize = sequelize;
   this.poolConfigs = JSON.parse(process.env.poolConfigs);
   this.portalConfig = JSON.parse(process.env.portalConfig);
   this.forkId = process.env.forkId;
+
+  const sequelizePayments = PaymentsModel(sequelize, Sequelize);
+  
+  /* istanbul ignore next */
+  if (typeof(sequelizePayments) === 'function') {
+    this.sequelize.sync({ force: false })
+  };
 
   // Check for Deletable Shares
   this.checkShares = function(rounds, round) {
@@ -468,13 +479,59 @@ const PoolPayments = function (logger, client) {
     });
   };
 
+  // Calculate Work from Round Data
+  /* istanbul ignore next */
+  this.handleWork = function(config, blockType, data, callback) {
+    // const times = data[2];
+    const shared = [];
+    const pool = config.name;
+
+    const commands = data[0].map((round) => {
+      return ['hgetall', `${ pool }:rounds:${ blockType }:round-${ round.height }:work`];
+    });
+
+    _this.client.multi(commands).exec((error, results) => {
+      if (error) {
+        logger.error('Payments', pool, `Could not load work data from database: ${ JSON.stringify(error) }`);
+        callback(true, []);
+        return;
+      }
+
+      // Build Worker Times Data
+      results.forEach((round) => {
+        const sharedRound = {};
+
+        // Iterate Through Each Round
+        Object.keys(round || {}).forEach((entry) => {
+
+          // Get Round Values
+          const address = entry.split('.')[0];
+          const workValue = /^-?\d*(\.\d+)?$/.test(round[entry]) ? parseFloat(round[entry]) : 0;
+          
+          // Process Round Share Data
+          if (address in sharedRound) {
+            sharedRound[address] += workValue;
+          } else {
+            sharedRound[address] = workValue;
+          }
+        });    
+
+        // Push Round Data to Main
+        shared.push(sharedRound);
+      });
+
+      // Return Times Data as Callback
+      callback(null, [data[0], data[1], shared]);
+    });
+  };
+
   // Calculate Shares from Round Data
   /* istanbul ignore next */
   this.handleShares = function(config, blockType, data, callback) {
 
     const times = [];
     const solo = [];
-    const shared = [];
+    const shared = data[2];
     const pool = config.name;
 
     // Map Commands from Individual Rounds
@@ -494,7 +551,6 @@ const PoolPayments = function (logger, client) {
       results.forEach((round) => {
         const timesRound = {};
         const soloRound = {};
-        const sharedRound = {};
 
         // Iterate Through Each Round
         Object.keys(round || {}).forEach((entry) => {
@@ -521,19 +577,12 @@ const PoolPayments = function (logger, client) {
             } else {
               soloRound[address] = parseFloat(workValue);
             }
-          } else {
-            if (address in sharedRound) {
-              sharedRound[address] += parseFloat(workValue);
-            } else {
-              sharedRound[address] = parseFloat(workValue);
-            }
-          }
+          } 
         });
 
         // Push Round Data to Main
         times.push(timesRound);
         solo.push(soloRound);
-        shared.push(sharedRound);
       });
 
       // Return Share Data as Callback
@@ -641,43 +690,75 @@ const PoolPayments = function (logger, client) {
     callback(null, [rounds, workers]);
   };
 
-  // Send Payments if Applicable
-  this.handleSending = function(daemon, config, blockType, data, callback) {
-
+  this.handleLimits = function(config, blockType, data, callback) {
     let totalSent = 0;
     const amounts = {};
+    const miners = {};
+
+    const pool = config.name;
+    const rounds = data[0];
+    const workers = data[1];
+    const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
+
+    const commands = [['hgetall', `${ pool }:miners:${ blockType }`]];
+
+    // Perform Redis Commands
+    _this.client.multi(commands).exec((error, results) => {
+      if (error) {
+        logger.error('Payments', pool, `Could not get miner data from database: ${ JSON.stringify(error) }`);
+        callback(true, []);
+        return;
+      }
+
+      for (const [key, value] of Object.entries(results[0])) {
+        const miner = JSON.parse(value);
+        miners[key] = miner.payoutLimit;
+      }
+
+      // Calculate Amount to Send to Workers
+      Object.keys(workers).forEach((address) => {
+        const worker = workers[address];
+        const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
+        const minerLimit = utils.coinsToSatoshis(miners[address], processingConfig.payments.magnitude) || 0;
+
+        // Determine Amounts Given Mininum Payment
+        const payoutLimit = minerLimit > processingConfig.payments.minPaymentSatoshis ? minerLimit : processingConfig.payments.minPaymentSatoshis;
+
+        if (amount >= payoutLimit) {
+          worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
+          amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
+          totalSent += worker.sent;
+        } else {
+          worker.sent = 0;
+          worker.change = amount;
+        }
+        
+        workers[address] = worker;
+      });
+
+      // Return Share Data as Callback
+      callback(null, [rounds, workers, amounts, totalSent]);
+    });
+  };
+
+  // Send Payments if Applicable
+  this.handleSending = function(daemon, config, blockType, data, callback) {
     const commands = [];
     const dateNow = Date.now();
 
     const rounds = data[0];
     const workers = data[1];
+    const amounts = data[2];
+    const totalSent = data[3];
     const pool = config.name;
     const processingConfig = blockType === 'primary' ? config.primary : config.auxiliary;
-
-    // Calculate Amount to Send to Workers
-    Object.keys(workers).forEach((address) => {
-      const worker = workers[address];
-      const amount = Math.round((worker.balance || 0) + (worker.generate || 0));
-
-      // Determine Amounts Given Mininum Payment
-      if (amount >= processingConfig.payments.minPaymentSatoshis) {
-        worker.sent = utils.satoshisToCoins(amount, processingConfig.payments.magnitude, processingConfig.payments.coinPrecision);
-        amounts[address] = utils.coinsRound(worker.sent, processingConfig.payments.coinPrecision);
-        totalSent += worker.sent;
-      } else {
-        worker.sent = 0;
-        worker.change = amount;
-      }
-
-      workers[address] = worker;
-    });
 
     // Check if No Workers/Rounds
     if (Object.keys(amounts).length === 0) {
       callback(null, [rounds, workers]);
       return;
     }
-
+    
     // Send Payments to Workers Through Daemon
     const rpcTracking = `sendmany "" ${ JSON.stringify(amounts) }`;
     daemon.cmd('sendmany', ['', amounts], true, (result) => {
@@ -714,6 +795,19 @@ const PoolPayments = function (logger, client) {
           paid: totalSent,
           miners: Object.keys(amounts).length,
           transaction: transaction,
+        };
+
+        // Update Sequelize with Miner Payment Records
+        for (const [address, amount] of Object.entries(amounts)) {
+          sequelizePayments  
+            .create({
+              pool: pool,
+              block_type: blockType,
+              miner: address,
+              paid: amount,
+              transaction: transaction,
+              time: currentDate,
+            });
         };
 
         // Update Redis Database with Payment Record
@@ -784,8 +878,10 @@ const PoolPayments = function (logger, client) {
     // Update Worker Shares
     const deleteCurrent = function(round, pool, blockType) {
       return [
+        ['del', `${ pool }:rounds:${ blockType }:round-${ round.height }:work`],
         ['del', `${ pool }:rounds:${ blockType }:round-${ round.height }:counts`],
-        ['del', `${ pool }:rounds:${ blockType }:round-${ round.height }:shares`]];
+        ['del', `${ pool }:rounds:${ blockType }:round-${ round.height }:shares`]
+      ];
     };
 
     // Update Round Shares/Times
@@ -847,6 +943,7 @@ const PoolPayments = function (logger, client) {
       (callback) => _this.handleBlocks(daemon, config, blockType, callback),
       (data, callback) => _this.handleWorkers(config, blockType, data, callback),
       (data, callback) => _this.handleTransactions(daemon, config, blockType, data, callback),
+      (data, callback) => _this.handleWork(config, blockType, data, callback),
       (data, callback) => _this.handleShares(config, blockType, data, callback),
       (data, callback) => _this.handleRewards(config, category, blockType, data, callback),
       (data, callback) => _this.handleUpdates(config, category, blockType, interval, data, callback),
@@ -868,9 +965,11 @@ const PoolPayments = function (logger, client) {
       (callback) => _this.handleBlocks(daemon, config, blockType, callback),
       (data, callback) => _this.handleWorkers(config, blockType, data, callback),
       (data, callback) => _this.handleTransactions(daemon, config, blockType, data, callback),
+      (data, callback) => _this.handleWork(config, blockType, data, callback),
       (data, callback) => _this.handleShares(config, blockType, data, callback),
       (data, callback) => _this.handleOwed(daemon, config, category, blockType, data, callback),
       (data, callback) => _this.handleRewards(config, category, blockType, data, callback),
+      (data, callback) => _this.handleLimits(config, blockType, data, callback),
       (data, callback) => _this.handleSending(daemon, config, blockType, data, callback),
       (data, callback) => _this.handleUpdates(config, category, blockType, interval, data, callback),
     ], (error) => {

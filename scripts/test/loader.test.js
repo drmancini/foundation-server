@@ -9,6 +9,9 @@ const PoolLogger = require('../main/logger');
 const portalConfig = require('../../configs/main/example.js');
 const logger = new PoolLogger(portalConfig);
 
+const sequelizeMock = require('sequelize-mock');
+const sequelize = new sequelizeMock();
+
 ////////////////////////////////////////////////////////////////////////////////
 
 describe('Test loader functionality', () => {
@@ -81,17 +84,6 @@ describe('Test loader functionality', () => {
     const poolConfig = { enabled: false, name: 'Litecoin', primary: { coin: { name: 'Litecoin' }, payments: {}}};
     const response = poolLoader.validatePoolConfigs(poolConfig);
     expect(response).toBe(false);
-  });
-
-  test('Test pool configuration validation [7]', () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const algorithms = { mining: 'scrypt', block: 'sha256d', coinbase: 'sha256d' };
-    const poolLoader = new PoolLoader(logger, configCopy);
-    const poolConfig = { enabled: true, statistics: { historicalInterval: 300 }, primary: { coin: { algorithms: algorithms }, payments: {}}};
-    const response = poolLoader.validatePoolConfigs(poolConfig);
-    expect(consoleSpy).toHaveBeenCalled();
-    expect(response).toBe(false);
-    console.log.mockClear();
   });
 
   test('Test pool recipient validation [1]', () => {

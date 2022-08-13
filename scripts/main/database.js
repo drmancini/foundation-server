@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const redis = require('redis');
+const Sequelize = require('sequelize');
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,6 +62,40 @@ const PoolDatabase = function(portalConfig) {
       }
       return;
     });
+  };
+
+  /* istanbul ignore next */
+  this.connectSequelize = function() {
+
+    // Build Connection Options
+    const database = _this.portalConfig.postgresql.database;
+    const username = _this.portalConfig.postgresql.user;
+    const password = _this.portalConfig.postgresql.password;
+    
+    const connectionOptions = {};
+    connectionOptions.host = _this.portalConfig.postgresql.host;
+    connectionOptions.port = _this.portalConfig.postgresql.port;
+    connectionOptions.dialect = 'postgres';
+    connectionOptions.logging = false;
+    
+
+    // Check if TLS Configuration is Set
+    if (_this.portalConfig.postgresql.tls) {
+      connectionOptions.ssl = {};
+      connectionOptions.ssl.rejectUnauthorized = false;
+      connectionOptions.ssl.ca = fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.ca));
+      connectionOptions.ssl.key = fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.key));
+      connectionOptions.ssl.cert = fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.cert));
+    }
+
+    connectionOptions.pool = {
+      idle: 200000,
+      acquire: 1000000
+    };
+
+    const sequelize = new Sequelize(database, username, password, connectionOptions);
+
+    return sequelize;
   };
 };
 
