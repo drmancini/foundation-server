@@ -122,12 +122,15 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const commands = [];
     const usersLookups = [
       ['hgetall', `${_this.pool}:workers:${blockType}:shared`],
+      ['hgetall', `${_this.pool}:workers:${blockType}:solo`],
       ['hgetall', `${_this.pool}:miners:${blockType}`]
     ];
     _this.executeCommands(usersLookups, (results) => {
-      const workers = results[0] || {};
-      const miners = results[1] || {};
-      for (const [key, value] of Object.entries(workers)) {
+      const sharedWorkers = results[0] || {};
+      const soloWorkers = results[1] || {};
+      const miners = results[2] || {};
+
+      for (const [key, value] of Object.entries(sharedWorkers)) {
         const workerObject = JSON.parse(value);
         const worker = workerObject.worker;
         const miner = worker.split('.')[0];
@@ -140,6 +143,21 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           commands.push(['hset', `${_this.pool}:miners:${blockType}`, miner, output]);
         }
       };
+
+      for (const [key, value] of Object.entries(soloWorkers)) {
+        const workerObject = JSON.parse(value);
+        const worker = workerObject.worker;
+        const miner = worker.split('.')[0];
+        if (!(miner in miners)) {
+          const minerObject = {
+            firstJoined: workerObject.time,
+            payoutLimit: minPayment
+          }
+          const output = JSON.stringify(minerObject);
+          commands.push(['hset', `${_this.pool}:miners:${blockType}`, miner, output]);
+        }
+      };
+      
       callback(commands);
     }, handler);
   };
