@@ -49,7 +49,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const timeChange = utils.roundTo(Math.max(dateNow - lastTime, 0) / 1000, 4);
     
     if (timeChange < 900) {
-      times = times + timeChange;
+      times += timeChange;
     }
 
     if (times > roundTime) {
@@ -116,15 +116,12 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Establish Previous Share Data: 
     if (isSoloMining) {
       shares = (['share', 'primary'].includes(blockType)) ? (results[2] || {}) : (results[3] || {});
+      lastBlock = (['share', 'primary'].includes(blockType)) ? (results[6] || {}) : (results[7] || {});
     } else {
       shares = (['share', 'primary'].includes(blockType)) ? (results[0] || {}) : (results[1] || {});
+      lastBlock = (['share', 'primary'].includes(blockType)) ? (results[4] || {}) : (results[5] || {});
+      works = (results[8] || {});
     }
-
-    if (!isSoloMining) {
-      lastBlock = (blockType == 'primary') ? (results[4] || {}) : (results[5] || {});
-    } 
-
-    works = results[6];
 
     // Establish Last Share Data for Miner
     const lastShare = JSON.parse(shares[worker] || '{}');
@@ -133,9 +130,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     if (shareData.height > _this.curHeight) _this.curHeight = shareData.height;
     if (!isSoloMining && shareData.height < _this.curHeight) shareType = "stale";
     
-
     // Calculate Updated Share Data
-    const times = _this.handleTimes(lastShare, lastBlock, shareType);
+    const times = _this.handleTimes(lastShare, lastBlock);
     const effort = _this.handleEffort(shares, works, worker, shareData, shareType, blockDifficulty, isSoloMining);
     const types = _this.handleTypes(lastShare, shareType);
     let workIncrement = difficulty;
@@ -374,6 +370,8 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       ['hgetall', `${ _this.pool }:rounds:auxiliary:current:solo:shares`],
       ['hgetall', `${ _this.pool }:rounds:primary:current:shared:previous`],
       ['hgetall', `${ _this.pool }:rounds:auxiliary:current:shared:previous`],
+      ['hgetall', `${ _this.pool }:rounds:primary:current:solo:previous`],
+      ['hgetall', `${ _this.pool }:rounds:auxiliary:current:solo:previous`],
       ['hgetall', `${ _this.pool }:rounds:primary:current:shared:work`]];
     this.executeCommands(shareLookups, (results) => {
       _this.buildCommands(results, shareData, shareType, blockValid, callback, handler);

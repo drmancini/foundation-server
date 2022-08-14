@@ -400,7 +400,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     const payoutLimit = body.payoutLimit;
     const address = body.address;
     const ipAddress = body.ipAddress;
-    console.log(body);
     if (minPayment > payoutLimit) {
       callback(400, {
         error: 'Payout limit below minimum pool payment',
@@ -434,7 +433,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
         
         if (miner === address) {
           if ((worker.time * 1000) >= (dateNow - twentyFourHours) && ipAddress === worker.ip) {
-            console.log('IP valid');
             ipValid = true;
           }
         }
@@ -459,7 +457,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           }
         }, callback);
       } else {
-        console.log('IP not valid');
         callback(200, {
           error: 'IP address does not belong to active miner',
           result: null
@@ -469,47 +466,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /miner/paymentStats for miner [address]
-  this.minerPaymentStats = function(pool, address, callback) {
-    sequelizePayments
-      .findAll({
-        raw: true,
-        attributes: ['transaction', 'paid', 'time'],
-        where: {
-          pool: pool,
-          miner: address,
-        },
-        order: [
-          ['time', 'desc']
-        ],
-      })
-      .then((data) => {
-        const transactionCount = data.length;
-        const lastPayment = {};
-        let totalPaid = 0; 
-        let isLastPayment = true;
-        data.forEach((payment) => {
-          if (isLastPayment) {
-              lastPayment.hash = payment.transaction,
-              lastPayment.timestamp = payment.time,
-              lastPayment.value = payment.paid,
-            isLastPayment = false;
-          }
-          totalPaid += payment.paid
-        });
-        callback(200, {
-          //countervalue: 'honverze do USD',
-          lastPayment: lastPayment,
-          stats: {
-            averageValue: totalPaid / transactionCount,
-            totalPaid: totalPaid,
-            transactionCount: transactionCount,
-          }
-        });
-      });
-  };
-
-  // API Endpoint for /miner/paymentStats for miner [address]
-  this.minerPaymentStats2 = function(pool, address, countervalue, blockType, callback) {
+  this.minerPaymentStats = function(pool, address, countervalue, blockType, callback) {
     if (countervalue == '') {
       countervalue = 'usd';
     };
@@ -678,40 +635,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
       callback(200, output);
     }, callback);
   };
-
-  // API Endpoint for /miner/roundTimes for miner [address]
-  // this.minerRoundTimes = function(pool, address, blockType, callback) {
-  //   /* istanbul ignore next */
-  //   if (blockType == '') {
-  //     blockType = 'primary';
-  //   }
-  //   const output = {
-  //     maxTimes: 0,
-  //     minerTimes: 0
-  //   };
-  //   const commands = [
-  //     ['hgetall', `${ pool }:rounds:${ blockType }:current:shared:times`]];
-  //   _this.executeCommands(commands, (results) => {
-  //     for (const [key, value] of Object.entries(results[0])) {
-  //       const miner = key.split('.')[0] || null;
-  //       const work = parseFloat(value);
-  //       if (work > output.maxTimes) {
-  //         output.maxTimes = work;
-  //         // console.log('max: ' + value);
-  //       }
-
-  //       if (miner === address && work > output.minerTimes) {
-  //         output.minerTimes = work;
-  //         // console.log('miner: ' + value);
-  //       }
-  //     };
-
-  //     callback(200, {
-  //       error: null,
-  //       result: output
-  //     });
-  //   }, callback);
-  // }
 
   // API Endpoint for /miner/roundTimes for miner [address]
   this.minerRoundWork = function(pool, address, blockType, callback) {
@@ -1222,13 +1145,11 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   };
 
   // API Endpoint for /pool/clientIP
-  this.poolClientIP = function(remoteAddress, callback) {
-    
-
-    callback(200, {
-        result: remoteAddress,
-      });
-  };
+  // this.poolClientIP = function(remoteAddress, callback) {
+  //   callback(200, {
+  //       result: remoteAddress,
+  //     });
+  // };
   
   // API Endpoint for /pool/currentLuck
   this.poolCurrentLuck = function(pool, blockType, isSolo, callback) {
@@ -1632,9 +1553,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           case (endpoint === 'chart' && address.length > 0):
             _this.minerChart(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
             break;
-          // case (endpoint === 'chart2' && address.length > 0):
-          //   _this.minerChart(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
-          //   break;
           case (endpoint === 'details' && address.length > 0):
             _this.minerDetails(pool, address, blockType, (code, message) => callback(code, message));
             break;
@@ -1642,10 +1560,10 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             _this.minerPayments(pool, address, countervalue, page, (code, message) => callback(code, message));
             break;
           case (endpoint === 'paymentStats' && address.length > 0):
-            _this.minerPaymentStats(pool, address, (code, message) => callback(code, message));
+            _this.minerPaymentStats(pool, address, countervalue, blockType, (code, message) => callback(code, message));
             break;
           case (endpoint === 'paymentStats2' && address.length > 0):
-            _this.minerPaymentStats2(pool, address, countervalue, blockType, (code, message) => callback(code, message));
+            _this.minerPaymentStats(pool, address, countervalue, blockType, (code, message) => callback(code, message));
             break;
           case (endpoint === 'payoutSettings'):
             _this.minerPayoutSettings(pool, body, (code, message) => callback(code, message));
@@ -1653,9 +1571,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           case (endpoint === 'stats' && address.length > 0):
             _this.minerStats(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
             break;
-          // case (endpoint === 'stats2' && address.length > 0):
-          //   _this.minerStats(pool, address, blockType, isSolo, worker, (code, message) => callback(code, message));
-          //   break;
           case (endpoint === 'roundWork' && address.length > 0):
             _this.minerRoundWork(pool, address, blockType, (code, message) => callback(code, message));
             break;
@@ -1674,9 +1589,6 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           case (endpoint === 'workers' && address.length > 0):
             _this.minerWorkers(pool, address, blockType, isSolo, (code, message) => callback(code, message));
             break;
-          // case (endpoint === 'workers2' && address.length > 0):
-          //   _this.minerWorkers(pool, address, blockType, isSolo, (code, message) => callback(code, message));
-          //   break;
           default:
             callback(405, 'The requested endpoint does not exist. Verify your input and try again');
             break;
@@ -1690,9 +1602,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
           case (endpoint === 'blocks'):
             _this.poolBlocks(pool, blockType, (code, message) => callback(code, message));
             break;
-          case (endpoint === 'clientIP'):
-            _this.poolClientIP(remoteAddress, (code, message) => callback(code, message));
-            break;
+          // case (endpoint === 'clientIP'):
+          //   _this.poolClientIP(remoteAddress, (code, message) => callback(code, message));
+          //   break;
           case (endpoint === 'coin'):
             _this.poolCoin(pool, blockType, (code, message) => callback(code, message));
             break;
