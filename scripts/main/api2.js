@@ -1023,7 +1023,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /miner/workerCount
   this.minerWorkerCount = function(pool, address, blockType, isSolo, callback) {
     const config = _this.poolConfigs[pool] || {};
-    const solo = isSolo ? 'solo' : 'shared';
+    const solo = isSolo === true ? 'solo' : 'shared';
     const dateNow = Date.now() / 1000 | 0;
     const onlineWindow = config.statistics.onlineWindow;
     const onlineWindowTime = ((dateNow - onlineWindow) || 0);

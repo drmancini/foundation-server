@@ -439,23 +439,33 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const minuteStart = minuteEnd - oneMinute;
     const workerLookups = [
       ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:hashrate`, `(${minuteStart / 1000}`, minuteEnd / 1000],
-      ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:snapshots`, minuteEnd / 1000, minuteEnd / 1000]
+      ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:snapshots`, minuteEnd / 1000, minuteEnd / 1000],
+      ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:solo:hashrate`, `(${minuteStart / 1000}`, minuteEnd / 1000],
+      ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:solo:snapshots`, minuteEnd / 1000, minuteEnd / 1000]
     ];
     _this.executeCommands(workerLookups, (results) => {
       const commands = [];
-      const snapshotWorkers = [];
-      const snapshots = [];
+      const sharedSnapshotWorkers = [];
+      const sharedSnapshots = [];
+      const soloSnapshotWorkers = [];
+      const soloSnapshots = [];
 
       if (results[1]) {
         results[1].forEach((snapshot) => {
-          snapshots.push(JSON.parse(snapshot));
+          sharedSnapshots.push(JSON.parse(snapshot));
+        });
+      };
+
+      if (results[3]) {
+        results[3].forEach((snapshot) => {
+          soloSnapshots.push(JSON.parse(snapshot));
         });
       };
 
       if (results[0]) {
         results[0].forEach((share) => {
           share = JSON.parse(share);
-          const workerIndex = snapshotWorkers.findIndex(worker => worker.worker === share.worker);
+          const workerIndex = sharedSnapshotWorkers.findIndex(worker => worker.worker === share.worker);
           if (workerIndex === -1) {
             const objectTemplate = {
               worker: share.worker,
@@ -465,27 +475,63 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
               time: minuteEnd / 1000,
               work: share.type === 'valid' ? share.work : 0,
             };
-            snapshotWorkers.push(objectTemplate);
+            sharedSnapshotWorkers.push(objectTemplate);
           } else {
             if (share.type === 'valid') {
-              snapshotWorkers[workerIndex].valid += 1;
-              snapshotWorkers[workerIndex].work += share.work;
+              sharedSnapshotWorkers[workerIndex].valid += 1;
+              sharedSnapshotWorkers[workerIndex].work += share.work;
             }
             if (share.type === 'stale') {
-              snapshotWorkers[workerIndex].stale += 1;
+              sharedSnapshotWorkers[workerIndex].stale += 1;
             }
             if (share.type === 'invalid') {
-              snapshotWorkers[workerIndex].invalid += 1;
+              sharedSnapshotWorkers[workerIndex].invalid += 1;
             }
           }
         });
       };
 
-      snapshotWorkers.forEach((worker) => {
-        if (!snapshots.find((snapshot) => snapshot.worker === worker.worker)) {
+      if (results[2]) {
+        results[2].forEach((share) => {
+          share = JSON.parse(share);
+          const workerIndex = soloSnapshotWorkers.findIndex(worker => worker.worker === share.worker);
+          if (workerIndex === -1) {
+            const objectTemplate = {
+              worker: share.worker,
+              valid: share.type === 'valid' ? 1 : 0,
+              stale: share.type === 'stale' ? 1 : 0,
+              invalid: share.type === 'invalid' ? 1 : 0,
+              time: minuteEnd / 1000,
+              work: share.type === 'valid' ? share.work : 0,
+            };
+            soloSnapshotWorkers.push(objectTemplate);
+          } else {
+            if (share.type === 'valid') {
+              soloSnapshotWorkers[workerIndex].valid += 1;
+              soloSnapshotWorkers[workerIndex].work += share.work;
+            }
+            if (share.type === 'stale') {
+              soloSnapshotWorkers[workerIndex].stale += 1;
+            }
+            if (share.type === 'invalid') {
+              soloSnapshotWorkers[workerIndex].invalid += 1;
+            }
+          }
+        });
+      };
+
+      sharedSnapshotWorkers.forEach((worker) => {
+        if (!sharedSnapshots.find((snapshot) => snapshot.worker === worker.worker)) {
           commands.push(['zadd', `${_this.pool}:rounds:${blockType}:current:shared:snapshots`, minuteEnd / 1000, JSON.stringify(worker)]);
         }
       });
+
+      soloSnapshotWorkers.forEach((worker) => {
+        if (!soloSnapshots.find((snapshot) => snapshot.worker === worker.worker)) {
+          commands.push(['zadd', `${_this.pool}:rounds:${blockType}:current:solo:snapshots`, minuteEnd / 1000, JSON.stringify(worker)]);
+        }
+      });
+
       callback(commands);
     }, handler);
   };
@@ -500,22 +546,32 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
     const oneDayAgo = tenMinutesEnd - oneDay;
     const workerLookups = [
       ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:snapshots`, `(${tenMinutesStart / 1000}`, tenMinutesEnd / 1000],
-      ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:historicals`, tenMinutesEnd / 1000, tenMinutesEnd / 1000]];
+      ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:historicals`, tenMinutesEnd / 1000, tenMinutesEnd / 1000],
+      ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:solo:snapshots`, `(${tenMinutesStart / 1000}`, tenMinutesEnd / 1000],
+      ['zrangebyscore', `${_this.pool}:rounds:${blockType}:current:solo:historicals`, tenMinutesEnd / 1000, tenMinutesEnd / 1000]];
     _this.executeCommands(workerLookups, (results) => {
       const commands = [];
-      const historicals = [];
-      const historicalWorkers = [];
+      const sharedHistoricals = [];
+      const soloHistoricals = [];
+      const sharedHistoricalWorkers = [];
+      const soloHistoricalWorkers = [];
 
       if (results[1]) {
         results[1].forEach((historical) => {
-          historicals.push(JSON.parse(historical));
+          sharedHistoricals.push(JSON.parse(historical));
+        });
+      };
+
+      if (results[3]) {
+        results[3].forEach((historical) => {
+          soloHistoricals.push(JSON.parse(historical));
         });
       };
 
       if (results[0]) {
         results[0].forEach((snapshot) => {
           snapshot = JSON.parse(snapshot);
-          const workerIndex = historicalWorkers.findIndex(worker => worker.worker === snapshot.worker);
+          const workerIndex = sharedHistoricalWorkers.findIndex(worker => worker.worker === snapshot.worker);
           if (workerIndex === -1) {
             const objectTemplate = {
               worker: snapshot.worker,
@@ -525,22 +581,54 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
               time: tenMinutesEnd / 1000,
               work: snapshot.work,
             };
-            historicalWorkers.push(objectTemplate);
+            sharedHistoricalWorkers.push(objectTemplate);
           } else {
-            historicalWorkers[workerIndex].valid += snapshot.valid,
-              historicalWorkers[workerIndex].stale += snapshot.stale,
-              historicalWorkers[workerIndex].invalid += snapshot.invalid,
-              historicalWorkers[workerIndex].work += snapshot.work
+            sharedHistoricalWorkers[workerIndex].valid += snapshot.valid,
+            sharedHistoricalWorkers[workerIndex].stale += snapshot.stale,
+            sharedHistoricalWorkers[workerIndex].invalid += snapshot.invalid,
+            sharedHistoricalWorkers[workerIndex].work += snapshot.work
           };
         });
       };
 
-      historicalWorkers.forEach((worker) => {
-        if (!historicals.find((historical) => historical.worker === worker.worker)) {
+      if (results[2]) {
+        results[2].forEach((snapshot) => {
+          snapshot = JSON.parse(snapshot);
+          const workerIndex = soloHistoricalWorkers.findIndex(worker => worker.worker === snapshot.worker);
+          if (workerIndex === -1) {
+            const objectTemplate = {
+              worker: snapshot.worker,
+              valid: snapshot.valid,
+              stale: snapshot.stale,
+              invalid: snapshot.invalid,
+              time: tenMinutesEnd / 1000,
+              work: snapshot.work,
+            };
+            soloHistoricalWorkers.push(objectTemplate);
+          } else {
+            soloHistoricalWorkers[workerIndex].valid += snapshot.valid,
+            soloHistoricalWorkers[workerIndex].stale += snapshot.stale,
+            soloHistoricalWorkers[workerIndex].invalid += snapshot.invalid,
+            soloHistoricalWorkers[workerIndex].work += snapshot.work
+          };
+        });
+      };
+
+      sharedHistoricalWorkers.forEach((worker) => {
+        if (!sharedHistoricals.find((historical) => historical.worker === worker.worker)) {
           // console.log(worker);
           commands.push(['zadd', `${_this.pool}:rounds:${blockType}:current:shared:historicals`, tenMinutesEnd / 1000, JSON.stringify(worker)]);
           commands.push(['zremrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:snapshots`, 0, tenMinutesStart / 1000]);
           commands.push(['zremrangebyscore', `${_this.pool}:rounds:${blockType}:current:shared:historicals`, 0, `(${oneDayAgo / 1000}`]);
+        }
+      });
+
+      soloHistoricalWorkers.forEach((worker) => {
+        if (!soloHistoricals.find((historical) => historical.worker === worker.worker)) {
+          // console.log(worker);
+          commands.push(['zadd', `${_this.pool}:rounds:${blockType}:current:solo:historicals`, tenMinutesEnd / 1000, JSON.stringify(worker)]);
+          commands.push(['zremrangebyscore', `${_this.pool}:rounds:${blockType}:current:solo:snapshots`, 0, tenMinutesStart / 1000]);
+          commands.push(['zremrangebyscore', `${_this.pool}:rounds:${blockType}:current:solo:historicals`, 0, `(${oneDayAgo / 1000}`]);
         }
       });
       callback(commands);
@@ -606,7 +694,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         }, () => { });
       }, () => { });
-    }, 10 * 1000); // every 20 seconds
+    }, 20 * 1000); // every 20 seconds
 
     // Handle Offline Worker Tagging 
     setInterval(() => {
@@ -627,7 +715,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           }
         }, () => { });
       }, () => { });
-    }, 1 * 60 * 1000); // every 3 minutes
+    }, 3 * 60 * 1000); // every 3 minutes
 
     // KEEP DISABLED
     // Handle Blocks Info Interval

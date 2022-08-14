@@ -40,9 +40,9 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   // Handle Times Updates
   this.handleTimes = function(lastShare, lastBlock) {
     const dateNow = Date.now();
-    const lastBlockTime = lastBlock.blockTime || 0;
+    const lastBlockTime = lastBlock ? lastBlock.blockTime : 0;
     const roundTime = (dateNow - lastBlockTime) / 1000;
-    const lastTime = lastShare.time || dateNow;
+    const lastTime = lastShare ? lastShare.time : dateNow;
 
     // Check for Continous Primary Mining
     let times = lastShare.times || 0;
