@@ -229,7 +229,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     if (blockType == '') {
       blockType = 'primary';
     }
-    const solo = isSolo ? 'solo' : 'shared';
+    const solo = isSolo === true ? 'solo' : 'shared';
 
     const commands = [
       ['zrangebyscore', `${ pool }:rounds:${ blockType }:current:${ solo }:historicals`, 0, '+inf']];
@@ -521,7 +521,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /miner/stats for miner [address]
   this.minerStats = function(pool, address, blockType, isSolo, worker, callback) {
-    const solo = isSolo ? 'solo' : 'shared';
+    const solo = isSolo === true ? 'solo' : 'shared';
     /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
@@ -781,7 +781,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
 
   // API Endpoint for /miner/work for miner [address]
   this.minerWork = function(pool, address, blockType, isSolo, callback) {
-    const solo = isSolo ? 'solo' : 'shared';
+    const solo = isSolo === true ? 'solo' : 'shared';
     /* istanbul ignore next */
     if (blockType == '') {
       blockType = 'primary';
@@ -849,7 +849,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     if (blockType == '') {
       blockType = 'primary';
     }
-    const solo = isSolo ? 'solo' : 'shared';
+    const solo = isSolo === true ? 'solo' : 'shared';
     const dateNow = Date.now();
     const algorithm = _this.poolConfigs[pool].primary.coin.algorithms.mining;
     const multiplier = Math.pow(2, 32) / Algorithms[algorithm].multiplier;
@@ -1158,7 +1158,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     if (blockType == '') {
       blockType = 'primary';
     }
-    const solo = isSolo ? 'solo' : 'shared';
+    const solo = isSolo === true ? 'solo' : 'shared';
     const commands = [
       ['hgetall', `${ pool }:rounds:${ blockType }:current:${ solo }:counts`]
     ];
@@ -1174,7 +1174,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     if (blockType == '') {
       blockType = 'primary';
     }
-    const solo = isSolo ? 'solo' : 'shared';
+    const solo = isSolo === true ? 'solo' : 'shared';
     const config = _this.poolConfigs[pool] || {};
     const algorithm = config.primary.coin.algorithms.mining;
     const hashrateWindow = config.statistics.hashrateWindow;
@@ -1236,10 +1236,44 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     }, callback);   
   };
 
+  // API Endpoint for /pool/iNodez
+  this.poolInodez = function(callback) {
+    const dayAgo = Date.now() - (24 * 60 + 10) * 60 * 1000;
+    const cutoff = Math.floor(0.8 * 144);
+    const commands = [
+      ['zrangebyscore', `zone:rounds:primary:current:shared:historicals`, dayAgo / 1000 | 0, `+inf`],
+    ];
+    _this.executeCommands(commands, (results) => {
+      const workers = {};
+      const miners = [];
+      results[0].forEach((element) => {
+        const snapshot = JSON.parse(element);
+        if (workers[snapshot.worker] > 0) {
+          workers[snapshot.worker] += 1;
+        } else {
+          workers[snapshot.worker] = 1;
+        }
+      });
+
+      for (const [key, value] of Object.entries(workers)) {
+        if (value > cutoff) {
+          const miner = key.split('.')[0];
+          if (!miners.includes(miner)) {
+            miners.push(miner);
+          }
+        }
+      }
+      
+      callback(200, {
+        result: miners
+      });
+    }, callback);
+  };
+
   // API Endpoint for /pool/minerCount
   this.poolMinerCount = function(pool, blockType, isSolo, callback) {
     const config = _this.poolConfigs[pool] || {};
-    const solo = isSolo ? 'solo' : 'shared';
+    const solo = isSolo === true ? 'solo' : 'shared';
     const onlineWindow = config.statistics.onlineWindow;
     const onlineWindowTime = Date.now() / 1000 - onlineWindow | 0;
 
@@ -1323,7 +1357,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
     if (blockType == '') {
       blockType = 'primary';
     }
-    const solo = isSolo ? 'solo' : 'shared';
+    const solo = isSolo === true ? 'solo' : 'shared';
 
     const commands = [
       ['hgetall', `${ pool }:workers:${ blockType }:${ solo }`],
@@ -1443,7 +1477,7 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /pool/workerCount
   this.poolWorkerCount = function(pool, blockType, isSolo, callback) {
     const config = _this.poolConfigs[pool] || {};
-    const solo = isSolo ? 'solo' : 'shared';
+    const solo = isSolo === true ? 'solo' : 'shared';
     const onlineWindow = config.statistics.onlineWindow;
     const onlineWindowTime = Date.now() / 1000 - onlineWindow | 0;
 
@@ -1616,6 +1650,9 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
             break;
           case (endpoint === 'hashrateChart'):
             _this.poolHashrateChart(pool, blockType, (code, message) => callback(code, message));
+            break;
+          case (endpoint === 'iNodez'):
+            _this.poolInodez((code, message) => callback(code, message));
             break;
           case (endpoint === 'minerCount'):
             _this.poolMinerCount(pool, blockType, isSolo, (code, message) => callback(code, message));

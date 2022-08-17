@@ -40,7 +40,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   // Handle Times Updates
   this.handleTimes = function(lastShare, lastBlock) {
     const dateNow = Date.now();
-    const lastBlockTime = lastBlock ? lastBlock.blockTime : 0;
+    const lastBlockTime = Object.keys(lastBlock).length === 0 ? lastBlock.blockTime : 0;
     const roundTime = (dateNow - lastBlockTime) / 1000;
     const lastTime = lastShare ? lastShare.time : dateNow;
 
