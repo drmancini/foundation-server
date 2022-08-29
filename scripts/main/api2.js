@@ -1064,15 +1064,15 @@ const PoolApi = function (client, sequelize, poolConfigs, portalConfig) {
   // API Endpoint for /pool/blocks
   this.poolBlocks = function(pool, blockType, callback) {
     /* istanbul ignore next */
-    if (blockType == '') {
-      blockType = 'primary';
-    }
+    // if (blockType == '') {
+    //   blockType = 'primary';
+    // }
 
     const commands = [
-      ['smembers', `${ pool }:blocks:${ blockType }:confirmed`],
-      ['smembers', `${ pool }:blocks:${ blockType }:kicked`],
-      ['smembers', `${ pool }:blocks:${ blockType }:pending`],
-      ['hgetall', `${ pool }:statistics:${ blockType }:network`]];
+      ['smembers', `${ pool }:blocks:primary:confirmed`],
+      ['smembers', `${ pool }:blocks:primary:kicked`],
+      ['smembers', `${ pool }:blocks:primary:pending`],
+      ['hgetall', `${ pool }:statistics:primary:network`]];
 
     _this.executeCommands(commands, (results) => {
       result = {};
