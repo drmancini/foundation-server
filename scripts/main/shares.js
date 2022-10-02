@@ -228,6 +228,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     const identifier = shareData.identifier || '';
     const ipLength = shareData.ip.split(':').length - 1;
     const ip = shareData.ip.split(':')[ipLength];
+    const submitTime = shareData.submitTime;
 
     const worker = ['share', 'primary'].includes(blockType) ? shareData.addrPrimary : shareData.addrAuxiliary;
     const blockDifficulty = ['share', 'primary'].includes(blockType) ? shareData.blockDiffPrimary : shareData.blockDiffAuxiliary;
@@ -254,6 +255,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       nodeReward: shareData.smartnodeReward, // added
       founderReward: shareData.founderReward, // added
       identifier: identifier,
+      submitTime: submitTime,
       transaction: shareData.transaction,
       difficulty: blockDifficulty,
       luck: luck,
@@ -269,6 +271,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       identifier: identifier,
       round: shareData.height,
       solo: isSoloMining,
+      submitTime: submitTime,
       times: 0,
       types: { valid: 0, invalid: 0, stale: 0 },
       work: difficulty,
