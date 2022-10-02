@@ -218,6 +218,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     let shares, works;
     const commands = [];
     const dateNow = Date.now();
+    const submitTime = shareData.submitTime;
     const blockType = shareData.blockType;
     const difficulty = (shareType === 'valid' ? shareData.difficulty : -shareData.difficulty);
     const minerType = isSoloMining ? 'solo' : 'shared';
@@ -244,6 +245,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Build Output Block
     const outputBlock = {
       time: dateNow,
+      submitTime: submitTime,
       height: shareData.height,
       hash: shareData.hash,
       reward: shareData.reward,
@@ -261,6 +263,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
     // Build Primary Output (Solo)
     const outputShare = {
       time: dateNow,
+      submitTime: submitTime,
       effort: 0,
       identifier: identifier,
       round: shareData.height,
