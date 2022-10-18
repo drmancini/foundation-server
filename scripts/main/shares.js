@@ -56,7 +56,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       times = roundTime;
     }
 
-    return times;
+    return Math.round(times * 1000) / 1000;
   };
 
   // Handle Effort Updates
@@ -151,7 +151,7 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
       times: times,
       types: types,
       type: shareType,
-      work: work,
+      work: Math.round(work * 1000) / 1000,
       worker: worker,
     };
 
@@ -338,9 +338,9 @@ const PoolShares = function (logger, client, poolConfig, portalConfig) {
   this.buildSharesCommands = function(results, shareData, shareType, blockValid, isSoloMining) {
     let commands = [];
     commands = commands.concat(_this.calculateShares(results, shareData, shareType, 'primary', isSoloMining));
-    if (_this.poolConfig.auxiliary && _this.poolConfig.auxiliary.enabled) {
-      commands = commands.concat(_this.calculateShares(results, shareData, shareType, 'auxiliary', isSoloMining));
-    }
+    // if (_this.poolConfig.auxiliary && _this.poolConfig.auxiliary.enabled) {
+    //   commands = commands.concat(_this.calculateShares(results, shareData, shareType, 'auxiliary', isSoloMining));
+    // }
     return commands;
   };
 
