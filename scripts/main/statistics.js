@@ -328,6 +328,16 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         } 
       };
 
+      const mailReplacementsX = {
+        inactiveMiners: 'inactiveWorkers',
+        isOrAre: 'is',
+        minerAddress: 'notification.miner',
+        dashboardLink: `https://raptoreum.zone/miners/${ notification.miner }`,
+        minerList: 'minerList',
+        unsubscribeLink: 'mailUnsubscribe'
+      };
+      utils.mailer('michal.pobuda@me.com', 'subject', 'https://api.raptoreum.zone/v2/miner/unsubscribeEmail', 'inactivity', mailReplacementsX).catch(console.error);
+
       if (minerNotifications.length > 0) {
         minerNotifications.forEach((notification) => {
           if (notification.workers != undefined) {
