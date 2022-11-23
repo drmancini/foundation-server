@@ -277,6 +277,7 @@ exports.mailer = async function (email, subject, unsubscribeLink, template, repl
     }
   };
 
+  console.log(messageObject)
   // send mail with defined transport object
   // let info = await transporter.sendMail(messageObject);
 
