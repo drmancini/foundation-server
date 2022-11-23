@@ -313,7 +313,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         if (toNotify && workerObject.offline == false && workerObject.time < offlineCutoff) {
           const minerIndex = minerNotifications.map(object => object.miner).indexOf(miner);
           
-          if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit * 60000) {
+          if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit * 60) {
 
             const workerName = worker.split('.')[1];
             if (minerNotifications[minerIndex].workers === undefined) {
@@ -343,7 +343,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
           if (notification.workers != undefined) {
             const minerList = notification.workers.join(', ');
             const inactiveWorkers = notification.workers.length;
-            const mailEmail = notification.email; // notification.email
+            const mailEmail = notification.email;
             const workerText = inactiveWorkers > 1 ? ' workers went offline' : ' worker went offline';
             const mailSubject = inactiveWorkers + workerText;
             const mailTemplate = 'inactivity';
