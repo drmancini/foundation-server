@@ -357,7 +357,8 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
               unsubscribeLink: mailUnsubscribe
             };
 
-            utils.mailer(mailEmail, mailSubject, mailUnsubscribe, mailTemplate, mailReplacements).catch(console.error);
+            console.log(mailEmail, mailSubject, mailUnsubscribe, mailReplacements)
+            // utils.mailer(mailEmail, mailSubject, mailUnsubscribe, mailTemplate, mailReplacements).catch(console.error);
           }
         });
       };
