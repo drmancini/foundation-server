@@ -303,6 +303,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         };
       }
 
+      //
       for (const [key, value] of Object.entries(workers)) {
         const workerObject = JSON.parse(value);
         const worker = key;
@@ -312,8 +313,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         if (toNotify && workerObject.offline == false && workerObject.time < offlineCutoff) {
           const minerIndex = minerNotifications.map(object => object.miner).indexOf(miner);
           
-          // if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit) {
-          if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit * 60) {
+          if (workerObject.time < dateNow - minerNotifications[minerIndex].alertLimit * 60000) {
 
             const workerName = worker.split('.')[1];
             if (minerNotifications[minerIndex].workers === undefined) {
@@ -328,15 +328,15 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
         } 
       };
 
-      const mailReplacementsX = {
-        inactiveMiners: 'inactiveWorkers',
-        isOrAre: 'is',
-        minerAddress: 'notification.miner',
-        dashboardLink: `https://raptoreum.zone/miners/`,
-        minerList: 'minerList',
-        unsubscribeLink: 'mailUnsubscribe'
-      };
-      utils.mailer('michal.pobuda@me.com', 'subject', 'https://api.raptoreum.zone/v2/miner/unsubscribeEmail', 'inactivity', mailReplacementsX).catch(console.error);
+      // const mailReplacementsX = {
+      //   inactiveMiners: 'inactiveWorkers',
+      //   isOrAre: 'is',
+      //   minerAddress: 'notification.miner',
+      //   dashboardLink: `https://raptoreum.zone/miners/`,
+      //   minerList: 'minerList',
+      //   unsubscribeLink: 'mailUnsubscribe'
+      // };
+      // utils.mailer('michal.pobuda@me.com', 'subject', 'https://api.raptoreum.zone/v2/miner/unsubscribeEmail', 'inactivity', mailReplacementsX).catch(console.error);
 
       if (minerNotifications.length > 0) {
         minerNotifications.forEach((notification) => {
@@ -356,6 +356,7 @@ const PoolStatistics = function (logger, client, poolConfig, portalConfig) {
               minerList: minerList,
               unsubscribeLink: mailUnsubscribe
             };
+
             utils.mailer(mailEmail, mailSubject, mailUnsubscribe, mailTemplate, mailReplacements).catch(console.error);
           }
         });
