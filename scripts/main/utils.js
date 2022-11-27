@@ -259,7 +259,6 @@ exports.mailer = async function (email, subject, unsubscribeLink, template, repl
     // },
   });
 
-
   const filePath = path.join(__dirname, activeTemplate);
   const source = fs.readFileSync(filePath, 'utf-8').toString();
   const tempTemplate = handlebars.compile(source);    
@@ -279,7 +278,7 @@ exports.mailer = async function (email, subject, unsubscribeLink, template, repl
 
   console.log(messageObject)
   // send mail with defined transport object
-  // let info = await transporter.sendMail(messageObject);
+  let info = await transporter.sendMail(messageObject);
 
   console.log(`Message sent: ${ info.messageId }`);
 };
