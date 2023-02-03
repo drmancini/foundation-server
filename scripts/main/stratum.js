@@ -71,6 +71,7 @@ const PoolStratum = function (logger, poolConfig, portalConfig, poolShares, pool
   this.checkPrimaryWorker = function(workerName, callback) {
     const address = workerName.split('.')[0];
     _this.poolStratum.primary.daemon.cmd('validateaddress', [address], false, (results) => {
+      console.log(results)
       const isValid = results.filter((result) => {
         if (result.response) {
           return result.response.isvalid;
