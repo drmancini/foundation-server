@@ -22,13 +22,9 @@ const PoolDatabase = function(portalConfig) {
   this.buildRedisClient = function() {
 
     // Build Connection Options
-    const connectionOptions = {
-      legacyMode: true,
-      socket: {
-        host: _this.portalConfig.redis.host,
-        port: _this.portalConfig.redis.port,
-      },
-    };
+    const connectionOptions = {};
+    connectionOptions.port = _this.portalConfig.redis.port;
+    connectionOptions.host = _this.portalConfig.redis.host;
 
     // Check if Authentication is Set
     if (_this.portalConfig.redis.password !== '') {
@@ -37,16 +33,13 @@ const PoolDatabase = function(portalConfig) {
 
     // Check if TLS Configuration is Set
     if (_this.portalConfig.redis.tls) {
-      connectionOptions.socket.tls = true;
-      connectionOptions.socket.key = fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.key));
-      connectionOptions.socket.cert = fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.cert));
-      connectionOptions.socket.ca = fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.ca));
+      connectionOptions.tls = {};
+      connectionOptions.tls.key = fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.key));
+      connectionOptions.tls.cert = fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.cert));
+      connectionOptions.tls.ca = fs.readFileSync(path.join('./certificates', _this.portalConfig.tls.ca));
     }
 
-    const client = redis.createClient(connectionOptions);
-    client.connect();
-
-    return client;
+    return redis.createClient(connectionOptions);
   };
 
   // Check Redis Client Version
